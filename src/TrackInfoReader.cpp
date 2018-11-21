@@ -128,6 +128,20 @@ namespace{
                 info.cover = QByteArray(bytes.data(), bytes.size());
             }
         }
+
+        if (info.album_artist.isEmpty())
+        {
+            const TagLib::Ogg::FieldListMap& field_list_map = tag->fieldListMap();
+
+            auto album_artists = field_list_map.find("ALBUMARTIST");
+            if (album_artists != field_list_map.end())
+            {
+                if (!album_artists->second.isEmpty())
+                {
+                    info.album_artist = toQString(album_artists->second.front());
+                }
+            }
+        }
     }
 
     void readMP4Info(TagLib::MP4::Tag* tag, TrackInfo& info)
@@ -145,6 +159,21 @@ namespace{
                 {
                     TagLib::ByteVector bytes = cover_art_list.front().data();
                     info.cover = QByteArray(bytes.data(), bytes.size());
+                }
+            }
+        }
+
+        if (info.album_artist.isEmpty())
+        {
+            const TagLib::MP4::ItemListMap& item_list_map = tag->itemListMap();
+
+            auto album_artist_item = item_list_map.find("aART");
+            if (album_artist_item != item_list_map.end())
+            {
+                TagLib::StringList album_artists = album_artist_item->second.toStringList();
+                if (!album_artists.isEmpty())
+                {
+                    info.album_artist = toQString(album_artists.front());
                 }
             }
         }
@@ -167,6 +196,17 @@ namespace{
                     TagLib::ByteVector bytes = item.mid(pos + 1);
                     info.cover = QByteArray(bytes.data(), bytes.size());
                 }
+            }
+        }
+
+        if (info.album_artist.isEmpty())
+        {
+            const TagLib::APE::ItemListMap& item_map = tag->itemListMap();
+
+            auto album_artist = item_map.find("ALBUMARTIST");
+            if (album_artist != item_map.end())
+            {
+                info.album_artist = toQString(album_artist->second.toString());
             }
         }
     }
@@ -192,6 +232,20 @@ namespace{
 
                     TagLib::ByteVector bytes = found->toPicture().picture();
                     info.cover = QByteArray(bytes.data(), bytes.size());
+                }
+            }
+        }
+
+        if (info.album_artist.isEmpty())
+        {
+            const TagLib::ASF::AttributeListMap& attr_list_map = tag->attributeListMap();
+
+            auto album_artists = attr_list_map.find("WM/AlbumArtist");
+            if (album_artists != attr_list_map.end())
+            {
+                if (!album_artists->second.isEmpty())
+                {
+                    info.album_artist = toQString(album_artists->second.front().toString());
                 }
             }
         }
