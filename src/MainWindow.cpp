@@ -83,6 +83,7 @@ namespace
 MainWindow::MainWindow(Settings& settings)
     : _settings(settings)
     , _abort_flag(false)
+    , _library_cache_loaded(false)
 {
     setWindowTitle(APPLICATION_NAME);
 
@@ -215,6 +216,7 @@ MainWindow::MainWindow(Settings& settings)
     vbox->addWidget(_view_stack);
     vbox->addWidget(_progress_label);
 
+    connect(this, &MainWindow::libraryCacheLoaded, this, &MainWindow::onLibraryCacheLoaded);
     connect(this, &MainWindow::libraryLoadProgressed, this, &MainWindow::onLibraryLoadProgressed);
     connect(this, &MainWindow::libraryLoadFinished, this, &MainWindow::onLibraryLoadFinished);
     connect(_search_field, &QLineEdit::returnPressed, this, &MainWindow::onSearchEnterPressed);
@@ -229,12 +231,7 @@ MainWindow::MainWindow(Settings& settings)
 
     show();
 
-    loadLibrary();
     scanAudioDirs();
-
-    QTimer::singleShot(1, this, [=](){
-        updateCurrentView();
-    });
 }
 
 MainWindow::~MainWindow()
@@ -244,6 +241,8 @@ MainWindow::~MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent* e)
 {
+    hide();
+
     QHash<QString, QVariant> column_widths;
     for (const auto& column : AudioLibraryView::columnToStringMapping())
     {
@@ -378,7 +377,12 @@ void MainWindow::onEditPreferences()
 
     if (_settings.audio_dir_paths.getValue() != old_audio_dir_paths)
     {
-        _library.cleanupTracksOutsideTheseDirectories(_settings.audio_dir_paths.getValue());
+        {
+            std::lock_guard<SpinLock> lock(_library_spin_lock);
+
+            _library.cleanupTracksOutsideTheseDirectories(_settings.audio_dir_paths.getValue());
+        }
+
         scanAudioDirs();
     }
 }
@@ -395,6 +399,11 @@ void MainWindow::onOpenAdvancedSearch()
     connect(advanced_search_dialog, &AdvancedSearchDialog::searchRequested, this, [=](AudioLibraryViewAdvancedSearch::Query query) {
         setBreadCrumb(new AudioLibraryViewAdvancedSearch(query));
     });
+}
+
+void MainWindow::onLibraryCacheLoaded()
+{
+    updateCurrentView();
 }
 
 void MainWindow::onLibraryLoadProgressed(int files_loaded, int files_skipped)
@@ -529,13 +538,16 @@ void MainWindow::saveLibrary()
 
     {
         QDataStream stream(&file);
+
+        std::lock_guard<SpinLock> lock(_library_spin_lock);
+
         _library.save(stream);
     }
 
     file.commit();
 }
 
-void MainWindow::loadLibrary()
+void MainWindow::loadLibrary(const Settings& settings, AudioLibrary& library)
 {
     QString cache_dir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
     QString filepath = cache_dir + "/AudioLibrary";
@@ -547,11 +559,11 @@ void MainWindow::loadLibrary()
 
         {
             QDataStream stream(&file);
-            _library.load(stream);
+            library.load(stream);
         }
     }
 
-    _library.cleanupTracksOutsideTheseDirectories(_settings.audio_dir_paths.getValue());
+    library.cleanupTracksOutsideTheseDirectories(settings.audio_dir_paths.getValue());
 }
 
 void MainWindow::scanAudioDirs()
@@ -577,6 +589,22 @@ void MainWindow::scanAudioDirsThreadFunc(QStringList audio_dir_paths)
     int files_loaded = 0;
     int files_skipped = 0;
     auto start_time = std::chrono::system_clock::now();
+
+    if(!_library_cache_loaded)
+    {
+        {
+            AudioLibrary temp_library;
+            loadLibrary(_settings, temp_library);
+
+            std::lock_guard<SpinLock> lock(_library_spin_lock);
+
+            _library = std::move(temp_library);
+        }
+
+        _library_cache_loaded = true;
+
+        libraryCacheLoaded();
+    }
 
     for (const QString& dirpath : audio_dir_paths)
     {
@@ -746,6 +774,8 @@ void MainWindow::getFilepathsFromIndex(const QModelIndex& index, std::vector<QSt
         auto view_found = _views_for_items.find(item);
         if (view_found != _views_for_items.end())
         {
+            std::lock_guard<SpinLock> lock(_library_spin_lock);
+
             std::vector<const AudioLibraryTrack*> tracks;
             view_found->second->resolveToTracks(_library, tracks);
 
@@ -762,7 +792,7 @@ void MainWindow::getFilepathsFromIndex(const QModelIndex& index, std::vector<QSt
     }
 }
 
-void MainWindow::forEachFilepathAtIndex(const QModelIndex& index, std::function<void(const QString&)> callback) const
+void MainWindow::forEachFilepathAtIndex(const QModelIndex& index, std::function<void(const QString&)> callback)
 {
     if (!index.isValid())
         return;
@@ -772,6 +802,8 @@ void MainWindow::forEachFilepathAtIndex(const QModelIndex& index, std::function<
         auto view_found = _views_for_items.find(item);
         if (view_found != _views_for_items.end())
         {
+            std::lock_guard<SpinLock> lock(_library_spin_lock);
+
             std::vector<const AudioLibraryTrack*> tracks;
             view_found->second->resolveToTracks(_library, tracks);
 

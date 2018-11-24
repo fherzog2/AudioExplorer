@@ -60,6 +60,7 @@ public:
     void setBreadCrumb(AudioLibraryView* view);
 
 signals:
+    void libraryCacheLoaded();
     void libraryLoadProgressed(int files_loaded, int files_skipped);
     void libraryLoadFinished(int files_loaded, int files_skipped, float duration_sec);
 
@@ -69,6 +70,7 @@ protected:
 private:
     void onEditPreferences();
     void onOpenAdvancedSearch();
+    void onLibraryCacheLoaded();
     void onLibraryLoadProgressed(int files_loaded, int files_skipped);
     void onLibraryLoadFinished(int files_loaded, int files_skipped, float duration_sec);
     void onShowDuplicateAlbums();
@@ -81,7 +83,7 @@ private:
     void onItemDoubleClicked(const QModelIndex &index);
 
     void saveLibrary();
-    void loadLibrary();
+    static void loadLibrary(const Settings& settings, AudioLibrary& library);
     void scanAudioDirs();
     void abortScanAudioDirs();
     void scanAudioDirsThreadFunc(QStringList audio_dir_paths);
@@ -90,7 +92,7 @@ private:
     void advanceIconSize(int direction);
     void addViewTypeTab(QWidget* view, const QString& friendly_name, const QString& internal_name);
     void getFilepathsFromIndex(const QModelIndex& index, std::vector<QString>& filepaths);
-    void forEachFilepathAtIndex(const QModelIndex& index, std::function<void(const QString&)> callback) const;
+    void forEachFilepathAtIndex(const QModelIndex& index, std::function<void(const QString&)> callback);
 
     void addBreadCrumb(AudioLibraryView* view);
     void clearBreadCrumbs();
@@ -112,6 +114,7 @@ private:
     std::thread _library_load_thread;
     std::chrono::steady_clock::time_point _last_view_update_time;
     bool _is_last_view_update_time_valid = false;
+    std::atomic_bool _library_cache_loaded;
 
     QLineEdit* _search_field = nullptr;
     QPointer<QWidget> _advanced_search_dialog = nullptr;
