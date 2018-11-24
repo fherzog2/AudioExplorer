@@ -227,41 +227,28 @@ void AudioLibrary::cleanupTracksOutsideTheseDirectories(const QStringList& paths
 
 void AudioLibrary::save(QDataStream& s)
 {
-    s << qint32(1); // version
+    s << qint32(2); // version
 
     s << quint64(_album_map.size());
 
-    std::map<AudioLibraryAlbumKey, size_t> album_key_to_index;
-    size_t current_index = 0;
-
     for (const auto& i : _album_map)
     {
-        album_key_to_index[i.first] = current_index;
-        ++current_index;
-
         s << i.second->_key;
         s << i.second->_cover;
-    }
 
-    s << quint64(_filepath_to_track_map.size());
+        s << quint64(i.second->_tracks.size());
 
-    for (const auto& i : _filepath_to_track_map)
-    {
-        assert(i.second->_album);
-
-        auto album_index = album_key_to_index.find(i.second->_album->_key);
-        assert(album_index != album_key_to_index.end());
-
-        s << quint64(album_index->second);
-
-        s << i.second->_filepath;
-        s << i.second->_last_modified;
-        s << i.second->_artist;
-        s << i.second->_album_artist;
-        s << i.second->_title;
-        s << qint32(i.second->_track_number);
-        s << i.second->_comment;
-        s << i.second->_tag_types;
+        for(const AudioLibraryTrack* track : i.second->_tracks)
+        {
+            s << track->_filepath;
+            s << track->_last_modified;
+            s << track->_artist;
+            s << track->_album_artist;
+            s << track->_title;
+            s << qint32(track->_track_number);
+            s << track->_comment;
+            s << track->_tag_types;
+        }
     }
 }
 
@@ -272,13 +259,11 @@ void AudioLibrary::load(QDataStream& s)
 
     qint32 version;
     s >> version;
-    if (version != 1)
+    if (version != 2)
         return;
 
     quint64 num_albums;
     s >> num_albums;
-
-    std::vector<AudioLibraryAlbum*> albums;
 
     for (quint64 i = 0; i < num_albums; ++i)
     {
@@ -288,36 +273,33 @@ void AudioLibrary::load(QDataStream& s)
         s >> key;
         s >> cover;
 
-        albums.push_back(addAlbum(key, cover));
-    }
+        AudioLibraryAlbum* album = addAlbum(key, cover);
 
-    quint64 num_tracks;
-    s >> num_tracks;
+        quint64 num_tracks;
+        s >> num_tracks;
 
-    for (quint64 i = 0; i < num_tracks; ++i)
-    {
-        quint64 album_index;
-        s >> album_index;
+        for(quint64 ti = 0; ti < num_tracks; ++ti)
+        {
+            QString filepath;
+            QDateTime last_modified;
+            QString artist;
+            QString album_artist;
+            QString title;
+            qint32 track_number;
+            QString comment;
+            QString tag_types;
 
-        QString filepath;
-        QDateTime last_modified;
-        QString artist;
-        QString album_artist;
-        QString title;
-        qint32 track_number;
-        QString comment;
-        QString tag_types;
+            s >> filepath;
+            s >> last_modified;
+            s >> artist;
+            s >> album_artist;
+            s >> title;
+            s >> track_number;
+            s >> comment;
+            s >> tag_types;
 
-        s >> filepath;
-        s >> last_modified;
-        s >> artist;
-        s >> album_artist;
-        s >> title;
-        s >> track_number;
-        s >> comment;
-        s >> tag_types;
-
-        addTrack(albums[album_index], filepath, last_modified, artist, album_artist, title, track_number, comment, tag_types);
+            addTrack(album, filepath, last_modified, artist, album_artist, title, track_number, comment, tag_types);
+        }
     }
 }
 
