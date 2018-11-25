@@ -106,19 +106,29 @@ namespace {
 
     //=========================================================================
 
-    QPixmap getCoverPixmap(AudioLibraryAlbum* album)
+    class CoverLoader
     {
-        QPixmap pixmap = album->getCoverPixmap();
+    public:
+        CoverLoader();
 
-        if (pixmap.isNull())
-        {
-            // create placeholder
+        const QPixmap& getCoverPixmap(const AudioLibraryAlbum* album) const;
 
-            pixmap = QPixmap(128, 128);
-            pixmap.fill(Qt::transparent);
-        }
+    private:
+        QPixmap _default_pixmap;
+    };
 
-        return pixmap;
+    CoverLoader::CoverLoader()
+    {
+        _default_pixmap = QPixmap(256, 256);
+        _default_pixmap.fill(Qt::transparent);
+    }
+
+    const QPixmap& CoverLoader::getCoverPixmap(const AudioLibraryAlbum* album) const
+    {
+        if (!album->getCoverPixmap().isNull())
+            return album->getCoverPixmap();
+
+        return _default_pixmap;
     }
 
     void setAdditionalColumn(QStandardItemModel* model, int row, AudioLibraryView::Column column, const QString& text, const QCollator& collator)
@@ -135,12 +145,13 @@ namespace {
         setAdditionalColumn(model, row, AudioLibraryView::COVER_CHECKSUM, QString("%3").arg(album->_key._cover_checksum), collator);
     }
 
-    void createAlbumRow(AudioLibraryAlbum* album,
+    void createAlbumRow(const AudioLibraryAlbum* album,
         QStandardItemModel* model,
         std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items,
-        const QCollator& collator)
+        const QCollator& collator,
+        const CoverLoader& cover_loader)
     {
-        QPixmap pixmap = getCoverPixmap(album);
+        QPixmap pixmap = cover_loader.getCoverPixmap(album);
 
         int row = model->rowCount();
         QStandardItem* item = new AlbumModelItem(pixmap, album->_key._artist + " - " + album->_key._album, album, collator);
@@ -170,20 +181,21 @@ namespace {
         setAdditionalColumn(model, row, AudioLibraryView::TAG_TYPES, track->_tag_types, collator);
     }
 
-    void createAlbumOrTrackRow(AudioLibraryAlbum* album,
+    void createAlbumOrTrackRow(const AudioLibraryAlbum* album,
         const AudioLibraryView::DisplayMode* display_mode,
         QStandardItemModel* model,
         std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items,
-        const QCollator& collator)
+        const QCollator& collator,
+        const CoverLoader& cover_loader)
     {
         switch (*display_mode)
         {
         case AudioLibraryView::DisplayMode::ALBUMS:
-            createAlbumRow(album, model, views_for_items, collator);
+            createAlbumRow(album, model, views_for_items, collator, cover_loader);
             break;
         case AudioLibraryView::DisplayMode::TRACKS:
         {
-            QPixmap pixmap = getCoverPixmap(album);
+            QPixmap pixmap = cover_loader.getCoverPixmap(album);
             for (const AudioLibraryTrack* track : album->_tracks)
                 createTrackRow(track, model, pixmap, collator);
         }
@@ -200,9 +212,11 @@ namespace {
         QCollator collator;
         collator.setNumericMode(true);
 
+        CoverLoader cover_loader;
+
         std::unordered_set<GROUPED_TYPE> displayed_groups;
 
-        for (AudioLibraryAlbum* album : library.getAlbums())
+        for (const AudioLibraryAlbum* album : library.getAlbums())
         {
             GROUPED_TYPE group = grouped_type_getter(album);
 
@@ -211,7 +225,7 @@ namespace {
 
             displayed_groups.insert(group);
 
-            QPixmap pixmap = getCoverPixmap(album);
+            QPixmap pixmap = cover_loader.getCoverPixmap(album);
 
             QStandardItem* item = new CollatedItem(pixmap, QString("%1").arg(group), collator);
             model->setItem(model->rowCount(), item);
@@ -392,9 +406,11 @@ void AudioLibraryViewAllAlbums::createItems(const AudioLibrary& library,
     QCollator collator;
     collator.setNumericMode(true);
 
-    for (AudioLibraryAlbum* album : library.getAlbums())
+    CoverLoader cover_loader;
+
+    for (const AudioLibraryAlbum* album : library.getAlbums())
     {
-        createAlbumRow(album, model, views_for_items, collator);
+        createAlbumRow(album, model, views_for_items, collator, cover_loader);
     }
 }
 
@@ -423,9 +439,11 @@ void AudioLibraryViewAllTracks::createItems(const AudioLibrary& library,
     QCollator collator;
     collator.setNumericMode(true);
 
-    for (AudioLibraryAlbum* album : library.getAlbums())
+    CoverLoader cover_loader;
+
+    for (const AudioLibraryAlbum* album : library.getAlbums())
     {
-        QPixmap pixmap = getCoverPixmap(album);
+        QPixmap pixmap = cover_loader.getCoverPixmap(album);
 
         for (const AudioLibraryTrack* track : album->_tracks)
         {
@@ -514,18 +532,20 @@ void AudioLibraryViewArtist::createItems(const AudioLibrary& library,
     QCollator collator;
     collator.setNumericMode(true);
 
-    for (AudioLibraryAlbum* album : library.getAlbums())
+    CoverLoader cover_loader;
+
+    for (const AudioLibraryAlbum* album : library.getAlbums())
     {
         if (album->_key._artist == _artist)
         {
-            createAlbumOrTrackRow(album, display_mode, model, views_for_items, collator);
+            createAlbumOrTrackRow(album, display_mode, model, views_for_items, collator, cover_loader);
         }
     }
 }
 
 void AudioLibraryViewArtist::resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const
 {
-    for (AudioLibraryAlbum* album : library.getAlbums())
+    for (const AudioLibraryAlbum* album : library.getAlbums())
     {
         if (album->_key._artist == _artist)
         {
@@ -559,9 +579,11 @@ void AudioLibraryViewAlbum::createItems(const AudioLibrary& library,
     QCollator collator;
     collator.setNumericMode(true);
 
-    if (AudioLibraryAlbum* album = library.getAlbum(_key))
+    CoverLoader cover_loader;
+
+    if (const AudioLibraryAlbum* album = library.getAlbum(_key))
     {
-        QPixmap pixmap = getCoverPixmap(album);
+        QPixmap pixmap = cover_loader.getCoverPixmap(album);
 
         for (const AudioLibraryTrack* track : album->_tracks)
         {
@@ -572,7 +594,7 @@ void AudioLibraryViewAlbum::createItems(const AudioLibrary& library,
 
 void AudioLibraryViewAlbum::resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const
 {
-    for (AudioLibraryAlbum* album : library.getAlbums())
+    for (const AudioLibraryAlbum* album : library.getAlbums())
     {
         if (album->_key == _key)
         {
@@ -606,18 +628,20 @@ void AudioLibraryViewYear::createItems(const AudioLibrary& library,
     QCollator collator;
     collator.setNumericMode(true);
 
-    for (AudioLibraryAlbum* album : library.getAlbums())
+    CoverLoader cover_loader;
+
+    for (const AudioLibraryAlbum* album : library.getAlbums())
     {
         if (album->_key._year == _year)
         {
-            createAlbumOrTrackRow(album, display_mode, model, views_for_items, collator);
+            createAlbumOrTrackRow(album, display_mode, model, views_for_items, collator, cover_loader);
         }
     }
 }
 
 void AudioLibraryViewYear::resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const
 {
-    for (AudioLibraryAlbum* album : library.getAlbums())
+    for (const AudioLibraryAlbum* album : library.getAlbums())
     {
         if (album->_key._year == _year)
         {
@@ -651,18 +675,20 @@ void AudioLibraryViewGenre::createItems(const AudioLibrary& library,
     QCollator collator;
     collator.setNumericMode(true);
 
-    for (AudioLibraryAlbum* album : library.getAlbums())
+    CoverLoader cover_loader;
+
+    for (const AudioLibraryAlbum* album : library.getAlbums())
     {
         if (album->_key._genre == _genre)
         {
-            createAlbumOrTrackRow(album, display_mode, model, views_for_items, collator);
+            createAlbumOrTrackRow(album, display_mode, model, views_for_items, collator, cover_loader);
         }
     }
 }
 
 void AudioLibraryViewGenre::resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const
 {
-    for (AudioLibraryAlbum* album : library.getAlbums())
+    for (const AudioLibraryAlbum* album : library.getAlbums())
     {
         if (album->_key._genre == _genre)
         {
@@ -695,9 +721,11 @@ void AudioLibraryViewSimpleSearch::createItems(const AudioLibrary& library,
     QCollator collator;
     collator.setNumericMode(true);
 
+    CoverLoader cover_loader;
+
     auto strings_to_match = _search_text.splitRef(" ");
 
-    for (AudioLibraryAlbum* album : library.getAlbums())
+    for (const AudioLibraryAlbum* album : library.getAlbums())
     {
         switch (*display_mode)
         {
@@ -705,7 +733,7 @@ void AudioLibraryViewSimpleSearch::createItems(const AudioLibrary& library,
             if (match(album->_key._artist, strings_to_match) ||
                 match(album->_key._album, strings_to_match))
             {
-                createAlbumRow(album, model, views_for_items, collator);
+                createAlbumRow(album, model, views_for_items, collator, cover_loader);
             }
             break;
         case AudioLibraryView::DisplayMode::TRACKS:
@@ -720,7 +748,7 @@ void AudioLibraryViewSimpleSearch::createItems(const AudioLibrary& library,
                     match(track->_title, strings_to_match))
                 {
                     if (pixmap.isNull())
-                        pixmap = getCoverPixmap(album);
+                        pixmap = cover_loader.getCoverPixmap(album);
 
                     createTrackRow(track, model, pixmap, collator);
                 }
@@ -813,13 +841,15 @@ void AudioLibraryViewAdvancedSearch::createItems(const AudioLibrary& library,
     QCollator collator;
     collator.setNumericMode(true);
 
+    CoverLoader cover_loader;
+
     AdvancedSearchComparer compare_artist(_query.artist, _query.case_sensitive, _query.use_regex);
     AdvancedSearchComparer compare_album(_query.album, _query.case_sensitive, _query.use_regex);
     AdvancedSearchComparer compare_genre(_query.genre, _query.case_sensitive, _query.use_regex);
     AdvancedSearchComparer compare_title(_query.title, _query.case_sensitive, _query.use_regex);
     AdvancedSearchComparer compare_comment(_query.comment, _query.case_sensitive, _query.use_regex);
 
-    for (AudioLibraryAlbum* album : library.getAlbums())
+    for (const AudioLibraryAlbum* album : library.getAlbums())
     {
         if (!_query.artist.isEmpty() && !compare_artist.check(album->_key._artist))
             continue;
@@ -840,13 +870,13 @@ void AudioLibraryViewAdvancedSearch::createItems(const AudioLibrary& library,
                     continue;
 
                 if (pixmap.isNull())
-                    pixmap = getCoverPixmap(album);
+                    pixmap = cover_loader.getCoverPixmap(album);
 
                 createTrackRow(track, model, pixmap, collator);
             }
         }
         else
-            createAlbumRow(album, model, views_for_items, collator);
+            createAlbumRow(album, model, views_for_items, collator, cover_loader);
     }
 }
 
@@ -870,7 +900,7 @@ std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewDuplicateAlbums::getS
 namespace {
     struct DuplicateAlbumKey
     {
-        DuplicateAlbumKey(AudioLibraryAlbum* album)
+        DuplicateAlbumKey(const AudioLibraryAlbum* album)
             : _artist(album->_key._artist)
             , _album(album->_key._album)
         {}
@@ -894,10 +924,12 @@ void AudioLibraryViewDuplicateAlbums::createItems(const AudioLibrary& library,
     QCollator collator;
     collator.setNumericMode(true);
 
-    std::map<DuplicateAlbumKey, AudioLibraryAlbum*> first_album_occurence;
-    std::unordered_set<AudioLibraryAlbum*> duplicates;
+    CoverLoader cover_loader;
 
-    for (AudioLibraryAlbum* album : library.getAlbums())
+    std::map<DuplicateAlbumKey, const AudioLibraryAlbum*> first_album_occurence;
+    std::unordered_set<const AudioLibraryAlbum*> duplicates;
+
+    for (const AudioLibraryAlbum* album : library.getAlbums())
     {
         auto first_occurence = first_album_occurence.insert(std::make_pair(DuplicateAlbumKey(album), album));
 
@@ -909,9 +941,9 @@ void AudioLibraryViewDuplicateAlbums::createItems(const AudioLibrary& library,
         }
     }
 
-    for (AudioLibraryAlbum* album : duplicates)
+    for (const AudioLibraryAlbum* album : duplicates)
     {
-        createAlbumRow(album, model, views_for_items, collator);
+        createAlbumRow(album, model, views_for_items, collator, cover_loader);
     }
 }
 

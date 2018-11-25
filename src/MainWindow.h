@@ -83,7 +83,7 @@ private:
     void onItemDoubleClicked(const QModelIndex &index);
 
     void saveLibrary();
-    static void loadLibrary(const Settings& settings, AudioLibrary& library);
+    void loadLibrary();
     void scanAudioDirs();
     void abortScanAudioDirs();
     void scanAudioDirsThreadFunc(QStringList audio_dir_paths);

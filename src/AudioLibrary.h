@@ -71,12 +71,9 @@ public:
 class AudioLibraryAlbum
 {
 public:
-    AudioLibraryAlbum(const AudioLibraryAlbumKey& key, const QByteArray& cover)
-        : _key(key)
-        , _cover(cover)
-    {}
+    AudioLibraryAlbum(const AudioLibraryAlbumKey& key, const QByteArray& cover);
 
-    const QPixmap& getCoverPixmap();
+    const QPixmap& getCoverPixmap() const;
 
     AudioLibraryAlbumKey _key;
     QByteArray _cover;
@@ -155,6 +152,20 @@ public:
     void cleanupTracksOutsideTheseDirectories(const QStringList& paths);
     void save(QDataStream& s);
     void load(QDataStream& s);
+
+    class Loader
+    {
+    public:
+        void init(AudioLibrary& library, QDataStream& s);
+        bool hasNextAlbum() const;
+        void loadNextAlbum();
+
+    private:
+        AudioLibrary* _library = nullptr;
+        QDataStream* _s = nullptr;
+        quint64 _num_albums = 0;
+        quint64 _albums_loaded = 0;
+    };
 
 private:
     AudioLibraryAlbum* addAlbum(const AudioLibraryAlbumKey& album_key, const QByteArray& cover);

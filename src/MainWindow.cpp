@@ -540,7 +540,7 @@ void MainWindow::saveLibrary()
     file.commit();
 }
 
-void MainWindow::loadLibrary(const Settings& settings, AudioLibrary& library)
+void MainWindow::loadLibrary()
 {
     QString cache_dir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
     QString filepath = cache_dir + "/AudioLibrary";
@@ -552,11 +552,44 @@ void MainWindow::loadLibrary(const Settings& settings, AudioLibrary& library)
 
         {
             QDataStream stream(&file);
-            library.load(stream);
+
+            AudioLibrary::Loader loader;
+
+            {
+                std::lock_guard<SpinLock> lock(_library_spin_lock);
+
+                loader.init(_library, stream);
+            }
+
+            auto start_time = std::chrono::steady_clock::now();
+            bool first_update_triggered = false;
+
+            while (loader.hasNextAlbum())
+            {
+                {
+                    std::lock_guard<SpinLock> lock(_library_spin_lock);
+
+                    loader.loadNextAlbum();
+                }
+
+                // Trigger a view update shortly after starting to display something.
+
+                if (!first_update_triggered)
+                {
+                    auto end_time = std::chrono::steady_clock::now();
+                    if (std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() > 300)
+                    {
+                        libraryCacheLoaded();
+                        first_update_triggered = true;
+                    }
+                }
+            }
         }
     }
 
-    library.cleanupTracksOutsideTheseDirectories(settings.audio_dir_paths.getValue());
+    std::lock_guard<SpinLock> lock(_library_spin_lock);
+
+    _library.cleanupTracksOutsideTheseDirectories(_settings.audio_dir_paths.getValue());
 }
 
 void MainWindow::scanAudioDirs()
@@ -585,17 +618,8 @@ void MainWindow::scanAudioDirsThreadFunc(QStringList audio_dir_paths)
 
     if(!_library_cache_loaded)
     {
-        {
-            AudioLibrary temp_library;
-            loadLibrary(_settings, temp_library);
-
-            std::lock_guard<SpinLock> lock(_library_spin_lock);
-
-            _library = std::move(temp_library);
-        }
-
+        loadLibrary();
         _library_cache_loaded = true;
-
         libraryCacheLoaded();
     }
 

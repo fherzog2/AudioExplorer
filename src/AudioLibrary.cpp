@@ -56,14 +56,15 @@ QDataStream& operator >> (QDataStream& s, AudioLibraryTrack& track)
 
 //=============================================================================
 
-const QPixmap& AudioLibraryAlbum::getCoverPixmap()
+AudioLibraryAlbum::AudioLibraryAlbum(const AudioLibraryAlbumKey& key, const QByteArray& cover)
+    : _key(key)
+    , _cover(cover)
 {
-    if (!_tried_loading_cover)
-    {
-        _cover_pixmap.loadFromData(_cover);
-        _tried_loading_cover = true;
-    }
+    _cover_pixmap.loadFromData(_cover);
+}
 
+const QPixmap& AudioLibraryAlbum::getCoverPixmap() const
+{
     return _cover_pixmap;
 }
 
@@ -254,53 +255,71 @@ void AudioLibrary::save(QDataStream& s)
 
 void AudioLibrary::load(QDataStream& s)
 {
-    _album_map.clear();
-    _filepath_to_track_map.clear();
+    Loader loader;
+
+    loader.init(*this, s);
+    while (loader.hasNextAlbum())
+        loader.loadNextAlbum();
+}
+
+void AudioLibrary::Loader::init(AudioLibrary& library, QDataStream& s)
+{
+    _library = &library;
+    _s = &s;
+
+    _library->_album_map.clear();
+    _library->_filepath_to_track_map.clear();
 
     qint32 version;
     s >> version;
     if (version != 2)
         return;
 
-    quint64 num_albums;
-    s >> num_albums;
+    s >> _num_albums;
+}
 
-    for (quint64 i = 0; i < num_albums; ++i)
+bool AudioLibrary::Loader::hasNextAlbum() const
+{
+    return _albums_loaded < _num_albums;
+}
+
+void AudioLibrary::Loader::loadNextAlbum()
+{
+    AudioLibraryAlbumKey key;
+    QByteArray cover;
+
+    *_s >> key;
+    *_s >> cover;
+
+    AudioLibraryAlbum* album = _library->addAlbum(key, cover);
+
+    quint64 num_tracks;
+    *_s >> num_tracks;
+
+    for (quint64 ti = 0; ti < num_tracks; ++ti)
     {
-        AudioLibraryAlbumKey key;
-        QByteArray cover;
+        QString filepath;
+        QDateTime last_modified;
+        QString artist;
+        QString album_artist;
+        QString title;
+        qint32 track_number;
+        QString comment;
+        QString tag_types;
 
-        s >> key;
-        s >> cover;
+        *_s >> filepath;
+        *_s >> last_modified;
+        *_s >> artist;
+        *_s >> album_artist;
+        *_s >> title;
+        *_s >> track_number;
+        *_s >> comment;
+        *_s >> tag_types;
 
-        AudioLibraryAlbum* album = addAlbum(key, cover);
-
-        quint64 num_tracks;
-        s >> num_tracks;
-
-        for(quint64 ti = 0; ti < num_tracks; ++ti)
-        {
-            QString filepath;
-            QDateTime last_modified;
-            QString artist;
-            QString album_artist;
-            QString title;
-            qint32 track_number;
-            QString comment;
-            QString tag_types;
-
-            s >> filepath;
-            s >> last_modified;
-            s >> artist;
-            s >> album_artist;
-            s >> title;
-            s >> track_number;
-            s >> comment;
-            s >> tag_types;
-
-            addTrack(album, filepath, last_modified, artist, album_artist, title, track_number, comment, tag_types);
-        }
+        _library->addTrack(album, filepath, last_modified, artist, album_artist, title, track_number, comment, tag_types);
     }
+
+    ++_albums_loaded;
 }
 
 AudioLibraryAlbum* AudioLibrary::addAlbum(const AudioLibraryAlbumKey& album_key, const QByteArray& cover)
