@@ -113,13 +113,6 @@ MainWindow::MainWindow(Settings& settings)
 
     _model = new QStandardItemModel(this);
 
-    QStringList model_headers;
-    for (const auto& column : AudioLibraryView::columnToStringMapping())
-    {
-        model_headers.push_back(AudioLibraryView::getColumnFriendlyName(column.first));
-    }
-    _model->setHorizontalHeaderLabels(model_headers);
-
     _icon_size_steps = { 64, 96, 128, 192, 256 };
 
     int default_icon_size = 128;
@@ -655,7 +648,6 @@ const AudioLibraryView* MainWindow::getCurrentView() const
 void MainWindow::updateCurrentView()
 {
     _views_for_items.clear();
-    _model->removeRows(0, _model->rowCount());
 
     auto supported_modes = _breadcrumb_views.back()->getSupportedModes();
 
@@ -721,14 +713,28 @@ void MainWindow::updateCurrentView()
 
     // craete items
 
+    QStandardItemModel* model = new QStandardItemModel(this);
+
+    QStringList model_headers;
+    for (const auto& column : AudioLibraryView::columnToStringMapping())
+    {
+        model_headers.push_back(AudioLibraryView::getColumnFriendlyName(column.first));
+    }
+    model->setHorizontalHeaderLabels(model_headers);
+
     if (!_breadcrumb_views.empty())
     {
         std::lock_guard<SpinLock> lock(_library_spin_lock);
 
-        _breadcrumb_views.back()->createItems(_library, is_current_display_mode_valid ? &current_display_mode : nullptr, _model, _views_for_items);
+        _breadcrumb_views.back()->createItems(_library, is_current_display_mode_valid ? &current_display_mode : nullptr, model, _views_for_items);
     }
 
-    _model->sort(0);
+    model->sort(0);
+
+    _model->deleteLater();
+    _model = model;
+    _list->setModel(model);
+    _table->setModel(model);
 
     _last_view_update_time = std::chrono::steady_clock::now();
     _is_last_view_update_time_valid = true;
