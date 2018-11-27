@@ -121,10 +121,24 @@ private:
 
     std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>> _views_for_items;
 
+    struct ViewRestoreData
+    {
+        double _list_scroll_pos;
+        double _table_scroll_pos;
+
+        int _table_sort_indicator_section;
+        Qt::SortOrder _table_sort_indicator_order;
+    };
+
+    struct Breadcrumb
+    {
+        std::unique_ptr<QObject, LateDeleter> _button;
+        std::unique_ptr<AudioLibraryView> _view;
+        std::unique_ptr<ViewRestoreData> _restore_data;
+    };
+
     QHBoxLayout* _breadcrumb_layout = nullptr;
-    std::vector<std::unique_ptr<QObject, LateDeleter>> _breadcrumb_buttons;
-    std::vector<std::unique_ptr<AudioLibraryView>> _breadcrumb_views;
-    std::vector<double> _breadcrump_saved_scrollpos;
+    std::vector<Breadcrumb> _breadcrumbs;
 
     QTabBar* _display_mode_tabs = nullptr;
     std::vector<std::pair<int, AudioLibraryView::DisplayMode>> _display_mode_tab_indexes;

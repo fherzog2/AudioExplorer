@@ -76,6 +76,16 @@ namespace
             }
         }
     }
+
+    double getRelativeScrollPos(QScrollBar* scroll_bar)
+    {
+        return double(scroll_bar->value()) / double(scroll_bar->maximum() - scroll_bar->minimum());
+    }
+
+    void setRelativeScrollPos(QScrollBar* scroll_bar, double scroll_pos)
+    {
+        scroll_bar->setValue(int(scroll_pos * double(scroll_bar->maximum() - scroll_bar->minimum())));
+    }
 }
 
 //=============================================================================
@@ -438,9 +448,9 @@ void MainWindow::onBreadCrumbClicked()
 
 void MainWindow::onBreadCrumpReverse()
 {
-    if (_breadcrumb_views.size() > 1)
+    if (_breadcrumbs.size() > 1)
     {
-        QObject* second_last = _breadcrumb_buttons[_breadcrumb_buttons.size() - 2].get();
+        QObject* second_last = _breadcrumbs[_breadcrumbs.size() - 2]._button.get();
 
         restoreBreadCrumb(second_last);
     }
@@ -486,7 +496,18 @@ void MainWindow::onViewTypeSelected(int index)
     for (const auto& i : _view_type_map)
         if (i.first == internal_name)
         {
+            QAbstractItemView* previous_view = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget());
+
             _view_stack->setCurrentWidget(i.second);
+
+            QAbstractItemView* current_view = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget());
+
+            if (previous_view && current_view && previous_view != current_view)
+            {
+                double relative_scroll_pos = getRelativeScrollPos(previous_view->verticalScrollBar());
+                setRelativeScrollPos(current_view->verticalScrollBar(), relative_scroll_pos);
+            }
+
             break;
         }
 }
@@ -666,14 +687,14 @@ void MainWindow::scanAudioDirsThreadFunc(QStringList audio_dir_paths)
 
 const AudioLibraryView* MainWindow::getCurrentView() const
 {
-    return _breadcrumb_views.back().get();
+    return _breadcrumbs.back()._view.get();
 }
 
 void MainWindow::updateCurrentView()
 {
     _views_for_items.clear();
 
-    auto supported_modes = _breadcrumb_views.back()->getSupportedModes();
+    auto supported_modes = _breadcrumbs.back()._view->getSupportedModes();
 
     AudioLibraryView::DisplayMode current_display_mode;
     bool is_current_display_mode_valid = false;
@@ -746,11 +767,11 @@ void MainWindow::updateCurrentView()
     }
     model->setHorizontalHeaderLabels(model_headers);
 
-    if (!_breadcrumb_views.empty())
+    if (!_breadcrumbs.empty())
     {
         std::lock_guard<SpinLock> lock(_library_spin_lock);
 
-        _breadcrumb_views.back()->createItems(_library, is_current_display_mode_valid ? &current_display_mode : nullptr, model, _views_for_items);
+        _breadcrumbs.back()._view->createItems(_library, is_current_display_mode_valid ? &current_display_mode : nullptr, model, _views_for_items);
     }
 
     model->sort(0);
@@ -863,63 +884,68 @@ void MainWindow::setBreadCrumb(AudioLibraryView* view)
 
 void MainWindow::addBreadCrumb(AudioLibraryView* view)
 {
-    bool first_breadcrump = _breadcrumb_views.empty();
+    if (!_breadcrumbs.empty())
+    {
+        // if this isn't the first breadcrumb, create restore information so the view looks the same when going back
 
-    QScrollBar* visible_scrollbar = nullptr;
+        _breadcrumbs.back()._restore_data.reset(new ViewRestoreData());
+        ViewRestoreData* restore_data = _breadcrumbs.back()._restore_data.get();
 
-    if (_list == _view_stack->currentWidget())
-        visible_scrollbar = _list->verticalScrollBar();
-    else if (_table == _view_stack->currentWidget())
-        visible_scrollbar = _table->verticalScrollBar();
+        restore_data->_list_scroll_pos  = getRelativeScrollPos(_list->verticalScrollBar());
+        restore_data->_table_scroll_pos = getRelativeScrollPos(_table->verticalScrollBar());
 
-    double scroll_pos = double(visible_scrollbar->value()) / double(visible_scrollbar->maximum() - visible_scrollbar->minimum());
+        restore_data->_table_sort_indicator_section = _table->horizontalHeader()->sortIndicatorSection();
+        restore_data->_table_sort_indicator_order = _table->horizontalHeader()->sortIndicatorOrder();
+    }
 
     QPushButton* button = new QPushButton(view->getDisplayName(), this);
     connect(button, &QPushButton::clicked, this, &MainWindow::onBreadCrumbClicked);
+
     _breadcrumb_layout->addWidget(button);
-    _breadcrumb_buttons.push_back(std::unique_ptr<QObject, LateDeleter>(button));
-    _breadcrumb_views.push_back(std::unique_ptr<AudioLibraryView>(view));
-    // only save the scrollpos if there was a view active before this one
-    if (!first_breadcrump)
-        _breadcrump_saved_scrollpos.push_back(scroll_pos);
+
+    Breadcrumb breadcrumb;
+    breadcrumb._button.reset(button);
+    breadcrumb._view.reset(view);
+    _breadcrumbs.push_back(std::move(breadcrumb));
 
     updateCurrentView();
 }
 
 void MainWindow::clearBreadCrumbs()
 {
-    _breadcrumb_buttons.clear();
-    _breadcrumb_views.clear();
-    _breadcrump_saved_scrollpos.clear();
+    _breadcrumbs.clear();
 }
 
 void MainWindow::restoreBreadCrumb(QObject* object)
 {
     // remove all breadcrumbs behind the given one
 
-    auto found = std::find_if(_breadcrumb_buttons.begin(), _breadcrumb_buttons.end(), [=](const std::unique_ptr<QObject, LateDeleter>& i){
-        return i.get() == object;
+    auto found = std::find_if(_breadcrumbs.begin(), _breadcrumbs.end(), [=](const Breadcrumb& i){
+        return i._button.get() == object;
     });
-    size_t index = std::distance(_breadcrumb_buttons.begin(), found);
-    if (index >= _breadcrump_saved_scrollpos.size())
+
+    // the last breadcrumb is the current view, nothing to restore
+
+    if (found != _breadcrumbs.end() && found == _breadcrumbs.end() - 1)
         return;
 
-    double scroll_pos = _breadcrump_saved_scrollpos[index];
+    // delete breadcrumbs
 
-    _breadcrumb_buttons.erase(_breadcrumb_buttons.begin() + index + 1, _breadcrumb_buttons.end());
-    _breadcrumb_views.resize(_breadcrumb_buttons.size());
-    _breadcrump_saved_scrollpos.resize(_breadcrumb_buttons.size() - 1);
+    _breadcrumbs.erase(found + 1, _breadcrumbs.end());
+
+    // restore view, take away restore data from current breadcrumb
+
+    std::shared_ptr<ViewRestoreData> restore_data(_breadcrumbs.back()._restore_data.release());
 
     updateCurrentView();
 
-    QScrollBar* visible_scrollbar = nullptr;
-
-    if (_list == _view_stack->currentWidget())
-        visible_scrollbar = _list->verticalScrollBar();
-    else if (_table == _view_stack->currentWidget())
-        visible_scrollbar = _table->verticalScrollBar();
+    // restore uses a timer because the list view is updating asynchronously
 
     QTimer::singleShot(1, this, [=]() {
-        visible_scrollbar->setValue(int(scroll_pos * double(visible_scrollbar->maximum() - visible_scrollbar->minimum())));
+        setRelativeScrollPos(_list->verticalScrollBar(),  restore_data->_list_scroll_pos);
+        setRelativeScrollPos(_table->verticalScrollBar(), restore_data->_table_scroll_pos);
+
+        if(restore_data->_table_sort_indicator_section >= 0)
+            _table->sortByColumn(restore_data->_table_sort_indicator_section, restore_data->_table_sort_indicator_order);
     });
 }
