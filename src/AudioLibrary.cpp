@@ -79,22 +79,6 @@ AudioLibraryTrack* AudioLibrary::findTrack(const QString& filepath) const
     return nullptr;
 }
 
-void AudioLibrary::addTrack(const QFileInfo& file_info)
-{
-    QString filepath = file_info.filePath();
-    QDateTime last_modified = file_info.lastModified();
-
-    if(AudioLibraryTrack* track = findTrack(filepath))
-        if(track->_last_modified == last_modified)
-            return; // nothing to do
-
-    TrackInfo track_info;
-    if (readTrackInfo(filepath, track_info))
-    {
-        addTrack(filepath, last_modified, track_info);
-    }
-}
-
 void AudioLibrary::addTrack(const QString& filepath, const QDateTime& last_modified, const TrackInfo& track_info)
 {
     if(AudioLibraryTrack* track = findTrack(filepath))
@@ -113,6 +97,8 @@ void AudioLibrary::addTrack(const QString& filepath, const QDateTime& last_modif
                                         track_info.disc_number,
                                         track_info.comment,
                                         track_info.tag_types);
+
+    _is_modified = true;
 }
 
 void AudioLibrary::removeTrack(AudioLibraryTrack* track)
@@ -130,17 +116,9 @@ void AudioLibrary::removeTrack(AudioLibraryTrack* track)
         }
 
         _filepath_to_track_map.erase(track->_filepath);
-    }
-}
 
-void AudioLibrary::removeAlbum(AudioLibraryAlbum* album)
-{
-    for(AudioLibraryTrack* track : album->_tracks)
-    {
-        _filepath_to_track_map.erase(track->_filepath);
+        _is_modified = true;
     }
-
-    _album_map.erase(album->_key);
 }
 
 void AudioLibrary::removeTracksWithInvalidPaths()
@@ -198,6 +176,11 @@ AudioLibraryAlbum* AudioLibrary::getAlbum(const AudioLibraryAlbumKey& key) const
         return it->second.get();
 
     return nullptr;
+}
+
+bool AudioLibrary::isModified() const
+{
+    return _is_modified;
 }
 
 void AudioLibrary::cleanupTracksOutsideTheseDirectories(const QStringList& paths)
@@ -271,6 +254,7 @@ void AudioLibrary::Loader::init(AudioLibrary& library, QDataStream& s)
 
     _library->_album_map.clear();
     _library->_filepath_to_track_map.clear();
+    _library->_is_modified = false;
 
     qint32 version;
     s >> version;

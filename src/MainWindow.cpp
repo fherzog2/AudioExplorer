@@ -537,6 +537,16 @@ void MainWindow::onItemDoubleClicked(const QModelIndex &index)
 
 void MainWindow::saveLibrary()
 {
+    if (!_library_cache_loaded)
+        return; // don't save back a partially loaded library
+
+    {
+        std::lock_guard<SpinLock> lock(_library_spin_lock);
+
+        if (!_library.isModified())
+            return; // no need to save if the library has not changed
+    }
+
     QString cache_dir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
     QString filepath = cache_dir + "/AudioLibrary";
 

@@ -141,16 +141,16 @@ class AudioLibrary
 {
 public:
     AudioLibraryTrack* findTrack(const QString& filepath) const;
-    void addTrack(const QFileInfo& file_info);
     void addTrack(const QString& filepath, const QDateTime& last_modified, const TrackInfo& track_info);
 
     void removeTrack(AudioLibraryTrack* track);
-    void removeAlbum(AudioLibraryAlbum* album);
     void removeTracksWithInvalidPaths();
 
     std::vector<AudioLibraryAlbum*> getAlbums() const;
     void forEachAlbum(const std::function<void(AudioLibraryAlbum* album)>& func) const;
     AudioLibraryAlbum* getAlbum(const AudioLibraryAlbumKey& key) const;
+
+    bool isModified() const;
 
     void cleanupTracksOutsideTheseDirectories(const QStringList& paths);
     void save(QDataStream& s);
@@ -185,4 +185,5 @@ private:
 
     std::map<AudioLibraryAlbumKey, std::unique_ptr<AudioLibraryAlbum>> _album_map;
     std::unordered_map<QString, std::unique_ptr<AudioLibraryTrack>> _filepath_to_track_map;
+    bool _is_modified = false;
 };
