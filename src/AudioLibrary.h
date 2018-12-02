@@ -95,6 +95,7 @@ public:
         const QString& album_artist,
         const QString& title,
         int track_number,
+        int disc_number,
         const QString& comment,
         const QString& tag_types)
         : _album(album)
@@ -104,13 +105,14 @@ public:
         , _album_artist(album_artist)
         , _title(title)
         , _track_number(track_number)
+        , _disc_number(disc_number)
         , _comment(comment)
         , _tag_types(tag_types)
     {}
 
-    std::tuple<AudioLibraryAlbumKey, QByteArray, QString, QString, QString, QDateTime, QString, int, QString, QString> getMembersAsTuple() const
+    std::tuple<AudioLibraryAlbumKey, QByteArray, QString, QString, QString, QDateTime, QString, int, int, QString, QString> getMembersAsTuple() const
     {
-        return std::tie(_album->_key, _album->_cover, _artist, _album_artist, _filepath, _last_modified, _title, _track_number, _comment, _tag_types);
+        return std::tie(_album->_key, _album->_cover, _artist, _album_artist, _filepath, _last_modified, _title, _track_number, _disc_number, _comment, _tag_types);
     }
 
     bool operator==(const AudioLibraryTrack& other) const
@@ -130,6 +132,7 @@ public:
     QDateTime _last_modified;
     QString _title;
     int _track_number;
+    int _disc_number;
     QString _comment;
     QString _tag_types;
 };
@@ -176,6 +179,7 @@ private:
         const QString& album_artist,
         const QString& title,
         int track_number,
+        int disc_number,
         const QString& comment,
         const QString& tag_types);
 

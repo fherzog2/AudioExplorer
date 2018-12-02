@@ -83,10 +83,11 @@ namespace {
     TrackModelItem::TrackModelItem(const QIcon& icon, const QString& text, const AudioLibraryTrack* track, const QCollator& collator)
         : CollatedItem(icon, text, collator)
     {
-        QString sort_key = QString("%1 %2 %3 %4")
+        QString sort_key = QString("%1 %2 %3 %4 %5")
             .arg(track->_album->_key._artist)
             .arg(track->_album->_key._year)
             .arg(track->_album->_key._album)
+            .arg(track->_disc_number)
             .arg(track->_track_number);
         setData(sort_key);
     }
@@ -175,6 +176,7 @@ namespace {
         setAdditionalColumn(model, row, AudioLibraryView::COVER_CHECKSUM, QString("%3").arg(track->_album->_key._cover_checksum), collator);
         setAdditionalColumn(model, row, AudioLibraryView::TITLE, track->_title, collator);
         setAdditionalColumn(model, row, AudioLibraryView::TRACK_NUMBER, QString("%1").arg(track->_track_number), collator);
+        setAdditionalColumn(model, row, AudioLibraryView::DISC_NUMBER, QString("%1").arg(track->_disc_number), collator);
         setAdditionalColumn(model, row, AudioLibraryView::ALBUM_ARTIST, track->_album_artist, collator);
         setAdditionalColumn(model, row, AudioLibraryView::COMMENT, track->_comment, collator);
         setAdditionalColumn(model, row, AudioLibraryView::PATH, track->_filepath, collator);
@@ -276,6 +278,8 @@ QString AudioLibraryView::getColumnFriendlyName(Column column)
         return "Title";
     case TRACK_NUMBER:
         return "Track number";
+    case DISC_NUMBER:
+        return "Disc number";
     case ALBUM_ARTIST:
         return "Album Artist";
     case COMMENT:
@@ -300,6 +304,7 @@ std::vector<std::pair<AudioLibraryView::Column, QString>> AudioLibraryView::colu
     result.push_back(std::make_pair(COVER_CHECKSUM, "cover_checksum"));
     result.push_back(std::make_pair(TITLE, "title"));
     result.push_back(std::make_pair(TRACK_NUMBER, "track_number"));
+    result.push_back(std::make_pair(DISC_NUMBER, "disc_number"));
     result.push_back(std::make_pair(ALBUM_ARTIST, "album_artist"));
     result.push_back(std::make_pair(COMMENT, "comment"));
     result.push_back(std::make_pair(PATH, "path"));
@@ -351,6 +356,7 @@ std::vector<AudioLibraryView::Column> AudioLibraryView::getColumnsForDisplayMode
             AudioLibraryView::COVER_CHECKSUM,
             AudioLibraryView::TITLE,
             AudioLibraryView::TRACK_NUMBER,
+            AudioLibraryView::DISC_NUMBER,
             AudioLibraryView::ALBUM_ARTIST,
             AudioLibraryView::COMMENT,
             AudioLibraryView::PATH,
