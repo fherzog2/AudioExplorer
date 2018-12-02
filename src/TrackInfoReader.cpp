@@ -60,13 +60,6 @@ namespace{
     {
         appendTagType("ID3v2", info);
 
-        TagLib::ID3v2::FrameList album_artists = tag->frameListMap()["TPE2"];
-        for (TagLib::ID3v2::Frame* frame : album_artists)
-        {
-            info.album_artist = toQString(frame->toString());
-            break;
-        }
-
         if (info.cover.isEmpty())
         {
             TagLib::ID3v2::FrameList picture_frames = tag->frameListMap()["APIC"];
@@ -94,6 +87,28 @@ namespace{
             {
                 TagLib::ByteVector bytes = picture_frame->picture();
                 info.cover = QByteArray(bytes.data(), bytes.size());
+            }
+        }
+
+        if (info.album_artist.isEmpty())
+        {
+            const TagLib::ID3v2::FrameListMap& frame_list_map = tag->frameListMap();
+
+            auto it = frame_list_map.find("TPE2");
+            if (it != frame_list_map.end() && !it->second.isEmpty())
+            {
+                info.album_artist = toQString(it->second.front()->toString());
+            }
+        }
+
+        if (info.disc_number == 0)
+        {
+            const TagLib::ID3v2::FrameListMap& frame_list_map = tag->frameListMap();
+
+            auto it = frame_list_map.find("TPOS");
+            if (it != frame_list_map.end() && !it->second.isEmpty())
+            {
+                info.disc_number = it->second.front()->toString().toInt();
             }
         }
     }
@@ -142,6 +157,17 @@ namespace{
                 }
             }
         }
+
+        if (info.disc_number == 0)
+        {
+            const TagLib::Ogg::FieldListMap& field_list_map = tag->fieldListMap();
+
+            auto it = field_list_map.find("DISCNUMBER");
+            if (it != field_list_map.end() && !it->second.isEmpty())
+            {
+                info.disc_number = it->second.front().toInt();
+            }
+        }
     }
 
     void readMP4Info(TagLib::MP4::Tag* tag, TrackInfo& info)
@@ -177,6 +203,17 @@ namespace{
                 }
             }
         }
+
+        if (info.disc_number == 0)
+        {
+            const TagLib::MP4::ItemListMap& item_list_map = tag->itemListMap();
+
+            auto disc_number_item = item_list_map.find("disk");
+            if (disc_number_item != item_list_map.end())
+            {
+                info.disc_number = disc_number_item->second.toInt();
+            }
+        }
     }
 
     void readAPEInfo(TagLib::APE::Tag* tag, TrackInfo& info)
@@ -207,6 +244,17 @@ namespace{
             if (album_artist != item_map.end())
             {
                 info.album_artist = toQString(album_artist->second.toString());
+            }
+        }
+
+        if (info.disc_number == 0)
+        {
+            const TagLib::APE::ItemListMap& item_map = tag->itemListMap();
+
+            auto it = item_map.find("DISCNUMBER");
+            if (it != item_map.end())
+            {
+                info.disc_number = it->second.toString().toInt();
             }
         }
     }
@@ -247,6 +295,17 @@ namespace{
                 {
                     info.album_artist = toQString(album_artists->second.front().toString());
                 }
+            }
+        }
+
+        if (info.disc_number == 0)
+        {
+            const TagLib::ASF::AttributeListMap& attr_list_map = tag->attributeListMap();
+
+            auto it = attr_list_map.find("WM/PartOfSet");
+            if (it != attr_list_map.end() && !it->second.isEmpty())
+            {
+                info.disc_number = it->second.front().toString().toInt();
             }
         }
     }

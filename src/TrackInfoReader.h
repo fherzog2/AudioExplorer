@@ -9,12 +9,13 @@ struct TrackInfo
     QString artist;
     QString album_artist;
     QString album;
-    int year;
+    int year = 0;
     QString genre;
     QByteArray cover;
+    int disc_number = 0;
 
     QString title;
-    int track_number;
+    int track_number = 0;
     QString comment;
 
     QString tag_types;
