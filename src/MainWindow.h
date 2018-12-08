@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <thread>
+#include <mutex>
 #include <QtCore/qpointer.h>
 #include <QtGui/qstandarditemmodel.h>
 #include <QtWidgets/qboxlayout.h>
@@ -48,6 +49,37 @@ struct LateDeleter
     }
 };
 
+class ThreadSafeLibrary : public QObject
+{
+    Q_OBJECT
+
+public:
+    class LibraryAccessor
+    {
+    public:
+        LibraryAccessor(ThreadSafeLibrary& data);
+
+        const AudioLibrary& getLibrary() const;
+        AudioLibrary& getLibraryForUpdate() const;
+
+    private:
+        std::lock_guard<SpinLock> _lock;
+        AudioLibrary& _library;
+    };
+
+    std::atomic_bool _abort_loading = false;
+    std::atomic_bool _library_cache_loaded = false;
+
+signals:
+    void libraryCacheLoaded();
+    void libraryLoadProgressed(int files_loaded, int files_skipped);
+    void libraryLoadFinished(int files_loaded, int files_skipped, float duration_sec);
+
+private:
+    SpinLock _library_spin_lock;
+    AudioLibrary _library;
+};
+
 class MainWindow : public QFrame
 {
     Q_OBJECT
@@ -58,11 +90,6 @@ public:
 
     virtual bool eventFilter(QObject* watched, QEvent* event) override;
     void setBreadCrumb(AudioLibraryView* view);
-
-signals:
-    void libraryCacheLoaded();
-    void libraryLoadProgressed(int files_loaded, int files_skipped);
-    void libraryLoadFinished(int files_loaded, int files_skipped, float duration_sec);
 
 protected:
     virtual void closeEvent(QCloseEvent* e) override;
@@ -83,10 +110,10 @@ private:
     void onItemDoubleClicked(const QModelIndex &index);
 
     void saveLibrary();
-    void loadLibrary();
+    static void loadLibrary(QStringList audio_dir_paths, ThreadSafeLibrary& library);
     void scanAudioDirs();
     void abortScanAudioDirs();
-    void scanAudioDirsThreadFunc(QStringList audio_dir_paths);
+    static void scanAudioDirsThreadFunc(QStringList audio_dir_paths, ThreadSafeLibrary& library);
     const AudioLibraryView* getCurrentView() const;
     void updateCurrentView();
     void advanceIconSize(int direction);
@@ -108,13 +135,12 @@ private:
     QListView* _list = nullptr;
     QTableView* _table = nullptr;
     QStackedWidget* _view_stack = nullptr;
-    AudioLibrary _library;
-    SpinLock _library_spin_lock;
-    std::atomic_bool _abort_flag;
+
+    ThreadSafeLibrary _library;
+
     std::thread _library_load_thread;
     std::chrono::steady_clock::time_point _last_view_update_time;
     bool _is_last_view_update_time_valid = false;
-    std::atomic_bool _library_cache_loaded;
 
     QLineEdit* _search_field = nullptr;
     QPointer<QWidget> _advanced_search_dialog = nullptr;

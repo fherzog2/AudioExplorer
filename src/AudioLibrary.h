@@ -153,7 +153,7 @@ public:
     bool isModified() const;
 
     void cleanupTracksOutsideTheseDirectories(const QStringList& paths);
-    void save(QDataStream& s);
+    void save(QDataStream& s) const;
     void load(QDataStream& s);
 
     class Loader

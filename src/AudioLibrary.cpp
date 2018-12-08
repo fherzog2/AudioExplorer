@@ -87,16 +87,16 @@ void AudioLibrary::addTrack(const QString& filepath, const QDateTime& last_modif
     AudioLibraryAlbum* album = addAlbum(AudioLibraryAlbumKey(track_info),
                                         track_info.cover);
 
-    AudioLibraryTrack* track = addTrack(album,
-                                        filepath,
-                                        last_modified,
-                                        track_info.artist,
-                                        track_info.album_artist,
-                                        track_info.title,
-                                        track_info.track_number,
-                                        track_info.disc_number,
-                                        track_info.comment,
-                                        track_info.tag_types);
+    addTrack(album,
+        filepath,
+        last_modified,
+        track_info.artist,
+        track_info.album_artist,
+        track_info.title,
+        track_info.track_number,
+        track_info.disc_number,
+        track_info.comment,
+        track_info.tag_types);
 
     _is_modified = true;
 }
@@ -210,7 +210,7 @@ void AudioLibrary::cleanupTracksOutsideTheseDirectories(const QStringList& paths
     }
 }
 
-void AudioLibrary::save(QDataStream& s)
+void AudioLibrary::save(QDataStream& s) const
 {
     s << qint32(3); // version
 
