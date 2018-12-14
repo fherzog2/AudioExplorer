@@ -120,6 +120,7 @@ private:
     void addViewTypeTab(QWidget* view, const QString& friendly_name, const QString& internal_name);
     void getFilepathsFromIndex(const QModelIndex& index, std::vector<QString>& filepaths);
     void forEachFilepathAtIndex(const QModelIndex& index, std::function<void(const QString&)> callback);
+    QString getItemId(QStandardItem* item) const;
 
     void addBreadCrumb(AudioLibraryView* view);
     void clearBreadCrumbs();
@@ -154,7 +155,12 @@ private:
 
         int _table_sort_indicator_section;
         Qt::SortOrder _table_sort_indicator_order;
+
+        std::vector<QString> _selected_items;
     };
+
+    std::unique_ptr<ViewRestoreData> saveViewSettings() const;
+    void restoreViewSettings(ViewRestoreData* restore_data);
 
     struct Breadcrumb
     {

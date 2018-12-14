@@ -539,7 +539,7 @@ void MainWindow::onItemDoubleClicked(const QModelIndex &index)
     auto found = _views_for_items.find(item);
     if (found != _views_for_items.end())
     {
-        addBreadCrumb(found->second.release());
+        addBreadCrumb(found->second->clone());
         return;
     }
 
@@ -717,6 +717,8 @@ const AudioLibraryView* MainWindow::getCurrentView() const
 
 void MainWindow::updateCurrentView()
 {
+    auto view_settings = saveViewSettings();
+
     _views_for_items.clear();
 
     auto supported_modes = _breadcrumbs.back()._view->getSupportedModes();
@@ -805,6 +807,8 @@ void MainWindow::updateCurrentView()
     _model = model;
     _list->setModel(model);
     _table->setModel(model);
+
+    restoreViewSettings(view_settings.get());
 
     _last_view_update_time = std::chrono::steady_clock::now();
     _is_last_view_update_time_valid = true;
@@ -901,6 +905,29 @@ void MainWindow::forEachFilepathAtIndex(const QModelIndex& index, std::function<
     }
 }
 
+/**
+* @return A unique identifier for the item.
+*/
+QString MainWindow::getItemId(QStandardItem* item) const
+{
+    auto view_it = _views_for_items.find(item);
+    if (view_it != _views_for_items.end())
+    {
+        return view_it->second->getId();
+    }
+
+    // tracks are not associated with a view, use the filepath as ID instead
+
+    if (QStandardItem* path_item = _model->item(item->row(), AudioLibraryView::PATH))
+    {
+        return path_item->text();
+    }
+
+    // normally every item has some ID, this line can only be reached through programming error
+
+    return QString::null;
+}
+
 void MainWindow::setBreadCrumb(AudioLibraryView* view)
 {
     clearBreadCrumbs();
@@ -913,14 +940,7 @@ void MainWindow::addBreadCrumb(AudioLibraryView* view)
     {
         // if this isn't the first breadcrumb, create restore information so the view looks the same when going back
 
-        _breadcrumbs.back()._restore_data.reset(new ViewRestoreData());
-        ViewRestoreData* restore_data = _breadcrumbs.back()._restore_data.get();
-
-        restore_data->_list_scroll_pos  = getRelativeScrollPos(_list->verticalScrollBar());
-        restore_data->_table_scroll_pos = getRelativeScrollPos(_table->verticalScrollBar());
-
-        restore_data->_table_sort_indicator_section = _table->horizontalHeader()->sortIndicatorSection();
-        restore_data->_table_sort_indicator_order = _table->horizontalHeader()->sortIndicatorOrder();
+        _breadcrumbs.back()._restore_data = saveViewSettings();
     }
 
     QPushButton* button = new QPushButton(view->getDisplayName(), this);
@@ -967,10 +987,72 @@ void MainWindow::restoreBreadCrumb(QObject* object)
     // restore uses a timer because the list view is updating asynchronously
 
     QTimer::singleShot(1, this, [=]() {
-        setRelativeScrollPos(_list->verticalScrollBar(),  restore_data->_list_scroll_pos);
-        setRelativeScrollPos(_table->verticalScrollBar(), restore_data->_table_scroll_pos);
-
-        if(restore_data->_table_sort_indicator_section >= 0)
-            _table->sortByColumn(restore_data->_table_sort_indicator_section, restore_data->_table_sort_indicator_order);
+        restoreViewSettings(restore_data.get());
     });
+}
+
+std::unique_ptr<MainWindow::ViewRestoreData> MainWindow::saveViewSettings() const
+{
+    std::unique_ptr<MainWindow::ViewRestoreData> restore_data(new ViewRestoreData());
+
+    restore_data->_list_scroll_pos = getRelativeScrollPos(_list->verticalScrollBar());
+    restore_data->_table_scroll_pos = getRelativeScrollPos(_table->verticalScrollBar());
+
+    restore_data->_table_sort_indicator_section = _table->horizontalHeader()->sortIndicatorSection();
+    restore_data->_table_sort_indicator_order = _table->horizontalHeader()->sortIndicatorOrder();
+
+    // save selection
+
+    QModelIndexList selected_indexes = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget())->selectionModel()->selectedIndexes();
+    for (const QModelIndex& index : selected_indexes)
+    {
+        if (index.column() != AudioLibraryView::ZERO)
+            continue;
+
+        QString id = getItemId(_model->itemFromIndex(index));
+        if (!id.isEmpty())
+            restore_data->_selected_items.push_back(id);
+    }
+
+    return restore_data;
+}
+
+void MainWindow::restoreViewSettings(ViewRestoreData* restore_data)
+{
+    setRelativeScrollPos(_list->verticalScrollBar(), restore_data->_list_scroll_pos);
+    setRelativeScrollPos(_table->verticalScrollBar(), restore_data->_table_scroll_pos);
+
+    if (restore_data->_table_sort_indicator_section >= 0)
+        _table->sortByColumn(restore_data->_table_sort_indicator_section, restore_data->_table_sort_indicator_order);
+
+    // restore selection
+
+    std::unordered_map<QString, QModelIndex> id_to_index_map;
+
+    for (int i = 0, end = _model->rowCount(); i < end; ++i)
+    {
+        QModelIndex index = _model->index(i, AudioLibraryView::ZERO);
+        if (QStandardItem* item = _model->itemFromIndex(index))
+        {
+            QString id = getItemId(item);
+            if (!id.isEmpty())
+            {
+                id_to_index_map[id] = index;
+            }
+        }
+    }
+
+    QItemSelection selection;
+
+    for (const QString& id : restore_data->_selected_items)
+    {
+        auto item_it = id_to_index_map.find(id);
+        if (item_it != id_to_index_map.end())
+        {
+            QModelIndex end = _model->index(item_it->second.row(), _model->columnCount() - 1);
+            selection.push_back(QItemSelectionRange(item_it->second, end));
+        }
+    }
+
+    qobject_cast<QAbstractItemView*>(_view_stack->currentWidget())->selectionModel()->select(selection, QItemSelectionModel::ClearAndSelect);
 }

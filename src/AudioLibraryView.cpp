@@ -369,6 +369,11 @@ std::vector<AudioLibraryView::Column> AudioLibraryView::getColumnsForDisplayMode
 
 //=============================================================================
 
+AudioLibraryView* AudioLibraryViewAllArtists::clone() const
+{
+    return new AudioLibraryViewAllArtists(*this);
+}
+
 QString AudioLibraryViewAllArtists::getDisplayName() const
 {
     return "Artists";
@@ -430,7 +435,18 @@ void AudioLibraryViewAllArtists::resolveToTracks(const AudioLibrary& library, st
     // top level view doesn't need to implement this
 }
 
+QString AudioLibraryViewAllArtists::getId() const
+{
+    // top level view doesn't need to implement this
+    return QString::null;
+}
+
 //=============================================================================
+
+AudioLibraryView* AudioLibraryViewAllAlbums::clone() const
+{
+    return new AudioLibraryViewAllAlbums(*this);
+}
 
 QString AudioLibraryViewAllAlbums::getDisplayName() const
 {
@@ -463,7 +479,18 @@ void AudioLibraryViewAllAlbums::resolveToTracks(const AudioLibrary& library, std
     // top level view doesn't need to implement this
 }
 
+QString AudioLibraryViewAllAlbums::getId() const
+{
+    // top level view doesn't need to implement this
+    return QString::null;
+}
+
 //=============================================================================
+
+AudioLibraryView* AudioLibraryViewAllTracks::clone() const
+{
+    return new AudioLibraryViewAllTracks(*this);
+}
 
 QString AudioLibraryViewAllTracks::getDisplayName() const
 {
@@ -501,7 +528,18 @@ void AudioLibraryViewAllTracks::resolveToTracks(const AudioLibrary& library, std
     // top level view doesn't need to implement this
 }
 
+QString AudioLibraryViewAllTracks::getId() const
+{
+    // top level view doesn't need to implement this
+    return QString::null;
+}
+
 //=============================================================================
+
+AudioLibraryView* AudioLibraryViewAllYears::clone() const
+{
+    return new AudioLibraryViewAllYears(*this);
+}
 
 QString AudioLibraryViewAllYears::getDisplayName() const
 {
@@ -526,7 +564,18 @@ void AudioLibraryViewAllYears::resolveToTracks(const AudioLibrary& library, std:
     // top level view doesn't need to implement this
 }
 
+QString AudioLibraryViewAllYears::getId() const
+{
+    // top level view doesn't need to implement this
+    return QString::null;
+}
+
 //=============================================================================
+
+AudioLibraryView* AudioLibraryViewAllGenres::clone() const
+{
+    return new AudioLibraryViewAllGenres(*this);
+}
 
 QString AudioLibraryViewAllGenres::getDisplayName() const
 {
@@ -551,11 +600,22 @@ void AudioLibraryViewAllGenres::resolveToTracks(const AudioLibrary& library, std
     // top level view doesn't need to implement this
 }
 
+QString AudioLibraryViewAllGenres::getId() const
+{
+    // top level view doesn't need to implement this
+    return QString::null;
+}
+
 //=============================================================================
 
 AudioLibraryViewArtist::AudioLibraryViewArtist(const QString& artist)
     : _artist(artist)
 {
+}
+
+AudioLibraryView* AudioLibraryViewArtist::clone() const
+{
+    return new AudioLibraryViewArtist(*this);
 }
 
 QString AudioLibraryViewArtist::getDisplayName() const
@@ -616,11 +676,21 @@ void AudioLibraryViewArtist::resolveToTracks(const AudioLibrary& library, std::v
     }
 }
 
+QString AudioLibraryViewArtist::getId() const
+{
+    return QString("view:artist=%1").arg(_artist);
+}
+
 //=============================================================================
 
 AudioLibraryViewAlbum::AudioLibraryViewAlbum(const AudioLibraryAlbumKey& key)
     : _key(key)
 {
+}
+
+AudioLibraryView* AudioLibraryViewAlbum::clone() const
+{
+    return new AudioLibraryViewAlbum(*this);
 }
 
 QString AudioLibraryViewAlbum::getDisplayName() const
@@ -665,11 +735,26 @@ void AudioLibraryViewAlbum::resolveToTracks(const AudioLibrary& library, std::ve
     }
 }
 
+QString AudioLibraryViewAlbum::getId() const
+{
+    return QString("view:album=%1,%2,%3,%4,%5")
+        .arg(_key._artist)
+        .arg(_key._album)
+        .arg(_key._genre)
+        .arg(_key._year)
+        .arg(_key._cover_checksum);
+}
+
 //=============================================================================
 
 AudioLibraryViewYear::AudioLibraryViewYear(int year)
     : _year(year)
 {
+}
+
+AudioLibraryView* AudioLibraryViewYear::clone() const
+{
+    return new AudioLibraryViewYear(*this);
 }
 
 QString AudioLibraryViewYear::getDisplayName() const
@@ -712,11 +797,21 @@ void AudioLibraryViewYear::resolveToTracks(const AudioLibrary& library, std::vec
     }
 }
 
+QString AudioLibraryViewYear::getId() const
+{
+    return QString("view:year=%1").arg(_year);
+}
+
 //=============================================================================
 
 AudioLibraryViewGenre::AudioLibraryViewGenre(const QString& genre)
     : _genre(genre)
 {
+}
+
+AudioLibraryView* AudioLibraryViewGenre::clone() const
+{
+    return new AudioLibraryViewGenre(*this);
 }
 
 QString AudioLibraryViewGenre::getDisplayName() const
@@ -759,11 +854,21 @@ void AudioLibraryViewGenre::resolveToTracks(const AudioLibrary& library, std::ve
     }
 }
 
+QString AudioLibraryViewGenre::getId() const
+{
+    return QString("view:genre=%1").arg(_genre);
+}
+
 //=============================================================================
 
 AudioLibraryViewSimpleSearch::AudioLibraryViewSimpleSearch(const QString& search_text)
     : _search_text(search_text)
 {}
+
+AudioLibraryView* AudioLibraryViewSimpleSearch::clone() const
+{
+    return new AudioLibraryViewSimpleSearch(*this);
+}
 
 QString AudioLibraryViewSimpleSearch::getDisplayName() const
 {
@@ -825,6 +930,12 @@ void AudioLibraryViewSimpleSearch::resolveToTracks(const AudioLibrary& library, 
     // top level view doesn't need to implement this
 }
 
+QString AudioLibraryViewSimpleSearch::getId() const
+{
+    // top level view doesn't need to implement this
+    return QString::null;
+}
+
 bool AudioLibraryViewSimpleSearch::match(const QString& input, const QVector<QStringRef>& strings_to_match)
 {
     for (const QStringRef& ref : strings_to_match)
@@ -839,6 +950,11 @@ bool AudioLibraryViewSimpleSearch::match(const QString& input, const QVector<QSt
 AudioLibraryViewAdvancedSearch::AudioLibraryViewAdvancedSearch(const Query& query)
     : _query(query)
 {
+}
+
+AudioLibraryView* AudioLibraryViewAdvancedSearch::clone() const
+{
+    return new AudioLibraryViewAdvancedSearch(*this);
 }
 
 QString AudioLibraryViewAdvancedSearch::getDisplayName() const
@@ -946,7 +1062,18 @@ void AudioLibraryViewAdvancedSearch::resolveToTracks(const AudioLibrary& library
     // top level view doesn't need to implement this
 }
 
+QString AudioLibraryViewAdvancedSearch::getId() const
+{
+    // top level view doesn't need to implement this
+    return QString::null;
+}
+
 //=============================================================================
+
+AudioLibraryView* AudioLibraryViewDuplicateAlbums::clone() const
+{
+    return new AudioLibraryViewDuplicateAlbums(*this);
+}
 
 QString AudioLibraryViewDuplicateAlbums::getDisplayName() const
 {
@@ -1011,4 +1138,10 @@ void AudioLibraryViewDuplicateAlbums::createItems(const AudioLibrary& library,
 void AudioLibraryViewDuplicateAlbums::resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const
 {
     // top level view doesn't need to implement this
+}
+
+QString AudioLibraryViewDuplicateAlbums::getId() const
+{
+    // top level view doesn't need to implement this
+    return QString::null;
 }
