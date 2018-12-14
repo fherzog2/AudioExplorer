@@ -72,8 +72,8 @@ public:
 
 signals:
     void libraryCacheLoaded();
-    void libraryLoadProgressed(int files_loaded, int files_skipped);
-    void libraryLoadFinished(int files_loaded, int files_skipped, float duration_sec);
+    void libraryLoadProgressed(int files_loaded, int files_in_cache);
+    void libraryLoadFinished(int files_loaded, int files_in_cache, float duration_sec);
 
 private:
     SpinLock _library_spin_lock;
@@ -98,8 +98,8 @@ private:
     void onEditPreferences();
     void onOpenAdvancedSearch();
     void onLibraryCacheLoaded();
-    void onLibraryLoadProgressed(int files_loaded, int files_skipped);
-    void onLibraryLoadFinished(int files_loaded, int files_skipped, float duration_sec);
+    void onLibraryLoadProgressed(int files_loaded, int files_in_cache);
+    void onLibraryLoadFinished(int files_loaded, int files_in_cache, float duration_sec);
     void onShowDuplicateAlbums();
     void onSearchEnterPressed();
     void onBreadCrumbClicked();

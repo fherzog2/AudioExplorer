@@ -424,9 +424,9 @@ void MainWindow::onLibraryCacheLoaded()
     updateCurrentView();
 }
 
-void MainWindow::onLibraryLoadProgressed(int files_loaded, int files_skipped)
+void MainWindow::onLibraryLoadProgressed(int files_loaded, int files_in_cache)
 {
-    _progress_label->setText(QString("Scan audio dirs: %1 files loaded, %2 files skipped").arg(files_loaded).arg(files_skipped));
+    _progress_label->setText(QString("Scan audio dirs: %1 files loaded, %2 files in cache").arg(files_loaded).arg(files_in_cache));
 
     auto now = std::chrono::steady_clock::now();
     auto time_span = now - _last_view_update_time;
@@ -436,9 +436,9 @@ void MainWindow::onLibraryLoadProgressed(int files_loaded, int files_skipped)
     }
 }
 
-void MainWindow::onLibraryLoadFinished(int files_loaded, int files_skipped, float duration_sec)
+void MainWindow::onLibraryLoadFinished(int files_loaded, int files_in_cache, float duration_sec)
 {
-    _progress_label->setText(QString("Scan audio dirs: %1 files loaded, %2 files skipped in %3 seconds").arg(files_loaded).arg(files_skipped).arg(duration_sec, 0, 'f', 1));
+    _progress_label->setText(QString("Scan audio dirs: %1 files loaded, %2 files in cache in %3 seconds").arg(files_loaded).arg(files_in_cache).arg(duration_sec, 0, 'f', 1));
 
     updateCurrentView();
 }
@@ -659,7 +659,7 @@ void MainWindow::abortScanAudioDirs()
 void MainWindow::scanAudioDirsThreadFunc(QStringList audio_dir_paths, ThreadSafeLibrary& library)
 {
     int files_loaded = 0;
-    int files_skipped = 0;
+    int files_in_cache = 0;
     auto start_time = std::chrono::system_clock::now();
 
     if(!library._library_cache_loaded)
@@ -671,7 +671,7 @@ void MainWindow::scanAudioDirsThreadFunc(QStringList audio_dir_paths, ThreadSafe
 
     for (const QString& dirpath : audio_dir_paths)
     {
-        forEachFileInDirectory(dirpath, [&library, &files_loaded, &files_skipped](const QFileInfo& file) {
+        forEachFileInDirectory(dirpath, [&library, &files_loaded, &files_in_cache](const QFileInfo& file) {
             if (library._abort_loading)
                 return false; // stop iteration
 
@@ -684,8 +684,8 @@ void MainWindow::scanAudioDirsThreadFunc(QStringList audio_dir_paths, ThreadSafe
                 if (AudioLibraryTrack* track = acc.getLibrary().findTrack(filepath))
                     if (track->_last_modified == last_modified)
                     {
-                        ++files_skipped;
-                        library.libraryLoadProgressed(files_loaded, files_skipped);
+                        ++files_in_cache;
+                        library.libraryLoadProgressed(files_loaded, files_in_cache);
                         return true; // nothing to do
                     }
             }
@@ -693,13 +693,15 @@ void MainWindow::scanAudioDirsThreadFunc(QStringList audio_dir_paths, ThreadSafe
             TrackInfo track_info;
             if (readTrackInfo(filepath, track_info))
             {
-                ThreadSafeLibrary::LibraryAccessor acc(library);
+                {
+                    ThreadSafeLibrary::LibraryAccessor acc(library);
 
-                acc.getLibraryForUpdate().addTrack(filepath, last_modified, track_info);
+                    acc.getLibraryForUpdate().addTrack(filepath, last_modified, track_info);
+                }
+
+                ++files_loaded;
+                library.libraryLoadProgressed(files_loaded, files_in_cache);
             }
-
-            ++files_loaded;
-            library.libraryLoadProgressed(files_loaded, files_skipped);
             return true;
         });
     }
@@ -707,7 +709,7 @@ void MainWindow::scanAudioDirsThreadFunc(QStringList audio_dir_paths, ThreadSafe
     auto end_time = std::chrono::system_clock::now();
     auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
 
-    library.libraryLoadFinished(files_loaded, files_skipped, float(millis.count()) / 1000.0);
+    library.libraryLoadFinished(files_loaded, files_in_cache, float(millis.count()) / 1000.0);
 }
 
 const AudioLibraryView* MainWindow::getCurrentView() const
