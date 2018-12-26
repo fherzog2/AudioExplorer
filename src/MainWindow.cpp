@@ -14,7 +14,6 @@
 #include <QtGui/qevent.h>
 #include <QtGui/qimagereader.h>
 #include <QtWidgets/qapplication.h>
-#include <QtWidgets/qlabel.h>
 #include <QtWidgets/qmenubar.h>
 #include <QtWidgets/qscrollbar.h>
 #include <QtWidgets/qshortcut.h>
@@ -38,13 +37,13 @@ namespace
     }
 
     template<class T>
-    QPushButton* createViewCreatorButton(MainWindow* parent)
+    QPushButton* createViewCreatorButton(QWidget* parent, MainWindow* main_window)
     {
         std::unique_ptr<T> dummy(new T());
 
         QPushButton* button = new QPushButton(dummy->getDisplayName(), parent);
-        QObject::connect(button, &QPushButton::clicked, parent, [parent](){
-            parent->setBreadCrumb(new T());
+        QObject::connect(button, &QPushButton::clicked, main_window, [main_window](){
+            main_window->setBreadCrumb(new T());
         });
 
         return button;
@@ -124,16 +123,18 @@ MainWindow::MainWindow(Settings& settings)
     addMenuAction(*viewmenu, "Badly tagged albums", this, &MainWindow::onShowDuplicateAlbums);
     addMenuAction(*viewmenu, "Reload all files", this, &MainWindow::scanAudioDirs, Qt::Key_F5);
 
-    QPushButton* artists_button = createViewCreatorButton<AudioLibraryViewAllArtists>(this);
-    QPushButton* albums_button = createViewCreatorButton<AudioLibraryViewAllAlbums>(this);
-    QPushButton* tracks_button = createViewCreatorButton<AudioLibraryViewAllTracks>(this);
-    QPushButton* years_button = createViewCreatorButton<AudioLibraryViewAllYears>(this);
-    QPushButton* genres_button = createViewCreatorButton<AudioLibraryViewAllGenres>(this);
+    auto toolarea = new QWidget(this);
 
-    _search_field = new QLineEdit(this);
+    QPushButton* artists_button = createViewCreatorButton<AudioLibraryViewAllArtists>(toolarea, this);
+    QPushButton* albums_button = createViewCreatorButton<AudioLibraryViewAllAlbums>(toolarea, this);
+    QPushButton* tracks_button = createViewCreatorButton<AudioLibraryViewAllTracks>(toolarea, this);
+    QPushButton* years_button = createViewCreatorButton<AudioLibraryViewAllYears>(toolarea, this);
+    QPushButton* genres_button = createViewCreatorButton<AudioLibraryViewAllGenres>(toolarea, this);
+
+    _search_field = new QLineEdit(toolarea);
     _search_field->setPlaceholderText("Search");
 
-    _display_mode_tabs = new QTabBar(this);
+    _display_mode_tabs = new QTabBar(toolarea);
     _display_mode_tabs->setAutoHide(true);
 
     _model = new QStandardItemModel(this);
@@ -191,7 +192,7 @@ MainWindow::MainWindow(Settings& settings)
     _view_stack->addWidget(_table);
     _view_stack->setCurrentWidget(_list);
 
-    _view_type_tabs = new QTabBar(this);
+    _view_type_tabs = new QTabBar(toolarea);
     addViewTypeTab(_list, "Icons", "icons");
     addViewTypeTab(_table, "Table", "table");
 
@@ -211,10 +212,9 @@ MainWindow::MainWindow(Settings& settings)
             break;
         }
 
-    _progress_label = new QLabel(this);
+    _status_bar = new QStatusBar(this);
+    _status_bar->setSizeGripEnabled(false);
 
-    QVBoxLayout* vbox = new QVBoxLayout(this);
-    vbox->setMenuBar(menubar);
     QHBoxLayout* view_buttons_layout = new QHBoxLayout();
     view_buttons_layout->addWidget(artists_button);
     view_buttons_layout->addWidget(albums_button);
@@ -223,16 +223,25 @@ MainWindow::MainWindow(Settings& settings)
     view_buttons_layout->addWidget(genres_button);
     view_buttons_layout->addStretch(1);
     view_buttons_layout->addWidget(_search_field);
-    vbox->addLayout(view_buttons_layout);
-    _breadcrumb_layout = new QHBoxLayout();
+
     QHBoxLayout* breadcrumb_layout_wrapper = new QHBoxLayout();
+    _breadcrumb_layout = new QHBoxLayout();
     breadcrumb_layout_wrapper->addLayout(_breadcrumb_layout);
     breadcrumb_layout_wrapper->addStretch();
     breadcrumb_layout_wrapper->addWidget(_display_mode_tabs);
     breadcrumb_layout_wrapper->addWidget(_view_type_tabs);
-    vbox->addLayout(breadcrumb_layout_wrapper);
+
+    QVBoxLayout* tool_vbox = new QVBoxLayout(toolarea);
+    tool_vbox->addLayout(view_buttons_layout);
+    tool_vbox->addLayout(breadcrumb_layout_wrapper);
+
+    QVBoxLayout* vbox = new QVBoxLayout(this);
+    vbox->setMargin(0);
+    vbox->setSpacing(0);
+    vbox->setMenuBar(menubar);
+    vbox->addWidget(toolarea);
     vbox->addWidget(_view_stack);
-    vbox->addWidget(_progress_label);
+    vbox->addWidget(_status_bar);
 
     connect(&_library, &ThreadSafeLibrary::libraryCacheLoaded, this, &MainWindow::onLibraryCacheLoaded);
     connect(&_library, &ThreadSafeLibrary::libraryLoadProgressed, this, &MainWindow::onLibraryLoadProgressed);
@@ -426,7 +435,7 @@ void MainWindow::onLibraryCacheLoaded()
 
 void MainWindow::onLibraryLoadProgressed(int files_loaded, int files_in_cache)
 {
-    _progress_label->setText(QString("Scan audio dirs: %1 files loaded, %2 files in cache").arg(files_loaded).arg(files_in_cache));
+    _status_bar->showMessage(QString("Scan audio dirs: %1 files loaded, %2 files in cache").arg(files_loaded).arg(files_in_cache));
 
     auto now = std::chrono::steady_clock::now();
     auto time_span = now - _last_view_update_time;
@@ -438,7 +447,7 @@ void MainWindow::onLibraryLoadProgressed(int files_loaded, int files_in_cache)
 
 void MainWindow::onLibraryLoadFinished(int files_loaded, int files_in_cache, float duration_sec)
 {
-    _progress_label->setText(QString("Scan audio dirs: %1 files loaded, %2 files in cache in %3 seconds").arg(files_loaded).arg(files_in_cache).arg(duration_sec, 0, 'f', 1));
+    _status_bar->showMessage(QString("Scan audio dirs: %1 files loaded, %2 files in cache in %3 seconds").arg(files_loaded).arg(files_in_cache).arg(duration_sec, 0, 'f', 1));
 
     updateCurrentView();
 }

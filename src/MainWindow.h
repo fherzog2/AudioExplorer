@@ -8,10 +8,10 @@
 #include <QtGui/qstandarditemmodel.h>
 #include <QtWidgets/qboxlayout.h>
 #include <QtWidgets/qframe.h>
-#include <QtWidgets/qlabel.h>
 #include <QtWidgets/qlineedit.h>
 #include <QtWidgets/qlistview.h>
 #include <QtWidgets/qpushbutton.h>
+#include <QtWidgets/qstatusbar.h>
 #include <QtWidgets/qtableview.h>
 #include <QtWidgets/qstackedwidget.h>
 
@@ -178,7 +178,7 @@ private:
     // for each combination of display modes, remember the users choice
     std::vector<std::pair<std::vector<AudioLibraryView::DisplayMode>, AudioLibraryView::DisplayMode>> _selected_display_modes;
 
-    QLabel* _progress_label = nullptr;
+    QStatusBar* _status_bar = nullptr;
 
     bool _is_dragging = false;
     QPoint _drag_start_pos;
