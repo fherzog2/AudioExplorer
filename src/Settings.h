@@ -89,13 +89,14 @@ class Settings
 public:
     Settings();
 
+private:
+    SettingsAdapter _settings;
+
+public:
     SettingsItemWindowGeometry main_window_geometry;
     SettingsItemWindowGeometry settings_window_geometry;
     SettingsItem<QStringList> audio_dir_paths;
     SettingsItem<QHash<QString, QVariant>> audio_library_view_column_widths;
     SettingsItem<QString> main_window_view_type;
     SettingsItem<int> main_window_icon_size;
-
-private:
-    SettingsAdapter _settings;
 };

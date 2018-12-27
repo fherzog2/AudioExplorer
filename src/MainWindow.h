@@ -67,8 +67,8 @@ public:
         AudioLibrary& _library;
     };
 
-    std::atomic_bool _abort_loading = false;
-    std::atomic_bool _library_cache_loaded = false;
+    std::atomic_bool _abort_loading = ATOMIC_VAR_INIT(false);
+    std::atomic_bool _library_cache_loaded = ATOMIC_VAR_INIT(false);
 
 signals:
     void libraryCacheLoaded();

@@ -51,7 +51,7 @@ namespace{
         info.tag_types += type;
     }
 
-    void readID3v1Info(TagLib::ID3v1::Tag* tag, TrackInfo& info)
+    void readID3v1Info(TrackInfo& info)
     {
         appendTagType("ID3v1", info);
     }
@@ -310,12 +310,12 @@ namespace{
         }
     }
 
-    void readModInfo(TagLib::Mod::Tag* tag, TrackInfo& info)
+    void readModInfo(TrackInfo& info)
     {
         appendTagType("MOD", info);
     }
 
-    void readInfoInfo(TagLib::RIFF::Info::Tag* tag, TrackInfo& info)
+    void readInfoInfo(TrackInfo& info)
     {
         appendTagType("Info", info);
     }
@@ -338,7 +338,7 @@ bool readTrackInfo(const QString& filepath, TrackInfo& info)
             if (TagLib::MPEG::File* file = dynamic_cast<TagLib::MPEG::File*>(file_ref.file()))
             {
                 if (file->hasID3v1Tag())
-                    readID3v1Info(file->ID3v1Tag(), info);
+                    readID3v1Info(info);
                 if (file->hasID3v2Tag())
                     readID3v2Info(file->ID3v2Tag(), info);
                 if (file->hasAPETag())
@@ -365,7 +365,7 @@ bool readTrackInfo(const QString& filepath, TrackInfo& info)
                 if (file->hasID3v2Tag())
                     readID3v2Info(file->ID3v2Tag(), info);
                 if (file->hasInfoTag())
-                    readInfoInfo(file->InfoTag(), info);
+                    readInfoInfo(info);
             }
             if (TagLib::RIFF::AIFF::File* file = dynamic_cast<TagLib::RIFF::AIFF::File*>(file_ref.file()))
             {
@@ -375,7 +375,7 @@ bool readTrackInfo(const QString& filepath, TrackInfo& info)
             if (TagLib::MPC::File* file = dynamic_cast<TagLib::MPC::File*>(file_ref.file()))
             {
                 if (file->hasID3v1Tag())
-                    readID3v1Info(file->ID3v1Tag(), info);
+                    readID3v1Info(info);
                 if (file->hasAPETag())
                     readAPEInfo(file->APETag(), info);
             }
@@ -387,7 +387,7 @@ bool readTrackInfo(const QString& filepath, TrackInfo& info)
             if (TagLib::FLAC::File* file = dynamic_cast<TagLib::FLAC::File*>(file_ref.file()))
             {
                 if (file->hasID3v1Tag())
-                    readID3v1Info(file->ID3v1Tag(), info);
+                    readID3v1Info(info);
                 if (file->hasID3v2Tag())
                     readID3v2Info(file->ID3v2Tag(), info);
                 if (file->hasXiphComment())
@@ -400,37 +400,37 @@ bool readTrackInfo(const QString& filepath, TrackInfo& info)
             if (TagLib::APE::File* file = dynamic_cast<TagLib::APE::File*>(file_ref.file()))
             {
                 if (file->hasID3v1Tag())
-                    readID3v1Info(file->ID3v1Tag(), info);
+                    readID3v1Info(info);
                 if (file->hasAPETag())
                     readAPEInfo(file->APETag(), info);
             }
-            if (TagLib::IT::File* file = dynamic_cast<TagLib::IT::File*>(file_ref.file()))
+            if (dynamic_cast<TagLib::IT::File*>(file_ref.file()))
             {
-                readModInfo(file->tag(), info);
+                readModInfo(info);
             }
-            if (TagLib::Mod::File* file = dynamic_cast<TagLib::Mod::File*>(file_ref.file()))
+            if (dynamic_cast<TagLib::Mod::File*>(file_ref.file()))
             {
-                readModInfo(file->tag(), info);
+                readModInfo(info);
             }
-            if (TagLib::S3M::File* file = dynamic_cast<TagLib::S3M::File*>(file_ref.file()))
+            if (dynamic_cast<TagLib::S3M::File*>(file_ref.file()))
             {
-                readModInfo(file->tag(), info);
+                readModInfo(info);
             }
-            if (TagLib::XM::File* file = dynamic_cast<TagLib::XM::File*>(file_ref.file()))
+            if (dynamic_cast<TagLib::XM::File*>(file_ref.file()))
             {
-                readModInfo(file->tag(), info);
+                readModInfo(info);
             }
             if (TagLib::TrueAudio::File* file = dynamic_cast<TagLib::TrueAudio::File*>(file_ref.file()))
             {
                 if (file->hasID3v1Tag())
-                    readID3v1Info(file->ID3v1Tag(), info);
+                    readID3v1Info(info);
                 if (file->hasID3v2Tag())
                     readID3v2Info(file->ID3v2Tag(), info);
             }
             if (TagLib::WavPack::File* file = dynamic_cast<TagLib::WavPack::File*>(file_ref.file()))
             {
                 if (file->hasID3v1Tag())
-                    readID3v1Info(file->ID3v1Tag(), info);
+                    readID3v1Info(info);
                 if (file->hasAPETag())
                     readAPEInfo(file->APETag(), info);
             }

@@ -322,28 +322,28 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event)
         case QEvent::MouseButtonPress:
         {
             QMouseEvent* me = static_cast<QMouseEvent*>(event);
-            QModelIndex index = view->indexAt(me->pos());
-            if (index.isValid())
+            QModelIndex mouse_index = view->indexAt(me->pos());
+            if (mouse_index.isValid())
             {
                 _is_dragging = true;
                 _drag_start_pos = me->pos();
                 _dragged_indexes.clear();
 
                 QModelIndexList selected_indexes = view->selectionModel()->selectedIndexes();
-                if (selected_indexes.indexOf(index) < 0)
+                if (selected_indexes.indexOf(mouse_index) < 0)
                 {
-                    _dragged_indexes.push_back(index);
+                    _dragged_indexes.push_back(mouse_index);
                 }
                 else
                 {
                     std::unordered_set<int> rows;
 
-                    for (const QModelIndex& index : selected_indexes)
+                    for (const QModelIndex& selected_index : selected_indexes)
                     {
-                        if (rows.find(index.row()) == rows.end())
+                        if (rows.find(selected_index.row()) == rows.end())
                         {
-                            rows.insert(index.row());
-                            _dragged_indexes.push_back(index);
+                            rows.insert(selected_index.row());
+                            _dragged_indexes.push_back(selected_index);
                         }
                     }
                 }
@@ -370,11 +370,11 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event)
                         });
                     }
 
-                    QMimeData* data = new QMimeData();
-                    data->setUrls(urls);
+                    QMimeData* mime_data = new QMimeData();
+                    mime_data->setUrls(urls);
 
                     QDrag drag(this);
-                    drag.setMimeData(data);
+                    drag.setMimeData(mime_data);
 
                     if (!urls.empty())
                     {
@@ -734,15 +734,13 @@ void MainWindow::updateCurrentView()
 
     auto supported_modes = _breadcrumbs.back()._view->getSupportedModes();
 
-    AudioLibraryView::DisplayMode current_display_mode;
-    bool is_current_display_mode_valid = false;
+    std::unique_ptr<AudioLibraryView::DisplayMode> current_display_mode;
 
     // restore user-selected display mode
 
     if (supported_modes.size() == 1)
     {
-        current_display_mode = supported_modes.front();
-        is_current_display_mode_valid = true;
+        current_display_mode.reset(new AudioLibraryView::DisplayMode(supported_modes.front()));
     }
     else if (supported_modes.size() > 1)
     {
@@ -752,13 +750,11 @@ void MainWindow::updateCurrentView()
 
         if (found_selected_display_mode != _selected_display_modes.end())
         {
-            current_display_mode = found_selected_display_mode->second;
-            is_current_display_mode_valid = true;
+            current_display_mode.reset(new AudioLibraryView::DisplayMode(found_selected_display_mode->second));
         }
         else
         {
-            current_display_mode = supported_modes.front();
-            is_current_display_mode_valid = true;
+            current_display_mode.reset(new AudioLibraryView::DisplayMode(supported_modes.front()));
         }
     }
 
@@ -773,7 +769,7 @@ void MainWindow::updateCurrentView()
         int index = _display_mode_tabs->addTab(AudioLibraryView::getDisplayModeFriendlyName(display_mode));
         _display_mode_tab_indexes.push_back(std::make_pair(index, display_mode));
 
-        if (is_current_display_mode_valid && current_display_mode == display_mode)
+        if (current_display_mode && *current_display_mode == display_mode)
         {
             _display_mode_tabs->setCurrentIndex(index);
         }
@@ -782,8 +778,8 @@ void MainWindow::updateCurrentView()
     // hide unused columns
 
     std::vector<AudioLibraryView::Column> visible_columns;
-    if (is_current_display_mode_valid)
-        visible_columns = AudioLibraryView::getColumnsForDisplayMode(current_display_mode);
+    if (current_display_mode)
+        visible_columns = AudioLibraryView::getColumnsForDisplayMode(*current_display_mode);
 
     visible_columns.push_back(AudioLibraryView::ZERO);
 
@@ -809,7 +805,7 @@ void MainWindow::updateCurrentView()
     {
         ThreadSafeLibrary::LibraryAccessor acc(_library);
 
-        _breadcrumbs.back()._view->createItems(acc.getLibrary(), is_current_display_mode_valid ? &current_display_mode : nullptr, model, _views_for_items);
+        _breadcrumbs.back()._view->createItems(acc.getLibrary(), current_display_mode.get(), model, _views_for_items);
     }
 
     model->sort(0);

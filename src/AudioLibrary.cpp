@@ -158,7 +158,7 @@ std::vector<AudioLibraryAlbum*> getAlbumsIf(const std::map<AudioLibraryAlbumKey,
 
 std::vector<AudioLibraryAlbum*> AudioLibrary::getAlbums() const
 {
-    return getAlbumsIf(_album_map, [](AudioLibraryAlbum* album){
+    return getAlbumsIf(_album_map, [](AudioLibraryAlbum* /*album*/){
         return true;
     });
 }

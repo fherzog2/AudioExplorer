@@ -125,6 +125,12 @@ target_include_directories(AudioExplorer PRIVATE ${TAGLIB_INCLUDE_DIR})
 target_compile_definitions(AudioExplorer PRIVATE TAGLIB_STATIC)
 set_property(TARGET AudioExplorer PROPERTY CXX_STANDARD 11)
 
+if(MSVC)
+  target_compile_options(AudioExplorer PRIVATE /W4 /WX)
+else(MSVC)
+  target_compile_options(AudioExplorer PRIVATE -Wall -Wextra -pedantic -Werror)
+endif(MSVC)
+
 # test
 
 add_executable(test1 test/test.cpp
@@ -142,6 +148,12 @@ target_include_directories(test1 PRIVATE ${TAGLIB_INCLUDE_DIR})
 target_compile_definitions(test1 PRIVATE TAGLIB_STATIC)
 set_property(TARGET test1 PROPERTY CXX_STANDARD 11)
 target_include_directories(test1 PRIVATE "src")
+
+if(MSVC)
+  target_compile_options(test1 PRIVATE /W4 /WX)
+else(MSVC)
+  target_compile_options(test1 PRIVATE -Wall -Wextra -pedantic -Werror)
+endif(MSVC)
 
 enable_testing()
 add_test(NAME test1 COMMAND test1 ${CMAKE_SOURCE_DIR}/test/data ${CMAKE_BINARY_DIR})

@@ -235,11 +235,6 @@ namespace {
         }
     }
 
-    QString getArtist(const AudioLibraryAlbum* album)
-    {
-        return album->_key._artist;
-    }
-
     int getYear(const AudioLibraryAlbum* album)
     {
         return album->_key._year;
@@ -367,6 +362,16 @@ std::vector<AudioLibraryView::Column> AudioLibraryView::getColumnsForDisplayMode
     return std::vector<AudioLibraryView::Column>();
 }
 
+void AudioLibraryView::resolveToTracks(const AudioLibrary& /*library*/, std::vector<const AudioLibraryTrack*>& /*tracks*/) const
+{
+    throw std::runtime_error("not implemented");
+}
+
+QString AudioLibraryView::getId() const
+{
+    throw std::runtime_error("not implemented");
+}
+
 //=============================================================================
 
 AudioLibraryView* AudioLibraryViewAllArtists::clone() const
@@ -385,7 +390,7 @@ std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewAllArtists::getSuppor
 }
 
 void AudioLibraryViewAllArtists::createItems(const AudioLibrary& library,
-    const DisplayMode* display_mode,
+    const DisplayMode* /*display_mode*/,
     QStandardItemModel* model,
     std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items) const
 {
@@ -430,17 +435,6 @@ void AudioLibraryViewAllArtists::createItems(const AudioLibrary& library,
     }
 }
 
-void AudioLibraryViewAllArtists::resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const
-{
-    // top level view doesn't need to implement this
-}
-
-QString AudioLibraryViewAllArtists::getId() const
-{
-    // top level view doesn't need to implement this
-    return QString::null;
-}
-
 //=============================================================================
 
 AudioLibraryView* AudioLibraryViewAllAlbums::clone() const
@@ -459,7 +453,7 @@ std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewAllAlbums::getSupport
 }
 
 void AudioLibraryViewAllAlbums::createItems(const AudioLibrary& library,
-    const DisplayMode* display_mode,
+    const DisplayMode* /*display_mode*/,
     QStandardItemModel* model,
     std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items) const
 {
@@ -472,17 +466,6 @@ void AudioLibraryViewAllAlbums::createItems(const AudioLibrary& library,
     {
         createAlbumRow(album, model, views_for_items, collator, cover_loader);
     }
-}
-
-void AudioLibraryViewAllAlbums::resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const
-{
-    // top level view doesn't need to implement this
-}
-
-QString AudioLibraryViewAllAlbums::getId() const
-{
-    // top level view doesn't need to implement this
-    return QString::null;
 }
 
 //=============================================================================
@@ -503,9 +486,9 @@ std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewAllTracks::getSupport
 }
 
 void AudioLibraryViewAllTracks::createItems(const AudioLibrary& library,
-    const DisplayMode* display_mode,
+    const DisplayMode* /*display_mode*/,
     QStandardItemModel* model,
-    std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items) const
+    std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& /*views_for_items*/) const
 {
     QCollator collator;
     collator.setNumericMode(true);
@@ -521,17 +504,6 @@ void AudioLibraryViewAllTracks::createItems(const AudioLibrary& library,
             createTrackRow(track, model, pixmap, collator);
         }
     }
-}
-
-void AudioLibraryViewAllTracks::resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const
-{
-    // top level view doesn't need to implement this
-}
-
-QString AudioLibraryViewAllTracks::getId() const
-{
-    // top level view doesn't need to implement this
-    return QString::null;
 }
 
 //=============================================================================
@@ -552,22 +524,11 @@ std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewAllYears::getSupporte
 }
 
 void AudioLibraryViewAllYears::createItems(const AudioLibrary& library,
-    const DisplayMode* display_mode,
+    const DisplayMode* /*display_mode*/,
     QStandardItemModel* model,
     std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items) const
 {
     createGroupViewItems<int, AudioLibraryViewYear>(library, model, views_for_items, getYear);
-}
-
-void AudioLibraryViewAllYears::resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const
-{
-    // top level view doesn't need to implement this
-}
-
-QString AudioLibraryViewAllYears::getId() const
-{
-    // top level view doesn't need to implement this
-    return QString::null;
 }
 
 //=============================================================================
@@ -588,22 +549,11 @@ std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewAllGenres::getSupport
 }
 
 void AudioLibraryViewAllGenres::createItems(const AudioLibrary& library,
-    const DisplayMode* display_mode,
+    const DisplayMode* /*display_mode*/,
     QStandardItemModel* model,
     std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items) const
 {
     createGroupViewItems<QString, AudioLibraryViewGenre>(library, model, views_for_items, getGenre);
-}
-
-void AudioLibraryViewAllGenres::resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const
-{
-    // top level view doesn't need to implement this
-}
-
-QString AudioLibraryViewAllGenres::getId() const
-{
-    // top level view doesn't need to implement this
-    return QString::null;
 }
 
 //=============================================================================
@@ -704,9 +654,9 @@ std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewAlbum::getSupportedMo
 }
 
 void AudioLibraryViewAlbum::createItems(const AudioLibrary& library,
-    const DisplayMode* display_mode,
+    const DisplayMode* /*display_mode*/,
     QStandardItemModel* model,
-    std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items) const
+    std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& /*views_for_items*/) const
 {
     QCollator collator;
     collator.setNumericMode(true);
@@ -925,17 +875,6 @@ void AudioLibraryViewSimpleSearch::createItems(const AudioLibrary& library,
     }
 }
 
-void AudioLibraryViewSimpleSearch::resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const
-{
-    // top level view doesn't need to implement this
-}
-
-QString AudioLibraryViewSimpleSearch::getId() const
-{
-    // top level view doesn't need to implement this
-    return QString::null;
-}
-
 bool AudioLibraryViewSimpleSearch::match(const QString& input, const QVector<QStringRef>& strings_to_match)
 {
     for (const QStringRef& ref : strings_to_match)
@@ -1011,7 +950,7 @@ bool AdvancedSearchComparer::check(const QString& text) const
 }
 
 void AudioLibraryViewAdvancedSearch::createItems(const AudioLibrary& library,
-    const DisplayMode* display_mode,
+    const DisplayMode* /*display_mode*/,
     QStandardItemModel* model,
     std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items) const
 {
@@ -1057,17 +996,6 @@ void AudioLibraryViewAdvancedSearch::createItems(const AudioLibrary& library,
     }
 }
 
-void AudioLibraryViewAdvancedSearch::resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const
-{
-    // top level view doesn't need to implement this
-}
-
-QString AudioLibraryViewAdvancedSearch::getId() const
-{
-    // top level view doesn't need to implement this
-    return QString::null;
-}
-
 //=============================================================================
 
 AudioLibraryView* AudioLibraryViewDuplicateAlbums::clone() const
@@ -1105,7 +1033,7 @@ namespace {
 }
 
 void AudioLibraryViewDuplicateAlbums::createItems(const AudioLibrary& library,
-    const DisplayMode* display_mode,
+    const DisplayMode* /*display_mode*/,
     QStandardItemModel* model,
     std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items) const
 {
@@ -1133,15 +1061,4 @@ void AudioLibraryViewDuplicateAlbums::createItems(const AudioLibrary& library,
     {
         createAlbumRow(album, model, views_for_items, collator, cover_loader);
     }
-}
-
-void AudioLibraryViewDuplicateAlbums::resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const
-{
-    // top level view doesn't need to implement this
-}
-
-QString AudioLibraryViewDuplicateAlbums::getId() const
-{
-    // top level view doesn't need to implement this
-    return QString::null;
 }

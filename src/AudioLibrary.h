@@ -99,10 +99,10 @@ public:
         const QString& comment,
         const QString& tag_types)
         : _album(album)
-        , _filepath(filepath)
-        , _last_modified(last_modified)
         , _artist(artist)
         , _album_artist(album_artist)
+        , _filepath(filepath)
+        , _last_modified(last_modified)
         , _title(title)
         , _track_number(track_number)
         , _disc_number(disc_number)
