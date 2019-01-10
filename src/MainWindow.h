@@ -125,6 +125,7 @@ private:
     void addBreadCrumb(AudioLibraryView* view);
     void clearBreadCrumbs();
     void restoreBreadCrumb(QObject* object);
+    bool findBreadcrumbId(const QString& id) const;
 
     Settings& _settings;
 
