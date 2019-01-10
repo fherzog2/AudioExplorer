@@ -163,6 +163,7 @@ MainWindow::MainWindow(Settings& settings)
 
     _table = new QTableView(this);
     _table->setSortingEnabled(true);
+    _table->sortByColumn(AudioLibraryView::ZERO, Qt::AscendingOrder);
     _table->setModel(_model);
     _table->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     _table->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
@@ -807,8 +808,6 @@ void MainWindow::updateCurrentView()
 
         _breadcrumbs.back()._view->createItems(acc.getLibrary(), current_display_mode.get(), model, _views_for_items);
     }
-
-    model->sort(0);
 
     _model->deleteLater();
     _model = model;
