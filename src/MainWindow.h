@@ -71,7 +71,7 @@ public:
     std::atomic_bool _library_cache_loaded = ATOMIC_VAR_INIT(false);
 
 signals:
-    void libraryCacheLoaded();
+    void libraryCacheLoading();
     void libraryLoadProgressed(int files_loaded, int files_in_cache);
     void libraryLoadFinished(int files_loaded, int files_in_cache, float duration_sec);
 
@@ -97,7 +97,7 @@ protected:
 private:
     void onEditPreferences();
     void onOpenAdvancedSearch();
-    void onLibraryCacheLoaded();
+    void onLibraryCacheLoading();
     void onLibraryLoadProgressed(int files_loaded, int files_in_cache);
     void onLibraryLoadFinished(int files_loaded, int files_in_cache, float duration_sec);
     void onShowDuplicateAlbums();
@@ -116,6 +116,7 @@ private:
     static void scanAudioDirsThreadFunc(QStringList audio_dir_paths, ThreadSafeLibrary& library);
     const AudioLibraryView* getCurrentView() const;
     void updateCurrentView();
+    void updateCurrentViewIfOlderThan(int msecs);
     void advanceIconSize(int direction);
     void addViewTypeTab(QWidget* view, const QString& friendly_name, const QString& internal_name);
     void getFilepathsFromIndex(const QModelIndex& index, std::vector<QString>& filepaths);

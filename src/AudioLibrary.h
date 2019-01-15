@@ -149,6 +149,7 @@ public:
     std::vector<AudioLibraryAlbum*> getAlbums() const;
     void forEachAlbum(const std::function<void(AudioLibraryAlbum* album)>& func) const;
     AudioLibraryAlbum* getAlbum(const AudioLibraryAlbumKey& key) const;
+    size_t getNumberOfTracks() const;
 
     bool isModified() const;
 

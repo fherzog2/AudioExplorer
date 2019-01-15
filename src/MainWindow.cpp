@@ -244,7 +244,7 @@ MainWindow::MainWindow(Settings& settings)
     vbox->addWidget(_view_stack);
     vbox->addWidget(_status_bar);
 
-    connect(&_library, &ThreadSafeLibrary::libraryCacheLoaded, this, &MainWindow::onLibraryCacheLoaded);
+    connect(&_library, &ThreadSafeLibrary::libraryCacheLoading, this, &MainWindow::onLibraryCacheLoading);
     connect(&_library, &ThreadSafeLibrary::libraryLoadProgressed, this, &MainWindow::onLibraryLoadProgressed);
     connect(&_library, &ThreadSafeLibrary::libraryLoadFinished, this, &MainWindow::onLibraryLoadFinished);
     connect(_search_field, &QLineEdit::returnPressed, this, &MainWindow::onSearchEnterPressed);
@@ -513,26 +513,31 @@ void MainWindow::onOpenAdvancedSearch()
     });
 }
 
-void MainWindow::onLibraryCacheLoaded()
+void MainWindow::onLibraryCacheLoading()
 {
-    updateCurrentView();
+    size_t num_tracks = 0;
+
+    {
+        ThreadSafeLibrary::LibraryAccessor acc(_library);
+
+        num_tracks += acc.getLibrary().getNumberOfTracks();
+    }
+
+    _status_bar->showMessage(QString("Loading cache: %1 files").arg(num_tracks));
+
+    updateCurrentViewIfOlderThan(1000);
 }
 
 void MainWindow::onLibraryLoadProgressed(int files_loaded, int files_in_cache)
 {
-    _status_bar->showMessage(QString("Scan audio dirs: %1 files loaded, %2 files in cache").arg(files_loaded).arg(files_in_cache));
+    _status_bar->showMessage(QString("%1 files in cache, %2 new files loaded").arg(files_in_cache).arg(files_loaded));
 
-    auto now = std::chrono::steady_clock::now();
-    auto time_span = now - _last_view_update_time;
-    if (std::chrono::duration_cast<std::chrono::milliseconds>(time_span).count() > 5000)
-    {
-        updateCurrentView();
-    }
+    updateCurrentViewIfOlderThan(1000);
 }
 
 void MainWindow::onLibraryLoadFinished(int files_loaded, int files_in_cache, float duration_sec)
 {
-    _status_bar->showMessage(QString("Scan audio dirs: %1 files loaded, %2 files in cache in %3 seconds").arg(files_loaded).arg(files_in_cache).arg(duration_sec, 0, 'f', 1));
+    _status_bar->showMessage(QString("%1 files in cache, %2 new files loaded, needed %3 seconds").arg(files_in_cache).arg(files_loaded).arg(duration_sec, 0, 'f', 1));
 
     updateCurrentView();
 }
@@ -701,8 +706,7 @@ void MainWindow::loadLibrary(QStringList audio_dir_paths, ThreadSafeLibrary& lib
                 loader.init(acc.getLibraryForUpdate(), stream);
             }
 
-            auto start_time = std::chrono::steady_clock::now();
-            bool first_update_triggered = false;
+            int album_counter = 0;
 
             while (loader.hasNextAlbum())
             {
@@ -712,17 +716,10 @@ void MainWindow::loadLibrary(QStringList audio_dir_paths, ThreadSafeLibrary& lib
                     loader.loadNextAlbum();
                 }
 
-                // Trigger a view update shortly after starting to display something.
+                ++album_counter;
 
-                if (!first_update_triggered)
-                {
-                    auto end_time = std::chrono::steady_clock::now();
-                    if (std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() > 300)
-                    {
-                        library.libraryCacheLoaded();
-                        first_update_triggered = true;
-                    }
-                }
+                if((album_counter % 10) == 0)
+                    library.libraryCacheLoading();
             }
         }
     }
@@ -760,7 +757,7 @@ void MainWindow::scanAudioDirsThreadFunc(QStringList audio_dir_paths, ThreadSafe
     {
         loadLibrary(audio_dir_paths, library);
         library._library_cache_loaded = true;
-        library.libraryCacheLoaded();
+        library.libraryCacheLoading();
     }
 
     for (const QString& dirpath : audio_dir_paths)
@@ -902,6 +899,22 @@ void MainWindow::updateCurrentView()
 
     _last_view_update_time = std::chrono::steady_clock::now();
     _is_last_view_update_time_valid = true;
+}
+
+void MainWindow::updateCurrentViewIfOlderThan(int msecs)
+{
+    if (!_is_last_view_update_time_valid)
+    {
+        updateCurrentView();
+        return;
+    }
+
+    auto now = std::chrono::steady_clock::now();
+    if (std::chrono::duration_cast<std::chrono::milliseconds>(now - _last_view_update_time).count() > msecs)
+    {
+        updateCurrentView();
+        return;
+    }
 }
 
 void MainWindow::advanceIconSize(int direction)

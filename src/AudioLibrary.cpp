@@ -178,6 +178,11 @@ AudioLibraryAlbum* AudioLibrary::getAlbum(const AudioLibraryAlbumKey& key) const
     return nullptr;
 }
 
+size_t AudioLibrary::getNumberOfTracks() const
+{
+    return _filepath_to_track_map.size();
+}
+
 bool AudioLibrary::isModified() const
 {
     return _is_modified;
