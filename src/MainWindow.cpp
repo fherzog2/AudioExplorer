@@ -259,6 +259,12 @@ MainWindow::MainWindow(Settings& settings)
 
     show();
 
+    if (_settings.audio_dir_paths.getValue().isEmpty())
+    {
+        FirstStartDialog dlg(this, _settings);
+        dlg.exec();
+    }
+
     scanAudioDirs();
 }
 

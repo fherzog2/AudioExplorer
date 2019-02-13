@@ -111,6 +111,33 @@ void SettingsWidgetDirPaths::deleteSelectedRows() const
 
 //=============================================================================
 
+FirstStartDialog::FirstStartDialog(QWidget* parent, Settings& settings)
+    : QDialog(parent)
+    , _settings(settings)
+{
+    auto layout = new QVBoxLayout(this);
+
+    setWindowTitle("Initialization");
+
+    _audio_dir_paths_widget.reset(new SettingsWidgetDirPaths(this, settings.audio_dir_paths, "Add audio directory..."));
+    layout->addWidget(_audio_dir_paths_widget->getWidget());
+
+    auto buttonbox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+    connect(buttonbox, &QDialogButtonBox::accepted, this, &QDialog::accept);
+    connect(buttonbox, &QDialogButtonBox::rejected, this, &QDialog::reject);
+
+    layout->addWidget(buttonbox);
+}
+
+void FirstStartDialog::accept()
+{
+    _audio_dir_paths_widget->applyChanges();
+
+    QDialog::accept();
+}
+
+//=============================================================================
+
 SettingsEditorDialog::SettingsEditorDialog(QWidget* parent, Settings& settings)
     : QDialog(parent)
     , _settings(settings)
