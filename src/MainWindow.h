@@ -108,6 +108,7 @@ private:
     void onDisplayModeSelected(int index);
     void onViewTypeSelected(int index);
     void onItemDoubleClicked(const QModelIndex &index);
+    void onTableHeaderSectionClicked();
 
     void saveLibrary();
     static void loadLibrary(QStringList audio_dir_paths, ThreadSafeLibrary& library);

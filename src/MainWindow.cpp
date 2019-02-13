@@ -250,8 +250,9 @@ MainWindow::MainWindow(Settings& settings)
     connect(_search_field, &QLineEdit::returnPressed, this, &MainWindow::onSearchEnterPressed);
     connect(_display_mode_tabs, &QTabBar::tabBarClicked, this, &MainWindow::onDisplayModeSelected);
     connect(_view_type_tabs, &QTabBar::tabBarClicked, this, &MainWindow::onViewTypeSelected);
-    connect(_list, &QListView::doubleClicked, this, &MainWindow::onItemDoubleClicked);
-    connect(_table, &QListView::doubleClicked, this, &MainWindow::onItemDoubleClicked);
+    connect(_list, &QAbstractItemView::doubleClicked, this, &MainWindow::onItemDoubleClicked);
+    connect(_table, &QAbstractItemView::doubleClicked, this, &MainWindow::onItemDoubleClicked);
+    connect(_table->horizontalHeader(), &QHeaderView::sectionClicked, this, &MainWindow::onTableHeaderSectionClicked);
 
     setBreadCrumb(new AudioLibraryViewAllArtists());
 
@@ -652,6 +653,32 @@ void MainWindow::onItemDoubleClicked(const QModelIndex &index)
     {
         if (QDesktopServices::openUrl(QUrl::fromLocalFile(path_item->text())))
             return;
+    }
+}
+
+void MainWindow::onTableHeaderSectionClicked()
+{
+    // keep the selection visible while re-sorting the table
+
+    QModelIndexList selection = _table->selectionModel()->selectedIndexes();
+
+    QModelIndex first_selected;
+
+    for (const QModelIndex& index : selection)
+    {
+        if (index.column() == AudioLibraryView::ZERO)
+        {
+            if (!first_selected.isValid() ||
+                index.row() < first_selected.row())
+            {
+                first_selected = index;
+            }
+        }
+    }
+
+    if (first_selected.isValid())
+    {
+        _table->scrollTo(first_selected);
     }
 }
 
