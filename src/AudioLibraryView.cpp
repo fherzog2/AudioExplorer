@@ -619,9 +619,13 @@ void AudioLibraryViewArtist::resolveToTracks(const AudioLibrary& library, std::v
 {
     for (const AudioLibraryAlbum* album : library.getAlbums())
     {
-        if (album->_key._artist == _artist)
+        for (const AudioLibraryTrack* track : album->_tracks)
         {
-            tracks.insert(tracks.end(), album->_tracks.begin(), album->_tracks.end());
+            if (track->_artist == _artist ||
+                track->_album_artist == _artist)
+            {
+                tracks.push_back(track);
+            }
         }
     }
 }

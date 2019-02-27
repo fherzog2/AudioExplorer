@@ -6,7 +6,9 @@
 #include <unordered_map>
 #include <set>
 #include <QtCore/qmimedata.h>
+#include <QtCore/qprocess.h>
 #include <QtCore/qsavefile.h>
+#include <QtCore/qsettings.h>
 #include <QtCore/qstandardpaths.h>
 #include <QtCore/qtimer.h>
 #include <QtGui/qdesktopservices.h>
@@ -1082,11 +1084,29 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
             }
         }
 
+        QMenu menu;
+
+        if (!getVlcPath().isEmpty())
+        {
+            QList<QPersistentModelIndex> selected_row_indexes;
+            for (int row : rows)
+                selected_row_indexes.push_back(view->model()->index(row, AudioLibraryView::ZERO));
+
+            QAction* add_to_vlc_action = menu.addAction("Add to VLC Playlist");
+
+            connect(add_to_vlc_action, &QAction::triggered, this, [=]() {
+                startVlc(selected_row_indexes, true);
+            });
+
+            QAction* play_with_vlc_action = menu.addAction("Play with VLC");
+
+            connect(play_with_vlc_action, &QAction::triggered, this, [=]() {
+                startVlc(selected_row_indexes, false);
+            });
+        }
+
         if (rows.size() == 1)
         {
-            QMenu menu;
-            std::unordered_map<QAction*, std::unique_ptr<AudioLibraryView>> possible_views;
-
             const QStandardItem* artist_item = _model->item(mouse_index.row(), AudioLibraryView::ARTIST);
             const QStandardItem* album_item = _model->item(mouse_index.row(), AudioLibraryView::ALBUM);
             const QStandardItem* year_item = _model->item(mouse_index.row(), AudioLibraryView::YEAR);
@@ -1097,12 +1117,17 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
 
             if (artist_item && !artist_item->text().isEmpty())
             {
-                std::unique_ptr<AudioLibraryView> artist_view(new AudioLibraryViewArtist(artist_item->text()));
+                std::shared_ptr<AudioLibraryView> artist_view(new AudioLibraryViewArtist(artist_item->text()));
 
                 if (!findBreadcrumbId(artist_view->getId()))
                 {
                     QAction* artist_action = menu.addAction(QString("More from artist \"%1\"...").arg(artist_item->text()));
-                    possible_views[artist_action].reset(artist_view.release());
+
+                    auto slot = [=]() {
+                        addBreadCrumb(artist_view->clone());
+                    };
+
+                    connect(artist_action, &QAction::triggered, this, slot);
                 }
             }
 
@@ -1126,26 +1151,62 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
 
                 if (year_ok && cover_checksum_ok)
                 {
-                    std::unique_ptr<AudioLibraryView> album_view(new AudioLibraryViewAlbum(key));
+                    std::shared_ptr<AudioLibraryView> album_view(new AudioLibraryViewAlbum(key));
 
                     if (!findBreadcrumbId(album_view->getId()))
                     {
                         QAction* artist_action = menu.addAction(QString("Show album \"%1\"").arg(album_item->text()));
-                        possible_views[artist_action].reset(album_view.release());
+
+                        auto slot = [=](){
+                            addBreadCrumb(album_view->clone());
+                        };
+
+                        connect(artist_action, &QAction::triggered, this, slot);
                     }
                 }
             }
-
-            if (QAction* selected_action = menu.exec(event->globalPos()))
-            {
-                auto view_it = possible_views.find(selected_action);
-                if (view_it != possible_views.end())
-                {
-                    addBreadCrumb(view_it->second.release());
-                }
-            }
         }
+
+        if(!menu.actions().isEmpty())
+            menu.exec(event->globalPos());
     }
+}
+
+QString MainWindow::getVlcPath()
+{
+#if WIN32
+    QSettings vlc_registry("HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\VideoLAN\\VLC", QSettings::NativeFormat);
+    return vlc_registry.value("Default").toString();
+#else
+    return QString::null;
+#endif
+}
+
+void MainWindow::startVlc(const QList<QPersistentModelIndex>& indexes, bool only_add_to_playlist)
+{
+    std::vector<QString> filepaths;
+
+    for (const QPersistentModelIndex& index : indexes)
+        if (index.isValid())
+            getFilepathsFromIndex(index, filepaths);
+
+    QStringList arguments;
+    arguments << "--started-from-file";
+
+    if(only_add_to_playlist)
+        arguments << "--playlist-enqueue";
+
+    for (QString filepath : filepaths)
+    {
+#if WIN32
+        // VLC has problems with slashes in filepaths
+        filepath.replace("/", "\\");
+#endif
+
+        arguments += filepath;
+    }
+
+    QProcess::startDetached(getVlcPath(), arguments);
 }
 
 std::unique_ptr<MainWindow::ViewRestoreData> MainWindow::saveViewSettings() const

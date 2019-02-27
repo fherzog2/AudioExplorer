@@ -130,6 +130,8 @@ private:
     bool findBreadcrumbId(const QString& id) const;
 
     void contextMenuEventForView(QAbstractItemView* view, QContextMenuEvent* event);
+    static QString getVlcPath();
+    void startVlc(const QList<QPersistentModelIndex>& indexes, bool only_add_to_playlist);
 
     Settings& _settings;
 
