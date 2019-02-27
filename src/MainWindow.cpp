@@ -397,89 +397,8 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event)
             }
             break;
         case QEvent::ContextMenu:
-        {
-            QContextMenuEvent* cme = static_cast<QContextMenuEvent*>(event);
-
-            QModelIndex mouse_index = view->indexAt(cme->pos());
-            if (mouse_index.isValid())
-            {
-                QModelIndexList selected_indexes = view->selectionModel()->selectedIndexes();
-                std::unordered_set<int> rows;
-
-                for (const QModelIndex& selected_index : selected_indexes)
-                {
-                    if (rows.find(selected_index.row()) == rows.end())
-                    {
-                        rows.insert(selected_index.row());
-                    }
-                }
-
-                if (rows.size() == 1)
-                {
-                    QMenu menu;
-                    std::unordered_map<QAction*, std::unique_ptr<AudioLibraryView>> possible_views;
-
-                    const QStandardItem* artist_item = _model->item(mouse_index.row(), AudioLibraryView::ARTIST);
-                    const QStandardItem* album_item = _model->item(mouse_index.row(), AudioLibraryView::ALBUM);
-                    const QStandardItem* year_item = _model->item(mouse_index.row(), AudioLibraryView::YEAR);
-                    const QStandardItem* genre_item = _model->item(mouse_index.row(), AudioLibraryView::GENRE);
-                    const QStandardItem* cover_checksum_item = _model->item(mouse_index.row(), AudioLibraryView::COVER_CHECKSUM);
-
-                    // show artist
-
-                    if (artist_item && !artist_item->text().isEmpty())
-                    {
-                        std::unique_ptr<AudioLibraryView> artist_view(new AudioLibraryViewArtist(artist_item->text()));
-
-                        if (!findBreadcrumbId(artist_view->getId()))
-                        {
-                            QAction* artist_action = menu.addAction(QString("More from artist \"%1\"...").arg(artist_item->text()));
-                            possible_views[artist_action].reset(artist_view.release());
-                        }
-                    }
-
-                    // only for tracks: show album
-
-                    if (_model->item(mouse_index.row(), AudioLibraryView::PATH) &&
-                        artist_item && album_item && year_item && genre_item && cover_checksum_item)
-                    {
-                        AudioLibraryAlbumKey key;
-                        key._artist = artist_item->text();
-
-                        key._album = album_item->text();
-
-                        bool year_ok = false;
-                        key._year = year_item->text().toInt(&year_ok);
-
-                        key._genre = genre_item->text();
-
-                        bool cover_checksum_ok = false;
-                        key._cover_checksum = cover_checksum_item->text().toUInt(&cover_checksum_ok);
-
-                        if (year_ok && cover_checksum_ok)
-                        {
-                            std::unique_ptr<AudioLibraryView> album_view(new AudioLibraryViewAlbum(key));
-
-                            if (!findBreadcrumbId(album_view->getId()))
-                            {
-                                QAction* artist_action = menu.addAction(QString("Show album \"%1\"").arg(album_item->text()));
-                                possible_views[artist_action].reset(album_view.release());
-                            }
-                        }
-                    }
-
-                    if (QAction* selected_action = menu.exec(cme->globalPos()))
-                    {
-                        auto view_it = possible_views.find(selected_action);
-                        if (view_it != possible_views.end())
-                        {
-                            addBreadCrumb(view_it->second.release());
-                        }
-                    }
-                }
-            }
+            contextMenuEventForView(view, static_cast<QContextMenuEvent*>(event));
             break;
-        }
         default:
             break;
         }
@@ -1145,6 +1064,88 @@ bool MainWindow::findBreadcrumbId(const QString& id) const
     }
 
     return false;
+}
+
+void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEvent* event)
+{
+    QModelIndex mouse_index = view->indexAt(event->pos());
+    if (mouse_index.isValid())
+    {
+        QModelIndexList selected_indexes = view->selectionModel()->selectedIndexes();
+        std::unordered_set<int> rows;
+
+        for (const QModelIndex& selected_index : selected_indexes)
+        {
+            if (rows.find(selected_index.row()) == rows.end())
+            {
+                rows.insert(selected_index.row());
+            }
+        }
+
+        if (rows.size() == 1)
+        {
+            QMenu menu;
+            std::unordered_map<QAction*, std::unique_ptr<AudioLibraryView>> possible_views;
+
+            const QStandardItem* artist_item = _model->item(mouse_index.row(), AudioLibraryView::ARTIST);
+            const QStandardItem* album_item = _model->item(mouse_index.row(), AudioLibraryView::ALBUM);
+            const QStandardItem* year_item = _model->item(mouse_index.row(), AudioLibraryView::YEAR);
+            const QStandardItem* genre_item = _model->item(mouse_index.row(), AudioLibraryView::GENRE);
+            const QStandardItem* cover_checksum_item = _model->item(mouse_index.row(), AudioLibraryView::COVER_CHECKSUM);
+
+            // show artist
+
+            if (artist_item && !artist_item->text().isEmpty())
+            {
+                std::unique_ptr<AudioLibraryView> artist_view(new AudioLibraryViewArtist(artist_item->text()));
+
+                if (!findBreadcrumbId(artist_view->getId()))
+                {
+                    QAction* artist_action = menu.addAction(QString("More from artist \"%1\"...").arg(artist_item->text()));
+                    possible_views[artist_action].reset(artist_view.release());
+                }
+            }
+
+            // only for tracks: show album
+
+            if (_model->item(mouse_index.row(), AudioLibraryView::PATH) &&
+                artist_item && album_item && year_item && genre_item && cover_checksum_item)
+            {
+                AudioLibraryAlbumKey key;
+                key._artist = artist_item->text();
+
+                key._album = album_item->text();
+
+                bool year_ok = false;
+                key._year = year_item->text().toInt(&year_ok);
+
+                key._genre = genre_item->text();
+
+                bool cover_checksum_ok = false;
+                key._cover_checksum = cover_checksum_item->text().toUInt(&cover_checksum_ok);
+
+                if (year_ok && cover_checksum_ok)
+                {
+                    std::unique_ptr<AudioLibraryView> album_view(new AudioLibraryViewAlbum(key));
+
+                    if (!findBreadcrumbId(album_view->getId()))
+                    {
+                        QAction* artist_action = menu.addAction(QString("Show album \"%1\"").arg(album_item->text()));
+                        possible_views[artist_action].reset(album_view.release());
+                    }
+                }
+            }
+
+            if (QAction* selected_action = menu.exec(event->globalPos()))
+            {
+                auto view_it = possible_views.find(selected_action);
+                if (view_it != possible_views.end())
+                {
+                    addBreadCrumb(view_it->second.release());
+                }
+            }
+        }
+    }
 }
 
 std::unique_ptr<MainWindow::ViewRestoreData> MainWindow::saveViewSettings() const

@@ -129,6 +129,8 @@ private:
     void restoreBreadCrumb(QObject* object);
     bool findBreadcrumbId(const QString& id) const;
 
+    void contextMenuEventForView(QAbstractItemView* view, QContextMenuEvent* event);
+
     Settings& _settings;
 
     QStandardItemModel* _model = nullptr;
