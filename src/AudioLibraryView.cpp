@@ -113,6 +113,7 @@ namespace {
         CoverLoader();
 
         const QPixmap& getCoverPixmap(const AudioLibraryAlbum* album) const;
+        const QPixmap& getDefaultPixmap() const;
 
     private:
         QPixmap _default_pixmap;
@@ -129,6 +130,11 @@ namespace {
         if (!album->getCoverPixmap().isNull())
             return album->getCoverPixmap();
 
+        return _default_pixmap;
+    }
+
+    const QPixmap& CoverLoader::getDefaultPixmap() const
+    {
         return _default_pixmap;
     }
 
@@ -216,22 +222,25 @@ namespace {
 
         CoverLoader cover_loader;
 
-        std::unordered_set<GROUPED_TYPE> displayed_groups;
+        std::unordered_map<GROUPED_TYPE, QPixmap> displayed_groups;
 
         for (const AudioLibraryAlbum* album : library.getAlbums())
         {
             GROUPED_TYPE group = grouped_type_getter(album);
 
-            if (displayed_groups.find(group) != displayed_groups.end())
-                continue; // already displayed
+            QPixmap& pixmap = displayed_groups[group];
 
-            displayed_groups.insert(group);
+            if (pixmap.isNull() && !album->getCoverPixmap().isNull())
+                pixmap = album->getCoverPixmap();
+        }
 
-            QPixmap pixmap = cover_loader.getCoverPixmap(album);
+        for (const auto& group : displayed_groups)
+        {
+            const QPixmap& pixmap = !group.second.isNull() ? group.second : cover_loader.getDefaultPixmap();
 
-            QStandardItem* item = new CollatedItem(pixmap, QString("%1").arg(group), collator);
+            QStandardItem* item = new CollatedItem(pixmap, QString("%1").arg(group.first), collator);
             model->setItem(model->rowCount(), item);
-            views_for_items[item].reset(new SUB_VIEW_TYPE(group));
+            views_for_items[item].reset(new SUB_VIEW_TYPE(group.first));
         }
     }
 
@@ -399,39 +408,40 @@ void AudioLibraryViewAllArtists::createItems(const AudioLibrary& library,
 
     CoverLoader cover_loader;
 
-    std::unordered_set<QString> displayed_artists;
+    std::unordered_map<QString, QPixmap> displayed_artists;
 
     for (const AudioLibraryAlbum* album : library.getAlbums())
     {
         for (const AudioLibraryTrack* track : album->_tracks)
         {
+            // always add an item for artist, even if this field is empty
+
             {
-                QString artist = track->_artist;
+                QPixmap& pixmap = displayed_artists[track->_artist];
 
-                if (displayed_artists.find(artist) != displayed_artists.end())
-                    continue; // already displayed
-
-                displayed_artists.insert(artist);
-
-                QStandardItem* item = new CollatedItem(cover_loader.getCoverPixmap(album), QString("%1").arg(artist), collator);
-                model->setItem(model->rowCount(), item);
-                views_for_items[item].reset(new AudioLibraryViewArtist(artist));
+                if (pixmap.isNull() && !album->getCoverPixmap().isNull())
+                    pixmap = album->getCoverPixmap();
             }
+
+            // if the album has an album artist, add an extra item for this field
 
             if (!track->_album_artist.isEmpty())
             {
-                QString artist = track->_album_artist;
+                QPixmap& pixmap = displayed_artists[track->_album_artist];
 
-                if (displayed_artists.find(artist) != displayed_artists.end())
-                    continue; // already displayed
-
-                displayed_artists.insert(artist);
-
-                QStandardItem* item = new CollatedItem(cover_loader.getCoverPixmap(album), QString("%1").arg(artist), collator);
-                model->setItem(model->rowCount(), item);
-                views_for_items[item].reset(new AudioLibraryViewArtist(artist));
+                if (pixmap.isNull() && !album->getCoverPixmap().isNull())
+                    pixmap = album->getCoverPixmap();
             }
         }
+    }
+
+    for (const auto& artist : displayed_artists)
+    {
+        const QPixmap& pixmap = !artist.second.isNull() ? artist.second : cover_loader.getDefaultPixmap();
+
+        QStandardItem* item = new CollatedItem(pixmap, QString("%1").arg(artist.first), collator);
+        model->setItem(model->rowCount(), item);
+        views_for_items[item].reset(new AudioLibraryViewArtist(artist.first));
     }
 }
 
