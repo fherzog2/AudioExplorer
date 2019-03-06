@@ -161,7 +161,7 @@ namespace {
         QPixmap pixmap = cover_loader.getCoverPixmap(album);
 
         int row = model->rowCount();
-        QStandardItem* item = new AlbumModelItem(pixmap, album->_key._artist + " - " + album->_key._album, album, collator);
+        QStandardItem* item = new AlbumModelItem(pixmap, album->_key._artist + '\n' + album->_key._album, album, collator);
         model->setItem(row, item);
         createAlbumColumns(album, model, row, collator);
         views_for_items[item].reset(new AudioLibraryViewAlbum(album->_key));
@@ -173,7 +173,7 @@ namespace {
         const QCollator& collator)
     {
         int row = model->rowCount();
-        QStandardItem* item = new TrackModelItem(cover, track->_artist + " - " + track->_title, track, collator);
+        QStandardItem* item = new TrackModelItem(cover, track->_artist + '\n' + track->_title, track, collator);
         model->setItem(row, item);
         setAdditionalColumn(model, row, AudioLibraryView::ARTIST, track->_artist, collator);
         setAdditionalColumn(model, row, AudioLibraryView::ALBUM, track->_album->_key._album, collator);

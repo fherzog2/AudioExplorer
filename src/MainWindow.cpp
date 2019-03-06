@@ -21,6 +21,8 @@
 #include <QtWidgets/qshortcut.h>
 #include <QtWidgets/qfiledialog.h>
 #include <QtWidgets/qheaderview.h>
+#include <QtWidgets/qstyleditemdelegate.h>
+#include <QtWidgets/qtooltip.h>
 #include "project_version.h"
 #include "SettingsEditorWindow.h"
 #include "AdvancedSearchDialog.h"
@@ -85,6 +87,75 @@ namespace
     void setRelativeScrollPos(QScrollBar* scroll_bar, double scroll_pos)
     {
         scroll_bar->setValue(int(scroll_pos * double(scroll_bar->maximum() - scroll_bar->minimum())));
+    }
+
+    /**
+    * A special QItemDelegate that can elide each line of a multi-lined text independently.
+    */
+    class MultiLinesElidedItemDelegate : public QStyledItemDelegate
+    {
+    public:
+        MultiLinesElidedItemDelegate(QObject* parent);
+
+        virtual bool helpEvent(QHelpEvent* event, QAbstractItemView* view,
+            const QStyleOptionViewItem& option, const QModelIndex& index) override;
+
+    protected:
+        virtual void initStyleOption(QStyleOptionViewItem* option, const QModelIndex& index) const override;
+
+    private:
+        static QString getElidedLines(const QString& text, const QFontMetrics& font_metrics, int width);
+    };
+
+    MultiLinesElidedItemDelegate::MultiLinesElidedItemDelegate(QObject* parent)
+        : QStyledItemDelegate(parent)
+    {}
+
+    bool MultiLinesElidedItemDelegate::helpEvent(QHelpEvent* event, QAbstractItemView* view,
+        const QStyleOptionViewItem& option, const QModelIndex& index)
+    {
+        if (event->type() == QEvent::ToolTip)
+        {
+            // show tooltip for elided text
+
+            QString text = index.data(Qt::DisplayRole).toString();
+            text.replace('\n', QChar::LineSeparator);
+
+            if (!text.isEmpty())
+            {
+                const QString elided_text = getElidedLines(text, option.fontMetrics, option.decorationSize.width());
+                if (elided_text != text)
+                {
+                    QToolTip::showText(event->globalPos(), text, view);
+                    return true;
+                }
+            }
+
+            QToolTip::hideText();
+            return true;
+        }
+
+        return QStyledItemDelegate::helpEvent(event, view, option, index);
+    }
+
+    void MultiLinesElidedItemDelegate::initStyleOption(QStyleOptionViewItem* option, const QModelIndex& index) const
+    {
+        QStyledItemDelegate::initStyleOption(option, index);
+
+        // bake elided text into the option
+        // using the size of the pixmap as width
+
+        option->text = getElidedLines(option->text, option->fontMetrics, option->decorationSize.width());
+    }
+
+    QString MultiLinesElidedItemDelegate::getElidedLines(const QString& text, const QFontMetrics& font_metrics, int width)
+    {
+        QStringList lines = text.split(QChar::LineSeparator);
+
+        for (QString& line : lines)
+            line = font_metrics.elidedText(line, Qt::ElideRight, width);
+
+        return lines.join(QChar::LineSeparator);
     }
 }
 
@@ -154,7 +225,6 @@ MainWindow::MainWindow(Settings& settings)
     _list = new QListView(this);
     _list->setModel(_model);
     _list->setViewMode(QListView::IconMode);
-    _list->setWordWrap(true);
     _list->setIconSize(QSize(default_icon_size, default_icon_size));
     _list->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     _list->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
@@ -162,6 +232,8 @@ MainWindow::MainWindow(Settings& settings)
     _list->setDragEnabled(false);
     _list->viewport()->installEventFilter(this);
     _list->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    _list->setTextElideMode(Qt::ElideNone);
+    _list->setItemDelegate(new MultiLinesElidedItemDelegate(this));
 
     _table = new QTableView(this);
     _table->setSortingEnabled(true);
