@@ -6,95 +6,109 @@ option(ENABLE_STATIC_RUNTIME "Use static runtime library" OFF)
 
 find_path(TAGLIB_INCLUDE_DIR
   NAMES taglib/tag.h
-  PATHS ${TAGLIB_DIR}/include
 )
 find_library(TAGLIB_LIBRARY
   NAMES tag
-  PATHS ${TAGLIB_DIR}/lib
-)
-
-# debug library (suffixed with d)
-find_library(TAGLIB_LIBRARY_DEBUG
-  NAMES tagd
-  PATHS ${TAGLIB_DIR}/lib
 )
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-find_package(Qt5Widgets)
-find_package(Qt5Svg)
-find_package(Threads)
-
-function(add_missing_qt_lib libname)
-    get_target_property(
-        linked_libs
-        Qt5::Widgets
-        INTERFACE_LINK_LIBRARIES
-    )
-
-    set(debug "${_qt5Widgets_install_prefix}/${libname}d.lib")
-    set(nondebug "${_qt5Widgets_install_prefix}/${libname}.lib")
-
-    # use generator expressions to support debug and release builds
-    set(debug_gen_expr "$<$<CONFIG:Debug>:${debug}>")
-    set(nondebug_gen_expr "$<$<NOT:$<CONFIG:Debug>>:${nondebug}>")
-    set(gen_expr "${debug_gen_expr};${nondebug_gen_expr}")
-
-    set_target_properties(
-        Qt5::Widgets
-        PROPERTIES
-        INTERFACE_LINK_LIBRARIES "${linked_libs};${gen_expr}"
-    )
-endfunction()
-
-function(add_missing_system_lib libname)
-    get_target_property(
-        linked_libs
-        Qt5::Widgets
-        INTERFACE_LINK_LIBRARIES
-    )
-
-    set_target_properties(
-        Qt5::Widgets
-        PROPERTIES
-        INTERFACE_LINK_LIBRARIES "${linked_libs};${libname}"
-    )
-endfunction()
+find_package(Qt5Widgets CONFIG REQUIRED)
+find_package(Qt5Svg CONFIG REQUIRED)
+find_package(Threads REQUIRED)
 
 if(MSVC AND ENABLE_STATIC_RUNTIME)
     foreach(flag_var CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
         string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
     endforeach(flag_var)
 
-    # add missing dependencies manually for static libs
-    add_missing_qt_lib("lib/Qt5AccessibilitySupport")
-    add_missing_qt_lib("lib/Qt5EventDispatcherSupport")
-    add_missing_qt_lib("lib/Qt5FontDatabaseSupport")
-    add_missing_qt_lib("lib/Qt5ThemeSupport")
-    add_missing_qt_lib("lib/Qt5WindowsUIAutomationSupport")
-    add_missing_qt_lib("lib/qtfreetype")
-    add_missing_qt_lib("lib/qtharfbuzz")
-    add_missing_qt_lib("lib/qtlibpng")
-    add_missing_qt_lib("lib/qtpcre2")
-    add_missing_qt_lib("plugins/imageformats/qgif")
-    add_missing_qt_lib("plugins/imageformats/qicns")
-    add_missing_qt_lib("plugins/imageformats/qico")
-    add_missing_qt_lib("plugins/imageformats/qjpeg")
-    add_missing_qt_lib("plugins/imageformats/qtga")
-    add_missing_qt_lib("plugins/imageformats/qtiff")
-    add_missing_qt_lib("plugins/imageformats/qwbmp")
-    add_missing_qt_lib("plugins/imageformats/qwebp")
-    add_missing_qt_lib("plugins/platforms/qwindows")
-    add_missing_qt_lib("plugins/styles/qwindowsvistastyle")
+    # for static linking, some additional dependencies have to be spelled out
 
-    add_missing_system_lib("dwmapi.lib")
-    add_missing_system_lib("imm32.lib")
-    add_missing_system_lib("netapi32.lib")
-    add_missing_system_lib("userenv.lib")
-    add_missing_system_lib("version.lib")
-    add_missing_system_lib("winmm.lib")
-    add_missing_system_lib("ws2_32.lib")
-    add_missing_system_lib("uxtheme.lib")
+    find_package(harfbuzz CONFIG REQUIRED)
+    find_package(double-conversion CONFIG REQUIRED)
+    find_package(JPEG REQUIRED)
+    find_package(PNG REQUIRED)
+    find_package(ZLIB REQUIRED)
+
+    # some Qt dependencies have to be searched by name
+
+    find_library(PCRE2_LIBRARY NAMES pcre2-16)
+    find_library(Qt5AccessibilitySupport_LIBRARY NAMES Qt5AccessibilitySupport)
+    find_library(Qt5EventDispatcherSupport_LIBRARY NAMES Qt5EventDispatcherSupport)
+    find_library(Qt5FontDatabaseSupport_LIBRARY NAMES Qt5FontDatabaseSupport)
+    find_library(Qt5ThemeSupport_LIBRARY NAMES Qt5ThemeSupport)
+    find_library(Qt5WindowsUIAutomationSupport_LIBRARY NAMES Qt5WindowsUIAutomationSupport)
+
+    # windows libraries
+
+    find_library(DWMAPI_LIBRARY NAMES dwmapi)
+    find_library(IMM32_LIBRARY NAMES imm32)
+    find_library(NETAPI32_LIBRARY NAMES netapi32)
+    find_library(USERENV_LIBRARY NAMES userenv)
+    find_library(VERSION_LIBRARY NAMES version)
+    find_library(WINMM_LIBRARY NAMES winmm)
+    find_library(WS2_32_LIBRARY NAMES ws2_32)
+    find_library(UXTHEME_LIBRARY NAMES uxtheme)
+    find_library(WTSAPI32_LIBRARY NAMES Wtsapi32)
+
+    if(CMAKE_BUILD_TYPE MATCHES "^Debug$" OR NOT DEFINED CMAKE_BUILD_TYPE)
+
+        # cannot use the harfbuzz package for debug builds, because it pulls in the release version of freetype
+        # so search for harfbuzz by name and use the freetype package directly
+
+        find_library(HARFBUZZ_LIBRARY_DEBUG NAMES harfbuzz)
+        find_package(freetype CONFIG REQUIRED)
+
+        # some Qt dependencies have to be searched by name
+
+        find_library(PCRE2_LIBRARY_DEBUG NAMES pcre2-16d)
+        find_library(Qt5AccessibilitySupport_LIBRARY_DEBUG NAMES Qt5AccessibilitySupportd)
+        find_library(Qt5EventDispatcherSupport_LIBRARY_DEBUG NAMES Qt5EventDispatcherSupportd)
+        find_library(Qt5FontDatabaseSupport_LIBRARY_DEBUG NAMES Qt5FontDatabaseSupportd)
+        find_library(Qt5ThemeSupport_LIBRARY_DEBUG NAMES Qt5ThemeSupportd)
+        find_library(Qt5WindowsUIAutomationSupport_LIBRARY_DEBUG NAMES Qt5WindowsUIAutomationSupportd)
+
+        find_library(QWindows_DEBUG NAMES qwindowsd PATH_SUFFIXES plugins/platforms)
+        find_library(QWindowsVistaStyle_DEBUG NAMES qwindowsvistastyled PATH_SUFFIXES plugins/styles)
+        find_library(QJpegPlugin_DEBUG NAMES qjpegd PATH_SUFFIXES plugins/imageformats)
+
+        set(STATIC_LINK_DEPENDENCIES_DEBUG debug freetype
+                                           debug ${HARFBUZZ_LIBRARY_DEBUG}
+                                           debug ${PCRE2_LIBRARY_DEBUG}
+                                           debug ${Qt5AccessibilitySupport_LIBRARY_DEBUG}
+                                           debug ${Qt5EventDispatcherSupport_LIBRARY_DEBUG}
+                                           debug ${Qt5FontDatabaseSupport_LIBRARY_DEBUG}
+                                           debug ${Qt5ThemeSupport_LIBRARY_DEBUG}
+                                           debug ${Qt5WindowsUIAutomationSupport_LIBRARY_DEBUG}
+                                           debug ${QWindows_DEBUG}
+                                           debug ${QWindowsVistaStyle_DEBUG}
+                                           debug ${QJpegPlugin_DEBUG})
+    endif()
+
+    set(STATIC_LINK_DEPENDENCIES double-conversion::double-conversion
+                                 ${JPEG_LIBRARIES}
+                                 PNG::PNG
+                                 ZLIB::ZLIB
+                                 ${DWMAPI_LIBRARY}
+                                 ${IMM32_LIBRARY}
+                                 ${NETAPI32_LIBRARY}
+                                 ${USERENV_LIBRARY}
+                                 ${VERSION_LIBRARY}
+                                 ${WINMM_LIBRARY}
+                                 ${WS2_32_LIBRARY}
+                                 ${UXTHEME_LIBRARY}
+                                 ${WTSAPI32_LIBRARY}
+                                 optimized harfbuzz::harfbuzz
+                                 optimized ${PCRE2_LIBRARY}
+                                 optimized ${Qt5AccessibilitySupport_LIBRARY}
+                                 optimized ${Qt5EventDispatcherSupport_LIBRARY}
+                                 optimized ${Qt5FontDatabaseSupport_LIBRARY}
+                                 optimized ${Qt5ThemeSupport_LIBRARY}
+                                 optimized ${Qt5WindowsUIAutomationSupport_LIBRARY}
+                                 optimized Qt5::QWindowsIntegrationPlugin
+                                 optimized Qt5::QWindowsVistaStylePlugin
+                                 optimized Qt5::QJpegPlugin
+                                 ${STATIC_LINK_DEPENDENCIES_DEBUG})
 
     set(STATIC_PLUGIN_INCLUDE src/static_plugin_include.cpp)
 endif()
@@ -116,10 +130,7 @@ add_executable(AudioExplorer WIN32 src/AdvancedSearchDialog.cpp
                                    src/TrackInfoReader.cpp
                                    src/TrackInfoReader.h
                                    ${STATIC_PLUGIN_INCLUDE})
-target_link_libraries(AudioExplorer ${CMAKE_THREAD_LIBS_INIT} Qt5::Widgets Qt5::Svg optimized ${TAGLIB_LIBRARY})
-if(DEFINED ${TAGLIB_LIBRARY_DEBUG})
-    target_link_libraries(AudioExplorer debug ${TAGLIB_LIBRARY_DEBUG})
-endif()
+target_link_libraries(AudioExplorer ${CMAKE_THREAD_LIBS_INIT} Qt5::Widgets Qt5::Svg ${TAGLIB_LIBRARY} ${STATIC_LINK_DEPENDENCIES})
 
 target_include_directories(AudioExplorer PRIVATE ${TAGLIB_INCLUDE_DIR})
 target_compile_definitions(AudioExplorer PRIVATE TAGLIB_STATIC)
@@ -139,10 +150,7 @@ add_executable(test1 test/test.cpp
                      src/TrackInfoReader.h
                      src/TrackInfoReader.cpp
                      ${STATIC_PLUGIN_INCLUDE})
-target_link_libraries(test1 Qt5::Widgets optimized ${TAGLIB_LIBRARY})
-if(DEFINED ${TAGLIB_LIBRARY_DEBUG})
-    target_link_libraries(test1 debug ${TAGLIB_LIBRARY_DEBUG})
-endif()
+target_link_libraries(test1 Qt5::Widgets ${TAGLIB_LIBRARY} ${STATIC_LINK_DEPENDENCIES})
 
 target_include_directories(test1 PRIVATE ${TAGLIB_INCLUDE_DIR})
 target_compile_definitions(test1 PRIVATE TAGLIB_STATIC)
