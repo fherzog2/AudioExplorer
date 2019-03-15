@@ -37,6 +37,8 @@ public:
     static std::vector<std::pair<DisplayMode, QString>> displayModeToStringMapping();
     static std::vector<Column> getColumnsForDisplayMode(DisplayMode mode);
 
+    static const int MULTILINE_DISPLAY_ROLE = Qt::UserRole + 1;
+
     virtual AudioLibraryView* clone() const = 0;
     virtual QString getDisplayName() const = 0;
     virtual std::vector<DisplayMode> getSupportedModes() const = 0;

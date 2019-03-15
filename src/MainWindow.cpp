@@ -145,6 +145,11 @@ namespace
         // bake elided text into the option
         // using the size of the pixmap as width
 
+        QVariant multiline_var = index.data(AudioLibraryView::MULTILINE_DISPLAY_ROLE);
+
+        if (multiline_var.isValid())
+            option->text = multiline_var.toString();
+
         option->text = getElidedLines(option->text, option->fontMetrics, option->decorationSize.width());
     }
 
@@ -237,6 +242,7 @@ MainWindow::MainWindow(Settings& settings)
 
     _table = new QTableView(this);
     _table->setSortingEnabled(true);
+    _table->setWordWrap(false);
     _table->sortByColumn(AudioLibraryView::ZERO, Qt::AscendingOrder);
     _table->setModel(_model);
     _table->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
