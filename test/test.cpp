@@ -196,9 +196,11 @@ bool testLibraryTrackCleanup(const QString binary_dir)
 
     library.addTrack(new_filepath3, QDateTime(), TrackInfo());
 
-    QStringList valid_dirs;
-    valid_dirs.push_back(dirpath2);
-    library.cleanupTracksOutsideTheseDirectories(valid_dirs);
+    std::unordered_set<QString> loaded_audio_files;
+    loaded_audio_files.insert(filepath2);
+    loaded_audio_files.insert(new_filepath3);
+
+    library.removeTracksExcept(loaded_audio_files);
 
     // filepath1 is not inside valid_dirs, so the library must not contain it anymore
     // filepath3 does not exist anymore, so the library must not contain it anymore

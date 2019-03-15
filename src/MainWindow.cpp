@@ -495,12 +495,6 @@ void MainWindow::onEditPreferences()
 
     if (_settings.audio_dir_paths.getValue() != old_audio_dir_paths)
     {
-        {
-            ThreadSafeLibrary::LibraryAccessor acc(_library);
-
-            acc.getLibraryForUpdate().cleanupTracksOutsideTheseDirectories(_settings.audio_dir_paths.getValue());
-        }
-
         scanAudioDirs();
     }
 }
@@ -755,10 +749,6 @@ void MainWindow::loadLibrary(QStringList audio_dir_paths, ThreadSafeLibrary& lib
             }
         }
     }
-
-    ThreadSafeLibrary::LibraryAccessor acc(library);
-
-    acc.getLibraryForUpdate().cleanupTracksOutsideTheseDirectories(audio_dir_paths);
 }
 
 void MainWindow::scanAudioDirs()
@@ -792,9 +782,11 @@ void MainWindow::scanAudioDirsThreadFunc(QStringList audio_dir_paths, ThreadSafe
         library.libraryCacheLoading();
     }
 
+    std::unordered_set<QString> visited_audio_files;
+
     for (const QString& dirpath : audio_dir_paths)
     {
-        forEachFileInDirectory(dirpath, [&library, &files_loaded, &files_in_cache](const QFileInfo& file) {
+        forEachFileInDirectory(dirpath, [&library, &files_loaded, &files_in_cache, &visited_audio_files](const QFileInfo& file) {
             if (library._abort_loading)
                 return false; // stop iteration
 
@@ -808,6 +800,7 @@ void MainWindow::scanAudioDirsThreadFunc(QStringList audio_dir_paths, ThreadSafe
                     if (track->_last_modified == last_modified)
                     {
                         ++files_in_cache;
+                        visited_audio_files.insert(filepath);
                         library.libraryLoadProgressed(files_loaded, files_in_cache);
                         return true; // nothing to do
                     }
@@ -823,10 +816,18 @@ void MainWindow::scanAudioDirsThreadFunc(QStringList audio_dir_paths, ThreadSafe
                 }
 
                 ++files_loaded;
+                visited_audio_files.insert(filepath);
                 library.libraryLoadProgressed(files_loaded, files_in_cache);
             }
             return true;
         });
+    }
+
+    if (!library._abort_loading)
+    {
+        ThreadSafeLibrary::LibraryAccessor acc(library);
+
+        acc.getLibraryForUpdate().removeTracksExcept(visited_audio_files);
     }
 
     auto end_time = std::chrono::system_clock::now();

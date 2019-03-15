@@ -5,6 +5,7 @@
 #include <map>
 #include <memory>
 #include <set>
+#include <unordered_set>
 #include <unordered_map>
 #include <vector>
 #include <QtCore/qdatastream.h>
@@ -153,7 +154,8 @@ public:
 
     bool isModified() const;
 
-    void cleanupTracksOutsideTheseDirectories(const QStringList& paths);
+    void removeTracksExcept(const std::unordered_set<QString>& loaded_audio_files);
+
     void save(QDataStream& s) const;
     void load(QDataStream& s);
 

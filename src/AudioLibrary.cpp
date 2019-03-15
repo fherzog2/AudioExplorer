@@ -188,22 +188,14 @@ bool AudioLibrary::isModified() const
     return _is_modified;
 }
 
-void AudioLibrary::cleanupTracksOutsideTheseDirectories(const QStringList& paths)
+void AudioLibrary::removeTracksExcept(const std::unordered_set<QString>& loaded_audio_files)
 {
     for (auto it = _filepath_to_track_map.begin(), end = _filepath_to_track_map.end(); it != end;)
     {
-        bool is_path_outside = true;
-        for (const QString& path : paths)
+        if (loaded_audio_files.find(it->first) == loaded_audio_files.end())
         {
-            if (it->first.startsWith(path))
-            {
-                is_path_outside = false;
-                break;
-            }
-        }
+            // track is not one of the loaded files, must be outdated
 
-        if (is_path_outside || !QFileInfo::exists(it->first))
-        {
             AudioLibraryTrack* track = it->second.get();
             ++it;
             removeTrack(track);
