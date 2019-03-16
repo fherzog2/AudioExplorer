@@ -54,13 +54,13 @@ namespace {
             .arg(album->_key._artist)
             .arg(album->_key._year)
             .arg(album->_key._album);
-        setData(sort_key);
+        setData(sort_key, AudioLibraryView::SORT_ROLE);
     }
 
     bool AlbumModelItem::operator<(const QStandardItem& other) const
     {
-        QVariant var_sort_key1 = data();
-        QVariant var_sort_key2 = other.data();
+        QVariant var_sort_key1 = data(AudioLibraryView::SORT_ROLE);
+        QVariant var_sort_key2 = other.data(AudioLibraryView::SORT_ROLE);
 
         if (var_sort_key1.type() == QVariant::String && var_sort_key2.type() == QVariant::String)
         {
@@ -89,13 +89,13 @@ namespace {
             .arg(track->_album->_key._album)
             .arg(track->_disc_number)
             .arg(track->_track_number);
-        setData(sort_key);
+        setData(sort_key, AudioLibraryView::SORT_ROLE);
     }
 
     bool TrackModelItem::operator<(const QStandardItem& other) const
     {
-        QVariant var_sort_key1 = data();
-        QVariant var_sort_key2 = other.data();
+        QVariant var_sort_key1 = data(AudioLibraryView::SORT_ROLE);
+        QVariant var_sort_key2 = other.data(AudioLibraryView::SORT_ROLE);
 
         if (var_sort_key1.type() == QVariant::String && var_sort_key2.type() == QVariant::String)
         {
