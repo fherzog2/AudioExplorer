@@ -60,12 +60,22 @@ AudioLibraryAlbum::AudioLibraryAlbum(const AudioLibraryAlbumKey& key, const QByt
     : _key(key)
     , _cover(cover)
 {
-    _cover_pixmap.loadFromData(_cover);
 }
 
 const QPixmap& AudioLibraryAlbum::getCoverPixmap() const
 {
     return _cover_pixmap;
+}
+
+void AudioLibraryAlbum::setCoverPixmap(const QPixmap& pixmap)
+{
+    _cover_pixmap = pixmap;
+    _is_cover_pixmap_set = true;
+}
+
+bool AudioLibraryAlbum::isCoverPixmapSet() const
+{
+    return _is_cover_pixmap_set;
 }
 
 //=============================================================================

@@ -29,6 +29,30 @@
 
 namespace
 {
+    template<class T, class V>
+    class SetValueOnDestroy
+    {
+    public:
+        SetValueOnDestroy(T& variable, V value)
+            : _variable(variable)
+            , _value(value)
+        {}
+
+        ~SetValueOnDestroy()
+        {
+            _variable = _value;
+        }
+
+        SetValueOnDestroy(const SetValueOnDestroy& other) = delete;
+        SetValueOnDestroy& operator=(const SetValueOnDestroy& other) = delete;
+        SetValueOnDestroy(SetValueOnDestroy&& other) = delete;
+        SetValueOnDestroy& operator=(SetValueOnDestroy&& other) = delete;
+
+    private:
+        T& _variable;
+        V _value;
+    };
+
     template<class RECEIVER, class FUNC>
     QAction* addMenuAction(QMenu& menu, const QString& text, RECEIVER rec, FUNC func, const QKeySequence& shortcut = 0)
     {
@@ -327,6 +351,7 @@ MainWindow::MainWindow(Settings& settings)
     connect(&_library, &ThreadSafeLibrary::libraryCacheLoading, this, &MainWindow::onLibraryCacheLoading);
     connect(&_library, &ThreadSafeLibrary::libraryLoadProgressed, this, &MainWindow::onLibraryLoadProgressed);
     connect(&_library, &ThreadSafeLibrary::libraryLoadFinished, this, &MainWindow::onLibraryLoadFinished);
+    connect(&_library, &ThreadSafeLibrary::coverLoadFinished, this, &MainWindow::onCoverLoadFinished);
     connect(_search_field, &QLineEdit::returnPressed, this, &MainWindow::onSearchEnterPressed);
     connect(_display_mode_tabs, &QTabBar::tabBarClicked, this, &MainWindow::onDisplayModeSelected);
     connect(_view_type_tabs, &QTabBar::tabBarClicked, this, &MainWindow::onViewTypeSelected);
@@ -352,6 +377,7 @@ MainWindow::MainWindow(Settings& settings)
 MainWindow::~MainWindow()
 {
     abortScanAudioDirs();
+    abortLoadingCovers();
 }
 
 void MainWindow::closeEvent(QCloseEvent* e)
@@ -539,6 +565,11 @@ void MainWindow::onLibraryLoadFinished(int files_loaded, int files_in_cache, flo
 {
     _status_bar->showMessage(QString("%1 files in cache, %2 new files loaded, needed %3 seconds").arg(files_in_cache).arg(files_loaded).arg(duration_sec, 0, 'f', 1));
 
+    updateCurrentView();
+}
+
+void MainWindow::onCoverLoadFinished()
+{
     updateCurrentView();
 }
 
@@ -754,23 +785,30 @@ void MainWindow::loadLibrary(QStringList audio_dir_paths, ThreadSafeLibrary& lib
 void MainWindow::scanAudioDirs()
 {
     abortScanAudioDirs();
+    abortLoadingCovers();
+
+    _library._is_libary_loading = true;
+
     _library_load_thread = std::thread([=]() {
         scanAudioDirsThreadFunc(_settings.audio_dir_paths.getValue(), _library);
     });
+
+    startLoadingCovers();
 }
 
 void MainWindow::abortScanAudioDirs()
 {
+    _library._abort_loading = true;
+    SetValueOnDestroy<std::atomic_bool, bool> reset_abort_flag(_library._abort_loading, false);
+
     if (_library_load_thread.joinable())
-    {
-        _library._abort_loading = true;
         _library_load_thread.join();
-        _library._abort_loading = false;
-    }
 }
 
 void MainWindow::scanAudioDirsThreadFunc(QStringList audio_dir_paths, ThreadSafeLibrary& library)
 {
+    SetValueOnDestroy<std::atomic_bool, bool> reset_loading_flag(library._is_libary_loading, false);
+
     int files_loaded = 0;
     int files_in_cache = 0;
     auto start_time = std::chrono::system_clock::now();
@@ -1062,6 +1100,83 @@ QString MainWindow::getItemId(QStandardItem* item) const
     // normally every item has some ID, this line can only be reached through programming error
 
     return QString::null;
+}
+
+void MainWindow::startLoadingCovers()
+{
+    _cover_load_thread = std::thread([=](){
+        loadCoversThreadFunc(_library);
+    });
+}
+
+void MainWindow::abortLoadingCovers()
+{
+    _library._abort_cover_loading = true;
+    SetValueOnDestroy<std::atomic_bool, bool> reset_abort_flag(_library._abort_cover_loading, false);
+
+    if (_cover_load_thread.joinable())
+        _cover_load_thread.join();
+}
+
+void MainWindow::loadCoversThreadFunc(ThreadSafeLibrary& library)
+{
+    while (true)
+    {
+        // get cover bytes from library
+
+        std::map<AudioLibraryAlbumKey, std::pair<QByteArray, QPixmap>> covers_to_load;
+        bool enough_bytes_for_now = false;
+
+        {
+            ThreadSafeLibrary::LibraryAccessor acc(library);
+            for (const AudioLibraryAlbum* album : acc.getLibrary().getAlbums())
+            {
+                if (library._abort_loading)
+                    return;
+
+                if (!album->_cover.isEmpty() && !album->isCoverPixmapSet())
+                {
+                    covers_to_load[album->_key].first = album->_cover;
+                }
+
+                if (covers_to_load.size() >= 100)
+                {
+                    enough_bytes_for_now = true;
+                    break;
+                }
+            }
+        }
+
+        if (covers_to_load.empty() && !enough_bytes_for_now && !library._is_libary_loading)
+        {
+            library.coverLoadFinished();
+            return; // ok, finished
+        }
+
+        // decode covers
+
+        for (auto& cover : covers_to_load)
+        {
+            if (library._abort_loading)
+                return;
+
+            cover.second.second.loadFromData(cover.second.first);
+        }
+
+        // write decoded covers to library
+
+        {
+            ThreadSafeLibrary::LibraryAccessor acc(library);
+
+            for (auto& cover : covers_to_load)
+            {
+                if (library._abort_loading)
+                    return;
+
+                acc.getLibraryForUpdate().getAlbum(cover.first)->setCoverPixmap(cover.second.second);
+            }
+        }
+    }
 }
 
 void MainWindow::setBreadCrumb(AudioLibraryView* view)

@@ -75,6 +75,8 @@ public:
     AudioLibraryAlbum(const AudioLibraryAlbumKey& key, const QByteArray& cover);
 
     const QPixmap& getCoverPixmap() const;
+    void setCoverPixmap(const QPixmap& pixmap);
+    bool isCoverPixmapSet() const;
 
     AudioLibraryAlbumKey _key;
     QByteArray _cover;
@@ -82,7 +84,7 @@ public:
     std::vector<AudioLibraryTrack*> _tracks;
 
 private:
-    bool _tried_loading_cover = false;
+    bool _is_cover_pixmap_set = false;
     QPixmap _cover_pixmap;
 };
 

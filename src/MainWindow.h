@@ -69,11 +69,15 @@ public:
 
     std::atomic_bool _abort_loading = ATOMIC_VAR_INIT(false);
     std::atomic_bool _library_cache_loaded = ATOMIC_VAR_INIT(false);
+    std::atomic_bool _is_libary_loading = ATOMIC_VAR_INIT(false);
+
+    std::atomic_bool _abort_cover_loading = ATOMIC_VAR_INIT(false);
 
 signals:
     void libraryCacheLoading();
     void libraryLoadProgressed(int files_loaded, int files_in_cache);
     void libraryLoadFinished(int files_loaded, int files_in_cache, float duration_sec);
+    void coverLoadFinished();
 
 private:
     SpinLock _library_spin_lock;
@@ -100,6 +104,7 @@ private:
     void onLibraryCacheLoading();
     void onLibraryLoadProgressed(int files_loaded, int files_in_cache);
     void onLibraryLoadFinished(int files_loaded, int files_in_cache, float duration_sec);
+    void onCoverLoadFinished();
     void onShowDuplicateAlbums();
     void onSearchEnterPressed();
     void onBreadCrumbClicked();
@@ -123,6 +128,10 @@ private:
     void getFilepathsFromIndex(const QModelIndex& index, std::vector<QString>& filepaths);
     void forEachFilepathAtIndex(const QModelIndex& index, std::function<void(const QString&)> callback);
     QString getItemId(QStandardItem* item) const;
+
+    void startLoadingCovers();
+    void abortLoadingCovers();
+    static void loadCoversThreadFunc(ThreadSafeLibrary& library);
 
     void addBreadCrumb(AudioLibraryView* view);
     void clearBreadCrumbs();
@@ -149,6 +158,8 @@ private:
     std::thread _library_load_thread;
     std::chrono::steady_clock::time_point _last_view_update_time;
     bool _is_last_view_update_time_valid = false;
+
+    std::thread _cover_load_thread;
 
     QLineEdit* _search_field = nullptr;
     QPointer<QWidget> _advanced_search_dialog = nullptr;
