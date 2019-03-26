@@ -392,7 +392,7 @@ void AudioLibraryViewArtist::createItems(const AudioLibrary& library,
             bool album_row_created = false;
 
             if (track->_artist == _artist ||
-                track->_album_artist == _artist)
+                (!track->_album_artist.isEmpty() && track->_album_artist == _artist))
             {
                 switch (*display_mode)
                 {
@@ -419,7 +419,7 @@ void AudioLibraryViewArtist::resolveToTracks(const AudioLibrary& library, std::v
         for (const AudioLibraryTrack* track : album->_tracks)
         {
             if (track->_artist == _artist ||
-                track->_album_artist == _artist)
+                (!track->_album_artist.isEmpty() && track->_album_artist == _artist))
             {
                 tracks.push_back(track);
             }
