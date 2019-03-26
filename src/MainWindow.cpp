@@ -239,7 +239,7 @@ MainWindow::MainWindow(Settings& settings)
     _display_mode_tabs = new QTabBar(toolarea);
     _display_mode_tabs->setAutoHide(true);
 
-    _model = new QStandardItemModel(this);
+    _model = new AudioLibraryModel(this);
 
     _icon_size_steps = { 64, 96, 128, 192, 256 };
 
@@ -565,12 +565,12 @@ void MainWindow::onLibraryLoadFinished(int files_loaded, int files_in_cache, flo
 {
     _status_bar->showMessage(QString("%1 files in cache, %2 new files loaded, needed %3 seconds").arg(files_in_cache).arg(files_loaded).arg(duration_sec, 0, 'f', 1));
 
-    updateCurrentView();
+    updateCurrentView(true);
 }
 
 void MainWindow::onCoverLoadFinished()
 {
-    updateCurrentView();
+    updateCurrentView(true);
 }
 
 void MainWindow::onShowDuplicateAlbums()
@@ -618,7 +618,7 @@ void MainWindow::onDisplayModeChanged(AudioLibraryView::DisplayMode display_mode
         _selected_display_modes.push_back(std::make_pair(modes, display_mode));
     }
 
-    updateCurrentView();
+    updateCurrentView(false);
 }
 
 void MainWindow::onDisplayModeSelected(int index)
@@ -666,17 +666,17 @@ void MainWindow::onItemDoubleClicked(const QModelIndex &index)
     if (!item)
         return;
 
-    auto found = _views_for_items.find(item);
-    if (found != _views_for_items.end())
+    if (const AudioLibraryView* view = _model->getViewForItem(item))
     {
-        addBreadCrumb(found->second->clone());
+        addBreadCrumb(view->clone());
         return;
     }
 
-    if (QStandardItem* path_item = _model->item(index.row(), AudioLibraryView::PATH))
+    QString path = _model->getFilepathFromIndex(index);
+    if (!path.isEmpty() &&
+        QDesktopServices::openUrl(QUrl::fromLocalFile(path)))
     {
-        if (QDesktopServices::openUrl(QUrl::fromLocalFile(path_item->text())))
-            return;
+        return;
     }
 }
 
@@ -879,11 +879,9 @@ const AudioLibraryView* MainWindow::getCurrentView() const
     return _breadcrumbs.back()._view.get();
 }
 
-void MainWindow::updateCurrentView()
+void MainWindow::updateCurrentView(bool incremental)
 {
     auto view_settings = saveViewSettings();
-
-    _views_for_items.clear();
 
     auto supported_modes = _breadcrumbs.back()._view->getSupportedModes();
 
@@ -943,28 +941,44 @@ void MainWindow::updateCurrentView()
         _table->setColumnHidden(column.first, it == visible_columns.end());
     }
 
-    // craete items
+    // create items
 
-    QStandardItemModel* model = new QStandardItemModel(this);
-
-    QStringList model_headers;
-    for (const auto& column : AudioLibraryView::columnToStringMapping())
+    if (incremental)
     {
-        model_headers.push_back(AudioLibraryView::getColumnFriendlyName(column.first));
-    }
-    model->setHorizontalHeaderLabels(model_headers);
+        if (!_breadcrumbs.empty())
+        {
+            AudioLibraryModel::IncrementalUpdateScope update_scope(*_model);
 
-    if (!_breadcrumbs.empty())
+            ThreadSafeLibrary::LibraryAccessor acc(_library);
+
+            _breadcrumbs.back()._view->createItems(acc.getLibrary(), current_display_mode.get(), _model);
+        }
+    }
+    else
     {
-        ThreadSafeLibrary::LibraryAccessor acc(_library);
+        AudioLibraryModel* model = new AudioLibraryModel(this);
 
-        _breadcrumbs.back()._view->createItems(acc.getLibrary(), current_display_mode.get(), model, _views_for_items);
+        QStringList model_headers;
+        for (const auto& column : AudioLibraryView::columnToStringMapping())
+        {
+            model_headers.push_back(AudioLibraryView::getColumnFriendlyName(column.first));
+        }
+        model->setHorizontalHeaderLabels(model_headers);
+
+        if (!_breadcrumbs.empty())
+        {
+            //AudioLibraryModel::UpdateScope update_scope(*model);
+
+            ThreadSafeLibrary::LibraryAccessor acc(_library);
+
+            _breadcrumbs.back()._view->createItems(acc.getLibrary(), current_display_mode.get(), model);
+        }
+
+        _model->deleteLater();
+        _model = model;
+        _list->setModel(model);
+        _table->setModel(model);
     }
-
-    _model->deleteLater();
-    _model = model;
-    _list->setModel(model);
-    _table->setModel(model);
 
     restoreViewSettings(view_settings.get());
 
@@ -976,14 +990,14 @@ void MainWindow::updateCurrentViewIfOlderThan(int msecs)
 {
     if (!_is_last_view_update_time_valid)
     {
-        updateCurrentView();
+        updateCurrentView(true);
         return;
     }
 
     auto now = std::chrono::steady_clock::now();
     if (std::chrono::duration_cast<std::chrono::milliseconds>(now - _last_view_update_time).count() > msecs)
     {
-        updateCurrentView();
+        updateCurrentView(true);
         return;
     }
 }
@@ -1025,13 +1039,12 @@ void MainWindow::getFilepathsFromIndex(const QModelIndex& index, std::vector<QSt
 
     if (QStandardItem* item = _model->itemFromIndex(index))
     {
-        auto view_found = _views_for_items.find(item);
-        if (view_found != _views_for_items.end())
+        if (const AudioLibraryView* view = _model->getViewForItem(item))
         {
             ThreadSafeLibrary::LibraryAccessor acc(_library);
 
             std::vector<const AudioLibraryTrack*> tracks;
-            view_found->second->resolveToTracks(acc.getLibrary(), tracks);
+            view->resolveToTracks(acc.getLibrary(), tracks);
 
             for (const AudioLibraryTrack* track : tracks)
                 filepaths.push_back(track->_filepath);
@@ -1040,9 +1053,10 @@ void MainWindow::getFilepathsFromIndex(const QModelIndex& index, std::vector<QSt
         }
     }
 
-    if (QStandardItem* path_item = _model->item(index.row(), AudioLibraryView::PATH))
+    QString path = _model->getFilepathFromIndex(index);
+    if (!path.isEmpty())
     {
-        filepaths.push_back(path_item->text());
+        filepaths.push_back(path);
     }
 }
 
@@ -1053,15 +1067,14 @@ void MainWindow::forEachFilepathAtIndex(const QModelIndex& index, std::function<
 
     if (QStandardItem* item = _model->itemFromIndex(index))
     {
-        auto view_found = _views_for_items.find(item);
-        if (view_found != _views_for_items.end())
+        if (const AudioLibraryView* view = _model->getViewForItem(item))
         {
             ThreadSafeLibrary::LibraryAccessor acc(_library);
 
             std::vector<const AudioLibraryTrack*> tracks;
-            view_found->second->resolveToTracks(acc.getLibrary(), tracks);
+            view->resolveToTracks(acc.getLibrary(), tracks);
 
-            std::sort(tracks.begin(), tracks.end(), [](const AudioLibraryTrack* a, const AudioLibraryTrack* b){
+            std::sort(tracks.begin(), tracks.end(), [](const AudioLibraryTrack* a, const AudioLibraryTrack* b) {
                 return std::tie(a->_album->_key._artist, a->_album->_key._year, a->_track_number, a->_title) <
                     std::tie(b->_album->_key._artist, b->_album->_key._year, b->_track_number, b->_title);
             });
@@ -1073,33 +1086,11 @@ void MainWindow::forEachFilepathAtIndex(const QModelIndex& index, std::function<
         }
     }
 
-    if (QStandardItem* path_item = _model->item(index.row(), AudioLibraryView::PATH))
+    QString path = _model->getFilepathFromIndex(index);
+    if (!path.isEmpty())
     {
-        callback(path_item->text());
+        callback(path);
     }
-}
-
-/**
-* @return A unique identifier for the item.
-*/
-QString MainWindow::getItemId(QStandardItem* item) const
-{
-    auto view_it = _views_for_items.find(item);
-    if (view_it != _views_for_items.end())
-    {
-        return view_it->second->getId();
-    }
-
-    // tracks are not associated with a view, use the filepath as ID instead
-
-    if (QStandardItem* path_item = _model->item(item->row(), AudioLibraryView::PATH))
-    {
-        return path_item->text();
-    }
-
-    // normally every item has some ID, this line can only be reached through programming error
-
-    return QString::null;
 }
 
 void MainWindow::startLoadingCovers()
@@ -1204,7 +1195,7 @@ void MainWindow::addBreadCrumb(AudioLibraryView* view)
     breadcrumb._view.reset(view);
     _breadcrumbs.push_back(std::move(breadcrumb));
 
-    updateCurrentView();
+    updateCurrentView(false);
 }
 
 void MainWindow::clearBreadCrumbs()
@@ -1233,7 +1224,7 @@ void MainWindow::restoreBreadCrumb(QObject* object)
 
     std::shared_ptr<ViewRestoreData> restore_data(_breadcrumbs.back()._restore_data.release());
 
-    updateCurrentView();
+    updateCurrentView(false);
 
     // restore uses a timer because the list view is updating asynchronously
 
@@ -1421,7 +1412,7 @@ std::unique_ptr<MainWindow::ViewRestoreData> MainWindow::saveViewSettings() cons
         if (index.column() != AudioLibraryView::ZERO)
             continue;
 
-        QString id = getItemId(_model->itemFromIndex(index));
+        QString id = _model->getItemId(_model->itemFromIndex(index));
         if (!id.isEmpty())
             restore_data->_selected_items.push_back(id);
     }
@@ -1446,7 +1437,7 @@ void MainWindow::restoreViewSettings(ViewRestoreData* restore_data)
         QModelIndex index = _model->index(i, AudioLibraryView::ZERO);
         if (QStandardItem* item = _model->itemFromIndex(index))
         {
-            QString id = getItemId(item);
+            QString id = _model->getItemId(item);
             if (!id.isEmpty())
             {
                 id_to_index_map[id] = index;

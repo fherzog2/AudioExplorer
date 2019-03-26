@@ -120,6 +120,8 @@ add_executable(AudioExplorer WIN32 src/AdvancedSearchDialog.cpp
                                    src/MainWindow.h
                                    src/AudioLibrary.cpp
                                    src/AudioLibrary.h
+                                   src/AudioLibraryModel.cpp
+                                   src/AudioLibraryModel.h
                                    src/AudioLibraryView.cpp
                                    src/AudioLibraryView.h
                                    src/project_version.h

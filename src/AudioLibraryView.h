@@ -4,6 +4,8 @@
 #include <QtGui/qstandarditemmodel.h>
 #include "AudioLibrary.h"
 
+class AudioLibraryModel;
+
 class AudioLibraryView
 {
 public:
@@ -39,14 +41,14 @@ public:
 
     static const int SORT_ROLE = Qt::UserRole + 1;
     static const int MULTILINE_DISPLAY_ROLE = Qt::UserRole + 2;
+    static const int ID_ROLE = Qt::UserRole + 3;
 
     virtual AudioLibraryView* clone() const = 0;
     virtual QString getDisplayName() const = 0;
     virtual std::vector<DisplayMode> getSupportedModes() const = 0;
     virtual void createItems(const AudioLibrary& library,
         const DisplayMode* display_mode,
-        QStandardItemModel* model,
-        std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items) const = 0;
+        AudioLibraryModel* model) const = 0;
     virtual void resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const;
     virtual QString getId() const;
 };
@@ -59,8 +61,7 @@ public:
     virtual std::vector<DisplayMode> getSupportedModes() const override;
     virtual void createItems(const AudioLibrary& library,
         const DisplayMode* display_mode,
-        QStandardItemModel* model,
-        std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items) const override;
+        AudioLibraryModel* model) const override;
 };
 
 class AudioLibraryViewAllAlbums : public AudioLibraryView
@@ -71,8 +72,7 @@ public:
     virtual std::vector<DisplayMode> getSupportedModes() const override;
     virtual void createItems(const AudioLibrary& library,
         const DisplayMode* display_mode,
-        QStandardItemModel* model,
-        std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items) const override;
+        AudioLibraryModel* model) const override;
 };
 
 class AudioLibraryViewAllTracks : public AudioLibraryView
@@ -83,8 +83,7 @@ public:
     virtual std::vector<DisplayMode> getSupportedModes() const override;
     virtual void createItems(const AudioLibrary& library,
         const DisplayMode* display_mode,
-        QStandardItemModel* model,
-        std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items) const override;
+        AudioLibraryModel* model) const override;
 };
 
 class AudioLibraryViewAllYears : public AudioLibraryView
@@ -95,8 +94,7 @@ public:
     virtual std::vector<DisplayMode> getSupportedModes() const override;
     virtual void createItems(const AudioLibrary& library,
         const DisplayMode* display_mode,
-        QStandardItemModel* model,
-        std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items) const override;
+        AudioLibraryModel* model) const override;
 };
 
 class AudioLibraryViewAllGenres : public AudioLibraryView
@@ -107,8 +105,7 @@ public:
     virtual std::vector<DisplayMode> getSupportedModes() const override;
     virtual void createItems(const AudioLibrary& library,
         const DisplayMode* display_mode,
-        QStandardItemModel* model,
-        std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items) const override;
+        AudioLibraryModel* model) const override;
 };
 
 class AudioLibraryViewArtist : public AudioLibraryView
@@ -121,8 +118,7 @@ public:
     virtual std::vector<DisplayMode> getSupportedModes() const override;
     virtual void createItems(const AudioLibrary& library,
         const DisplayMode* display_mode,
-        QStandardItemModel* model,
-        std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items) const override;
+        AudioLibraryModel* model) const override;
     virtual void resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const override;
     virtual QString getId() const override;
 
@@ -140,8 +136,7 @@ public:
     virtual std::vector<DisplayMode> getSupportedModes() const override;
     virtual void createItems(const AudioLibrary& library,
         const DisplayMode* display_mode,
-        QStandardItemModel* model,
-        std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items) const override;
+        AudioLibraryModel* model) const override;
     virtual void resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const override;
     virtual QString getId() const override;
 
@@ -159,8 +154,7 @@ public:
     virtual std::vector<DisplayMode> getSupportedModes() const override;
     virtual void createItems(const AudioLibrary& library,
         const DisplayMode* display_mode,
-        QStandardItemModel* model,
-        std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items) const override;
+        AudioLibraryModel* model) const override;
     virtual void resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const override;
     virtual QString getId() const override;
 
@@ -178,8 +172,7 @@ public:
     virtual std::vector<DisplayMode> getSupportedModes() const override;
     virtual void createItems(const AudioLibrary& library,
         const DisplayMode* display_mode,
-        QStandardItemModel* model,
-        std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items) const override;
+        AudioLibraryModel* model) const override;
     virtual void resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const override;
     virtual QString getId() const override;
 
@@ -197,8 +190,7 @@ public:
     virtual std::vector<DisplayMode> getSupportedModes() const override;
     virtual void createItems(const AudioLibrary& library,
         const DisplayMode* display_mode,
-        QStandardItemModel* model,
-        std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items) const override;
+        AudioLibraryModel* model) const override;
 
 private:
     static bool match(const QString& input, const QVector<QStringRef>& strings_to_match);
@@ -228,8 +220,7 @@ public:
     virtual std::vector<DisplayMode> getSupportedModes() const override;
     virtual void createItems(const AudioLibrary& library,
         const DisplayMode* display_mode,
-        QStandardItemModel* model,
-        std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items) const override;
+        AudioLibraryModel* model) const override;
 
 private:
     Query _query;
@@ -243,6 +234,5 @@ public:
     virtual std::vector<DisplayMode> getSupportedModes() const override;
     virtual void createItems(const AudioLibrary& library,
         const DisplayMode* display_mode,
-        QStandardItemModel* model,
-        std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>>& views_for_items) const override;
+        AudioLibraryModel* model) const override;
 };

@@ -74,6 +74,8 @@ class AudioLibraryAlbum
 public:
     AudioLibraryAlbum(const AudioLibraryAlbumKey& key, const QByteArray& cover);
 
+    const QString& getId() const { return _id; }
+
     const QPixmap& getCoverPixmap() const;
     void setCoverPixmap(const QPixmap& pixmap);
     bool isCoverPixmapSet() const;
@@ -84,6 +86,8 @@ public:
     std::vector<AudioLibraryTrack*> _tracks;
 
 private:
+    QString _id;
+
     bool _is_cover_pixmap_set = false;
     QPixmap _cover_pixmap;
 };
@@ -111,7 +115,18 @@ public:
         , _disc_number(disc_number)
         , _comment(comment)
         , _tag_types(tag_types)
-    {}
+    {
+        _id = QString("%1.track(%2,%3,%4,%5,%6,%7,%8,%9)")
+            .arg(_album->getId())
+            .arg(_artist)
+            .arg(_album_artist)
+            .arg(_filepath)
+            .arg(_title)
+            .arg(_track_number)
+            .arg(_disc_number)
+            .arg(_comment)
+            .arg(_tag_types);
+    }
 
     std::tuple<AudioLibraryAlbumKey, QByteArray, QString, QString, QString, QDateTime, QString, int, int, QString, QString> getMembersAsTuple() const
     {
@@ -128,6 +143,8 @@ public:
         return !operator==(other);
     }
 
+    const QString& getId() const { return _id;  }
+
     AudioLibraryAlbum* _album = nullptr;
     QString _artist;
     QString _album_artist;
@@ -138,6 +155,8 @@ public:
     int _disc_number;
     QString _comment;
     QString _tag_types;
+
+    QString _id;
 };
 
 class AudioLibrary

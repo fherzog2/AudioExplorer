@@ -18,6 +18,7 @@
 #include "Settings.h"
 #include "AudioLibrary.h"
 #include "AudioLibraryView.h"
+#include "AudioLibraryModel.h"
 
 class SpinLock
 {
@@ -121,13 +122,12 @@ private:
     void abortScanAudioDirs();
     static void scanAudioDirsThreadFunc(QStringList audio_dir_paths, ThreadSafeLibrary& library);
     const AudioLibraryView* getCurrentView() const;
-    void updateCurrentView();
+    void updateCurrentView(bool incremental);
     void updateCurrentViewIfOlderThan(int msecs);
     void advanceIconSize(int direction);
     void addViewTypeTab(QWidget* view, const QString& friendly_name, const QString& internal_name);
     void getFilepathsFromIndex(const QModelIndex& index, std::vector<QString>& filepaths);
     void forEachFilepathAtIndex(const QModelIndex& index, std::function<void(const QString&)> callback);
-    QString getItemId(QStandardItem* item) const;
 
     void startLoadingCovers();
     void abortLoadingCovers();
@@ -144,7 +144,7 @@ private:
 
     Settings& _settings;
 
-    QStandardItemModel* _model = nullptr;
+    AudioLibraryModel* _model = nullptr;
 
     std::vector<std::pair<QString, QWidget*>> _view_type_map;
     QTabBar* _view_type_tabs = nullptr;
@@ -164,7 +164,7 @@ private:
     QLineEdit* _search_field = nullptr;
     QPointer<QWidget> _advanced_search_dialog = nullptr;
 
-    std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>> _views_for_items;
+    //std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>> _views_for_items;
 
     struct ViewRestoreData
     {

@@ -60,6 +60,12 @@ AudioLibraryAlbum::AudioLibraryAlbum(const AudioLibraryAlbumKey& key, const QByt
     : _key(key)
     , _cover(cover)
 {
+    _id = QString("album(%1,%2,%3,%4,%5)")
+        .arg(_key._artist)
+        .arg(_key._album)
+        .arg(_key._genre)
+        .arg(_key._year)
+        .arg(_key._cover_checksum);
 }
 
 const QPixmap& AudioLibraryAlbum::getCoverPixmap() const
