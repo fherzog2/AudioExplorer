@@ -76,6 +76,8 @@ public:
 
     const QString& getId() const { return _id; }
 
+    const QString& getCoverType() const { return _cover_type; }
+
     const QPixmap& getCoverPixmap() const;
     void setCoverPixmap(const QPixmap& pixmap);
     bool isCoverPixmapSet() const;
@@ -86,7 +88,11 @@ public:
     std::vector<AudioLibraryTrack*> _tracks;
 
 private:
+    QString getCoverTypeInternal() const;
+
     QString _id;
+
+    QString _cover_type;
 
     bool _is_cover_pixmap_set = false;
     QPixmap _cover_pixmap;

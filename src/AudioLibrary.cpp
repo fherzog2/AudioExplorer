@@ -66,6 +66,8 @@ AudioLibraryAlbum::AudioLibraryAlbum(const AudioLibraryAlbumKey& key, const QByt
         .arg(_key._genre)
         .arg(_key._year)
         .arg(_key._cover_checksum);
+
+    _cover_type = getCoverTypeInternal();
 }
 
 const QPixmap& AudioLibraryAlbum::getCoverPixmap() const
@@ -82,6 +84,38 @@ void AudioLibraryAlbum::setCoverPixmap(const QPixmap& pixmap)
 bool AudioLibraryAlbum::isCoverPixmapSet() const
 {
     return _is_cover_pixmap_set;
+}
+
+template<class ARRAY>
+bool compareSignature(const ARRAY& signature, const QByteArray& bytes)
+{
+    const size_t signature_size = std::distance(std::begin(signature), std::end(signature));
+
+    return bytes.size() >= signature_size &&
+        memcmp(bytes.constData(), signature, signature_size) == 0;
+}
+
+QString AudioLibraryAlbum::getCoverTypeInternal() const
+{
+    const uint8_t JPG_SIGNATURE[] = { 0xff, 0xd8 };
+    const uint8_t PNG_SIGNATURE[] = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+    const uint8_t BMP_SIGNATURE[] = { 0x42, 0x4d };
+
+    if (compareSignature(JPG_SIGNATURE, _cover))
+        return "jpg";
+
+    if (compareSignature(PNG_SIGNATURE, _cover))
+        return "png";
+
+    if (compareSignature(BMP_SIGNATURE, _cover))
+        return "bmp";
+
+    if (!_cover.isEmpty())
+    {
+        return "unknown signature: " + QString::fromLatin1(_cover.left(32).toHex());
+    }
+
+    return QString::null;
 }
 
 //=============================================================================

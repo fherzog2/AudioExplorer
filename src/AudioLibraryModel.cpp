@@ -170,7 +170,7 @@ void AudioLibraryModel::addAlbumItem(const AudioLibraryAlbum* album)
         setAdditionalColumn(row, AudioLibraryView::YEAR, QString("%1").arg(album->_key._year));
         setAdditionalColumn(row, AudioLibraryView::GENRE, album->_key._genre);
         setAdditionalColumn(row, AudioLibraryView::COVER_CHECKSUM, QString("%1").arg(album->_key._cover_checksum));
-        setAdditionalColumn(row, AudioLibraryView::COVER_TYPE, getCoverType(album));
+        setAdditionalColumn(row, AudioLibraryView::COVER_TYPE, album->getCoverType());
 
         return item;
     };
@@ -195,7 +195,7 @@ void AudioLibraryModel::addTrackItem(const AudioLibraryTrack* track)
         setAdditionalColumn(row, AudioLibraryView::YEAR, QString("%1").arg(track->_album->_key._year));
         setAdditionalColumn(row, AudioLibraryView::GENRE, track->_album->_key._genre);
         setAdditionalColumn(row, AudioLibraryView::COVER_CHECKSUM, QString("%1").arg(track->_album->_key._cover_checksum));
-        setAdditionalColumn(row, AudioLibraryView::COVER_TYPE, getCoverType(track->_album));
+        setAdditionalColumn(row, AudioLibraryView::COVER_TYPE, track->_album->getCoverType());
         setAdditionalColumn(row, AudioLibraryView::TITLE, track->_title);
         setAdditionalColumn(row, AudioLibraryView::TRACK_NUMBER, QString("%1").arg(track->_track_number));
         setAdditionalColumn(row, AudioLibraryView::DISC_NUMBER, QString("%1").arg(track->_disc_number));
@@ -292,36 +292,4 @@ void AudioLibraryModel::onUpdateFinished()
 void AudioLibraryModel::setAdditionalColumn(int row, AudioLibraryView::Column column, const QString& text)
 {
     setItem(row, static_cast<int>(column), new CollatedItem(text, _numeric_collator));
-}
-
-template<class ARRAY>
-bool compareSignature(const ARRAY& signature, const QByteArray& bytes)
-{
-    const size_t signature_size = std::distance(std::begin(signature), std::end(signature));
-
-    return bytes.size() >= signature_size &&
-        memcmp(bytes.constData(), signature, signature_size) == 0;
-}
-
-QString AudioLibraryModel::getCoverType(const AudioLibraryAlbum* album)
-{
-    const uint8_t JPG_SIGNATURE[] = { 0xff, 0xd8 };
-    const uint8_t PNG_SIGNATURE[] = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
-    const uint8_t BMP_SIGNATURE[] = { 0x42, 0x4d };
-
-    if (compareSignature(JPG_SIGNATURE, album->_cover))
-        return "jpg";
-
-    if (compareSignature(PNG_SIGNATURE, album->_cover))
-        return "png";
-
-    if (compareSignature(BMP_SIGNATURE, album->_cover))
-        return "bmp";
-
-    if (!album->_cover.isEmpty())
-    {
-        return "unknown signature: " + QString::fromLatin1(album->_cover.left(32).toHex());
-    }
-
-    return QString::null;
 }
