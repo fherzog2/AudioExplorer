@@ -65,6 +65,16 @@ void AdvancedSearchDialog::emitSearchRequested()
     query.title = _title->text();
     query.comment = _comment->text();
 
+    if (query.artist.isEmpty() &&
+        query.album.isEmpty() &&
+        query.genre.isEmpty() &&
+        query.title.isEmpty() &&
+        query.comment.isEmpty())
+    {
+        // don't start an empty search
+        return;
+    }
+
     query.case_sensitive = _check_case_sensitive->isChecked() ? Qt::CaseSensitive : Qt::CaseInsensitive;
     query.use_regex = _check_regex->isChecked();
 

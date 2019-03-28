@@ -693,7 +693,7 @@ QString AudioLibraryViewAdvancedSearch::getDisplayName() const
 
 std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewAdvancedSearch::getSupportedModes() const
 {
-    return{ DisplayMode::TRACKS };
+    return{ DisplayMode::ALBUMS, DisplayMode::TRACKS };
 }
 
 class AdvancedSearchComparer
@@ -727,9 +727,18 @@ bool AdvancedSearchComparer::check(const QString& text) const
 }
 
 void AudioLibraryViewAdvancedSearch::createItems(const AudioLibrary& library,
-    const DisplayMode* /*display_mode*/,
+    const DisplayMode* display_mode,
     AudioLibraryModel* model) const
 {
+    if (*display_mode == DisplayMode::ALBUMS &&
+        _query.artist.isEmpty() &&
+        _query.album.isEmpty() &&
+        _query.genre.isEmpty())
+    {
+        // early out, this search won't find anything
+        return;
+    }
+
     AdvancedSearchComparer compare_artist(_query.artist, _query.case_sensitive, _query.use_regex);
     AdvancedSearchComparer compare_album(_query.album, _query.case_sensitive, _query.use_regex);
     AdvancedSearchComparer compare_genre(_query.genre, _query.case_sensitive, _query.use_regex);
@@ -745,10 +754,12 @@ void AudioLibraryViewAdvancedSearch::createItems(const AudioLibrary& library,
         if (!_query.genre.isEmpty() && !compare_genre.check(album->_key._genre))
             continue;
 
-        if (!_query.title.isEmpty() || !_query.comment.isEmpty())
+        switch (*display_mode)
         {
-            QPixmap pixmap;
-
+        case DisplayMode::ALBUMS:
+            model->addAlbumItem(album);
+            break;
+        case DisplayMode::TRACKS:
             for (const AudioLibraryTrack* track : album->_tracks)
             {
                 if (!_query.title.isEmpty() && !compare_title.check(track->_title))
@@ -758,9 +769,8 @@ void AudioLibraryViewAdvancedSearch::createItems(const AudioLibrary& library,
 
                 model->addTrackItem(track);
             }
+            break;
         }
-        else
-            model->addAlbumItem(album);
     }
 }
 
