@@ -64,6 +64,8 @@ QString AudioLibraryView::getColumnFriendlyName(Column column)
         return "Genre";
     case COVER_CHECKSUM:
         return "Cover checksum";
+    case COVER_TYPE:
+        return "Cover type";
     case TITLE:
         return "Title";
     case TRACK_NUMBER:
@@ -92,6 +94,7 @@ std::vector<std::pair<AudioLibraryView::Column, QString>> AudioLibraryView::colu
     result.push_back(std::make_pair(YEAR, "year"));
     result.push_back(std::make_pair(GENRE, "genre"));
     result.push_back(std::make_pair(COVER_CHECKSUM, "cover_checksum"));
+    result.push_back(std::make_pair(COVER_TYPE, "cover_type"));
     result.push_back(std::make_pair(TITLE, "title"));
     result.push_back(std::make_pair(TRACK_NUMBER, "track_number"));
     result.push_back(std::make_pair(DISC_NUMBER, "disc_number"));
@@ -135,6 +138,7 @@ std::vector<AudioLibraryView::Column> AudioLibraryView::getColumnsForDisplayMode
             AudioLibraryView::YEAR,
             AudioLibraryView::GENRE,
             AudioLibraryView::COVER_CHECKSUM,
+            AudioLibraryView::COVER_TYPE,
         };
     case DisplayMode::TRACKS:
         return
@@ -144,6 +148,7 @@ std::vector<AudioLibraryView::Column> AudioLibraryView::getColumnsForDisplayMode
             AudioLibraryView::YEAR,
             AudioLibraryView::GENRE,
             AudioLibraryView::COVER_CHECKSUM,
+            AudioLibraryView::COVER_TYPE,
             AudioLibraryView::TITLE,
             AudioLibraryView::TRACK_NUMBER,
             AudioLibraryView::DISC_NUMBER,

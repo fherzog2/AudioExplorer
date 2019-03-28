@@ -19,13 +19,14 @@ public:
         YEAR = 3,
         GENRE = 4,
         COVER_CHECKSUM = 5,
-        TITLE = 6,
-        TRACK_NUMBER = 7,
-        DISC_NUMBER = 8,
-        ALBUM_ARTIST = 9,
-        COMMENT = 10,
-        PATH = 11,
-        TAG_TYPES = 12,
+        COVER_TYPE = 6,
+        TITLE = 7,
+        TRACK_NUMBER = 8,
+        DISC_NUMBER = 9,
+        ALBUM_ARTIST = 10,
+        COMMENT = 11,
+        PATH = 12,
+        TAG_TYPES = 13,
     };
     static QString getColumnFriendlyName(Column column);
     static std::vector<std::pair<Column, QString>> columnToStringMapping();

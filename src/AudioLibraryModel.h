@@ -38,6 +38,7 @@ private:
     void onUpdateStarted();
     void onUpdateFinished();
     void setAdditionalColumn(int row, AudioLibraryView::Column column, const QString& text);
+    static QString getCoverType(const AudioLibraryAlbum* album);
 
     std::unordered_map<QString, QStandardItem*> _id_to_item_map;
     std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>> _item_to_view_map;
