@@ -113,6 +113,10 @@ if(MSVC AND ENABLE_STATIC_RUNTIME)
     set(STATIC_PLUGIN_INCLUDE src/static_plugin_include.cpp)
 endif()
 
+if(WIN32)
+    set(WIN_RESOURCE_FILE src/project_version.rc)
+endif()
+
 add_executable(AudioExplorer WIN32 src/AdvancedSearchDialog.cpp
                                    src/AdvancedSearchDialog.h
                                    src/main.cpp
@@ -131,6 +135,7 @@ add_executable(AudioExplorer WIN32 src/AdvancedSearchDialog.cpp
                                    src/SettingsEditorWindow.h
                                    src/TrackInfoReader.cpp
                                    src/TrackInfoReader.h
+                                   ${WIN_RESOURCE_FILE}
                                    ${STATIC_PLUGIN_INCLUDE})
 target_link_libraries(AudioExplorer ${CMAKE_THREAD_LIBS_INIT} Qt5::Widgets Qt5::Svg ${TAGLIB_LIBRARY} ${STATIC_LINK_DEPENDENCIES})
 
