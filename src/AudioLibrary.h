@@ -62,6 +62,14 @@ public:
         return !operator==(other);
     }
 
+    QString toString() const
+    {
+        return QString("%3,%4,%5,%1,%2")
+            .arg(_year)
+            .arg(_cover_checksum)
+            .arg(_artist, _album, _genre);
+    }
+
     QString _artist;
     QString _album;
     QString _genre;
@@ -122,16 +130,10 @@ public:
         , _comment(comment)
         , _tag_types(tag_types)
     {
-        _id = QString("%1.track(%2,%3,%4,%5,%6,%7,%8,%9)")
-            .arg(_album->getId())
-            .arg(_artist)
-            .arg(_album_artist)
-            .arg(_filepath)
-            .arg(_title)
+        _id = QString("%3.track(%4,%5,%6,%7,%1,%2,%8,%9)")
             .arg(_track_number)
             .arg(_disc_number)
-            .arg(_comment)
-            .arg(_tag_types);
+            .arg(_album->getId(), _artist, _album_artist, _filepath, _title, _comment, _tag_types);
     }
 
     std::tuple<AudioLibraryAlbumKey, QByteArray, QString, QString, QString, QDateTime, QString, int, int, QString, QString> getMembersAsTuple() const

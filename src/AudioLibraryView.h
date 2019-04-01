@@ -51,7 +51,7 @@ public:
         const DisplayMode* display_mode,
         AudioLibraryModel* model) const = 0;
     virtual void resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const;
-    virtual QString getId() const;
+    virtual QString getId() const = 0;
 };
 
 class AudioLibraryViewAllArtists : public AudioLibraryView
@@ -63,6 +63,7 @@ public:
     virtual void createItems(const AudioLibrary& library,
         const DisplayMode* display_mode,
         AudioLibraryModel* model) const override;
+    virtual QString getId() const override;
 };
 
 class AudioLibraryViewAllAlbums : public AudioLibraryView
@@ -74,6 +75,7 @@ public:
     virtual void createItems(const AudioLibrary& library,
         const DisplayMode* display_mode,
         AudioLibraryModel* model) const override;
+    virtual QString getId() const override;
 };
 
 class AudioLibraryViewAllTracks : public AudioLibraryView
@@ -85,6 +87,7 @@ public:
     virtual void createItems(const AudioLibrary& library,
         const DisplayMode* display_mode,
         AudioLibraryModel* model) const override;
+    virtual QString getId() const override;
 };
 
 class AudioLibraryViewAllYears : public AudioLibraryView
@@ -96,6 +99,7 @@ public:
     virtual void createItems(const AudioLibrary& library,
         const DisplayMode* display_mode,
         AudioLibraryModel* model) const override;
+    virtual QString getId() const override;
 };
 
 class AudioLibraryViewAllGenres : public AudioLibraryView
@@ -107,6 +111,7 @@ public:
     virtual void createItems(const AudioLibrary& library,
         const DisplayMode* display_mode,
         AudioLibraryModel* model) const override;
+    virtual QString getId() const override;
 };
 
 class AudioLibraryViewArtist : public AudioLibraryView
@@ -192,6 +197,7 @@ public:
     virtual void createItems(const AudioLibrary& library,
         const DisplayMode* display_mode,
         AudioLibraryModel* model) const override;
+    virtual QString getId() const override;
 
 private:
     static bool match(const QString& input, const QVector<QStringRef>& strings_to_match);
@@ -222,6 +228,7 @@ public:
     virtual void createItems(const AudioLibrary& library,
         const DisplayMode* display_mode,
         AudioLibraryModel* model) const override;
+    virtual QString getId() const override;
 
 private:
     Query _query;
@@ -236,4 +243,5 @@ public:
     virtual void createItems(const AudioLibrary& library,
         const DisplayMode* display_mode,
         AudioLibraryModel* model) const override;
+    virtual QString getId() const override;
 };

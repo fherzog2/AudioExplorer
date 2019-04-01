@@ -122,7 +122,7 @@ private:
     void abortScanAudioDirs();
     static void scanAudioDirsThreadFunc(QStringList audio_dir_paths, ThreadSafeLibrary& library);
     const AudioLibraryView* getCurrentView() const;
-    void updateCurrentView(bool incremental);
+    void updateCurrentView();
     void updateCurrentViewIfOlderThan(int msecs);
     void advanceIconSize(int direction);
     void addViewTypeTab(QWidget* view, const QString& friendly_name, const QString& internal_name);
@@ -164,8 +164,6 @@ private:
     QLineEdit* _search_field = nullptr;
     QPointer<QWidget> _advanced_search_dialog = nullptr;
 
-    //std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>> _views_for_items;
-
     struct ViewRestoreData
     {
         double _list_scroll_pos;
@@ -192,6 +190,9 @@ private:
 
     QTabBar* _display_mode_tabs = nullptr;
     std::vector<std::pair<int, AudioLibraryView::DisplayMode>> _display_mode_tab_indexes;
+
+    QString _current_view_id;
+    std::unique_ptr<AudioLibraryView::DisplayMode> _current_display_mode;
 
     // for each combination of display modes, remember the users choice
     std::vector<std::pair<std::vector<AudioLibraryView::DisplayMode>, AudioLibraryView::DisplayMode>> _selected_display_modes;

@@ -565,12 +565,12 @@ void MainWindow::onLibraryLoadFinished(int files_loaded, int files_in_cache, flo
 {
     _status_bar->showMessage(QString("%1 files in cache, %2 new files loaded, needed %3 seconds").arg(files_in_cache).arg(files_loaded).arg(duration_sec, 0, 'f', 1));
 
-    updateCurrentView(true);
+    updateCurrentView();
 }
 
 void MainWindow::onCoverLoadFinished()
 {
-    updateCurrentView(true);
+    updateCurrentView();
 }
 
 void MainWindow::onShowDuplicateAlbums()
@@ -618,7 +618,7 @@ void MainWindow::onDisplayModeChanged(AudioLibraryView::DisplayMode display_mode
         _selected_display_modes.push_back(std::make_pair(modes, display_mode));
     }
 
-    updateCurrentView(false);
+    updateCurrentView();
 }
 
 void MainWindow::onDisplayModeSelected(int index)
@@ -879,9 +879,11 @@ const AudioLibraryView* MainWindow::getCurrentView() const
     return _breadcrumbs.back()._view.get();
 }
 
-void MainWindow::updateCurrentView(bool incremental)
+void MainWindow::updateCurrentView()
 {
     auto view_settings = saveViewSettings();
+
+    QString current_view_id = _breadcrumbs.back()._view->getId();
 
     auto supported_modes = _breadcrumbs.back()._view->getSupportedModes();
 
@@ -908,6 +910,18 @@ void MainWindow::updateCurrentView(bool incremental)
             current_display_mode.reset(new AudioLibraryView::DisplayMode(supported_modes.front()));
         }
     }
+
+    const bool same_view = _current_view_id == current_view_id;
+    const bool same_display_mode = (current_display_mode && _current_display_mode && *current_display_mode == *_current_display_mode) ||
+        (!current_display_mode || !_current_display_mode);
+
+    const bool incremental = same_view && same_display_mode;
+
+    _current_view_id = current_view_id;
+    if (current_display_mode)
+        _current_display_mode.reset(new AudioLibraryView::DisplayMode(*current_display_mode));
+    else
+        _current_display_mode.reset();
 
     // create tabs for supported display modes
 
@@ -967,8 +981,6 @@ void MainWindow::updateCurrentView(bool incremental)
 
         if (!_breadcrumbs.empty())
         {
-            //AudioLibraryModel::UpdateScope update_scope(*model);
-
             ThreadSafeLibrary::LibraryAccessor acc(_library);
 
             _breadcrumbs.back()._view->createItems(acc.getLibrary(), current_display_mode.get(), model);
@@ -990,14 +1002,14 @@ void MainWindow::updateCurrentViewIfOlderThan(int msecs)
 {
     if (!_is_last_view_update_time_valid)
     {
-        updateCurrentView(true);
+        updateCurrentView();
         return;
     }
 
     auto now = std::chrono::steady_clock::now();
     if (std::chrono::duration_cast<std::chrono::milliseconds>(now - _last_view_update_time).count() > msecs)
     {
-        updateCurrentView(true);
+        updateCurrentView();
         return;
     }
 }
@@ -1195,7 +1207,7 @@ void MainWindow::addBreadCrumb(AudioLibraryView* view)
     breadcrumb._view.reset(view);
     _breadcrumbs.push_back(std::move(breadcrumb));
 
-    updateCurrentView(false);
+    updateCurrentView();
 }
 
 void MainWindow::clearBreadCrumbs()
@@ -1224,7 +1236,7 @@ void MainWindow::restoreBreadCrumb(QObject* object)
 
     std::shared_ptr<ViewRestoreData> restore_data(_breadcrumbs.back()._restore_data.release());
 
-    updateCurrentView(false);
+    updateCurrentView();
 
     // restore uses a timer because the list view is updating asynchronously
 
@@ -1237,16 +1249,9 @@ bool MainWindow::findBreadcrumbId(const QString& id) const
 {
     for (const Breadcrumb& breadcrumb : _breadcrumbs)
     {
-        try
+        if (breadcrumb._view->getId() == id)
         {
-            if (breadcrumb._view->getId() == id)
-            {
-                return true;
-            }
-        }
-        catch (const std::runtime_error&)
-        {
-            // some views don't have an ID
+            return true;
         }
     }
 

@@ -167,11 +167,6 @@ void AudioLibraryView::resolveToTracks(const AudioLibrary& /*library*/, std::vec
     throw std::runtime_error("not implemented");
 }
 
-QString AudioLibraryView::getId() const
-{
-    throw std::runtime_error("not implemented");
-}
-
 //=============================================================================
 
 AudioLibraryView* AudioLibraryViewAllArtists::clone() const
@@ -214,15 +209,19 @@ void AudioLibraryViewAllArtists::createItems(const AudioLibrary& library,
 
     for (const auto& group : displayed_groups)
     {
-        QString id = QString("artist(%1,%2,%3)")
-            .arg(group.first)
-            .arg(group.second->_key._album)
-            .arg(group.second->_key._cover_checksum);
+        QString id = QString("artist(%2,%3,%1)")
+            .arg(group.second->_key._cover_checksum)
+            .arg(group.first, group.second->_key._album);
 
         model->addItem(id, group.first, group.second->getCoverPixmap(), [=](){
             return new AudioLibraryViewArtist(group.first);
         });
     }
+}
+
+QString AudioLibraryViewAllArtists::getId() const
+{
+    return QLatin1String("AudioLibraryViewAllArtists");
 }
 
 //=============================================================================
@@ -250,6 +249,11 @@ void AudioLibraryViewAllAlbums::createItems(const AudioLibrary& library,
     {
         model->addAlbumItem(album);
     }
+}
+
+QString AudioLibraryViewAllAlbums::getId() const
+{
+    return QLatin1String("AudioLibraryViewAllAlbums");
 }
 
 //=============================================================================
@@ -282,6 +286,11 @@ void AudioLibraryViewAllTracks::createItems(const AudioLibrary& library,
     }
 }
 
+QString AudioLibraryViewAllTracks::getId() const
+{
+    return QLatin1String("AudioLibraryViewAllTracks");
+}
+
 //=============================================================================
 
 AudioLibraryView* AudioLibraryViewAllYears::clone() const
@@ -312,15 +321,20 @@ void AudioLibraryViewAllYears::createItems(const AudioLibrary& library,
 
     for (const auto& group : displayed_groups)
     {
-        QString id = QString("year(%1,%2,%3)")
+        QString id = QString("year(%1,%3,%2)")
             .arg(group.first)
-            .arg(group.second->_key._album)
-            .arg(group.second->_key._cover_checksum);
+            .arg(group.second->_key._cover_checksum)
+            .arg(group.second->_key._album);
 
         model->addItem(id, QString("%1").arg(group.first), group.second->getCoverPixmap(), [=]() {
             return new AudioLibraryViewYear(group.first);
         });
     }
+}
+
+QString AudioLibraryViewAllYears::getId() const
+{
+    return QLatin1String("AudioLibraryViewAllYears");
 }
 
 //=============================================================================
@@ -353,15 +367,19 @@ void AudioLibraryViewAllGenres::createItems(const AudioLibrary& library,
 
     for (const auto& group : displayed_groups)
     {
-        QString id = QString("genre(%1,%2,%3)")
-            .arg(group.first)
-            .arg(group.second->_key._album)
-            .arg(group.second->_key._cover_checksum);
+        QString id = QString("genre(%2,%3,%1)")
+            .arg(group.second->_key._cover_checksum)
+            .arg(group.first, group.second->_key._album);
 
         model->addItem(id, group.first, group.second->getCoverPixmap(), [=]() {
             return new AudioLibraryViewGenre(group.first);
         });
     }
+}
+
+QString AudioLibraryViewAllGenres::getId() const
+{
+    return QLatin1String("AudioLibraryViewAllGenres");
 }
 
 //=============================================================================
@@ -434,7 +452,7 @@ void AudioLibraryViewArtist::resolveToTracks(const AudioLibrary& library, std::v
 
 QString AudioLibraryViewArtist::getId() const
 {
-    return QString("view:artist=%1").arg(_artist);
+    return QString("AudioLibraryViewArtist,%1").arg(_artist);
 }
 
 //=============================================================================
@@ -485,12 +503,7 @@ void AudioLibraryViewAlbum::resolveToTracks(const AudioLibrary& library, std::ve
 
 QString AudioLibraryViewAlbum::getId() const
 {
-    return QString("view:album=%1,%2,%3,%4,%5")
-        .arg(_key._artist)
-        .arg(_key._album)
-        .arg(_key._genre)
-        .arg(_key._year)
-        .arg(_key._cover_checksum);
+    return QLatin1String("AudioLibraryViewAlbum,") + _key.toString();
 }
 
 //=============================================================================
@@ -541,7 +554,7 @@ void AudioLibraryViewYear::resolveToTracks(const AudioLibrary& library, std::vec
 
 QString AudioLibraryViewYear::getId() const
 {
-    return QString("view:year=%1").arg(_year);
+    return QString("AudioLibraryViewYear,%1").arg(_year);
 }
 
 //=============================================================================
@@ -592,7 +605,7 @@ void AudioLibraryViewGenre::resolveToTracks(const AudioLibrary& library, std::ve
 
 QString AudioLibraryViewGenre::getId() const
 {
-    return QString("view:genre=%1").arg(_genre);
+    return QString("AudioLibraryViewGenre,%1").arg(_genre);
 }
 
 //=============================================================================
@@ -659,6 +672,12 @@ bool AudioLibraryViewSimpleSearch::match(const QString& input, const QVector<QSt
             return false;
 
     return true;
+}
+
+QString AudioLibraryViewSimpleSearch::getId() const
+{
+    return QString("AudioLibraryViewSimpleSearch,%1")
+        .arg(_search_text);
 }
 
 //=============================================================================
@@ -774,6 +793,14 @@ void AudioLibraryViewAdvancedSearch::createItems(const AudioLibrary& library,
     }
 }
 
+QString AudioLibraryViewAdvancedSearch::getId() const
+{
+    return QString("AudioLibraryViewAdvancedSearch(%3,%4,%5,%6,%7,%1,%2)")
+        .arg(_query.case_sensitive)
+        .arg(_query.use_regex)
+        .arg(_query.artist, _query.album, _query.genre, _query.title, _query.comment);
+}
+
 //=============================================================================
 
 AudioLibraryView* AudioLibraryViewDuplicateAlbums::clone() const
@@ -833,4 +860,9 @@ void AudioLibraryViewDuplicateAlbums::createItems(const AudioLibrary& library,
     {
         model->addAlbumItem(album);
     }
+}
+
+QString AudioLibraryViewDuplicateAlbums::getId() const
+{
+    return "AudioLibraryViewDuplicateAlbums";
 }
