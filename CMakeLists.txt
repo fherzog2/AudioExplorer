@@ -114,7 +114,8 @@ if(MSVC AND ENABLE_STATIC_RUNTIME)
 endif()
 
 if(WIN32)
-    set(WIN_RESOURCE_FILE src/project_version.rc)
+    set(WIN_RESOURCE_FILE res/appicon.rc
+                          src/project_version.rc)
 endif()
 
 add_executable(AudioExplorer WIN32 src/AdvancedSearchDialog.cpp
@@ -169,6 +170,8 @@ if(MSVC)
 else(MSVC)
   target_compile_options(test1 PRIVATE -Wall -Wextra -pedantic -Werror)
 endif(MSVC)
+
+# test
 
 enable_testing()
 add_test(NAME test1 COMMAND test1 ${CMAKE_SOURCE_DIR}/test/data ${CMAKE_BINARY_DIR})
