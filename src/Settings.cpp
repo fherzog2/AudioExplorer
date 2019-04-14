@@ -66,6 +66,7 @@ Settings::Settings()
     , settings_window_geometry(_settings, "settings_window_geometry")
     , audio_dir_paths(_settings, "audio_dir_paths", QStringList())
     , audio_library_view_column_widths(_settings, "audio_library_view_column_widths", QHash<QString, QVariant>())
+    , audio_library_view_hidden_columns(_settings, "audio_library_view_hidden_columns", QStringList())
     , main_window_view_type(_settings, "main_window_view_type", QString())
     , main_window_icon_size(_settings, "main_window_icon_size", 0)
 {

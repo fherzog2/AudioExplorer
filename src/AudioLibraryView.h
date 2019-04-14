@@ -30,6 +30,8 @@ public:
     };
     static QString getColumnFriendlyName(Column column);
     static std::vector<std::pair<Column, QString>> columnToStringMapping();
+    static QString getColumnId(Column column);
+    static std::unique_ptr<Column> getColumnFromId(const QString& column_id);
 
     enum class DisplayMode
     {

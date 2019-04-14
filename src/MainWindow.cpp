@@ -276,6 +276,7 @@ MainWindow::MainWindow(Settings& settings)
     _table->setSelectionBehavior(QAbstractItemView::SelectRows);
     _table->setSelectionMode(QAbstractItemView::ExtendedSelection);
     _table->horizontalHeader()->setSectionsMovable(true);
+    _table->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
 
     // restore table column widths
 
@@ -290,6 +291,13 @@ MainWindow::MainWindow(Settings& settings)
             if (int_ok)
                 _table->setColumnWidth(column.first, column_width);
         }
+    }
+
+    const QStringList hidden_columns = _settings.audio_library_view_hidden_columns.getValue();
+    for (const QString& column_id : hidden_columns)
+    {
+        if (std::unique_ptr<AudioLibraryView::Column> column = AudioLibraryView::getColumnFromId(column_id))
+            _hidden_columns.insert(*column);
     }
 
     _view_stack = new QStackedWidget(this);
@@ -358,6 +366,7 @@ MainWindow::MainWindow(Settings& settings)
     connect(_list, &QAbstractItemView::doubleClicked, this, &MainWindow::onItemDoubleClicked);
     connect(_table, &QAbstractItemView::doubleClicked, this, &MainWindow::onItemDoubleClicked);
     connect(_table->horizontalHeader(), &QHeaderView::sectionClicked, this, &MainWindow::onTableHeaderSectionClicked);
+    connect(_table->horizontalHeader(), &QHeaderView::customContextMenuRequested, this, &MainWindow::onTableHeaderContextMenu);
 
     setBreadCrumb(new AudioLibraryViewAllArtists());
 
@@ -393,6 +402,13 @@ void MainWindow::closeEvent(QCloseEvent* e)
         }
     }
     _settings.audio_library_view_column_widths.setValue(column_widths);
+
+    QStringList hidden_columns;
+    for (AudioLibraryView::Column column : _hidden_columns)
+    {
+        hidden_columns.push_back(AudioLibraryView::getColumnId(column));
+    }
+    _settings.audio_library_view_hidden_columns.setValue(hidden_columns);
 
     for(const auto& i : _view_type_map)
         if (i.second == _view_stack->currentWidget())
@@ -706,6 +722,51 @@ void MainWindow::onTableHeaderSectionClicked()
     }
 }
 
+void MainWindow::onTableHeaderContextMenu(const QPoint& pos)
+{
+    if (!_current_display_mode)
+        return;
+
+    QMenu menu;
+
+    int clicked_index = _table->horizontalHeader()->logicalIndexAt(pos.x());
+    if (clicked_index != -1 && clicked_index != AudioLibraryView::ZERO)
+    {
+        QAction* action = menu.addAction("Hide");
+        connect(action, &QAction::triggered, [=](){
+            _table->setColumnHidden(clicked_index, true);
+
+            _hidden_columns.insert(static_cast<AudioLibraryView::Column>(clicked_index));
+        });
+
+        menu.addSeparator();
+    }
+
+    for (AudioLibraryView::Column column : AudioLibraryView::getColumnsForDisplayMode(*_current_display_mode))
+    {
+        QString name = AudioLibraryView::getColumnFriendlyName(column);
+
+        bool column_hidden = _table->isColumnHidden(column);
+
+        QAction* action = menu.addAction(name);
+        action->setCheckable(true);
+        action->setChecked(!column_hidden);
+        connect(action, &QAction::triggered, [=]() {
+            _table->setColumnHidden(column, !column_hidden);
+
+            if (column_hidden)
+                _hidden_columns.erase(column);
+            else
+                _hidden_columns.insert(column);
+        });
+    }
+
+    QPoint global_pos = _table->horizontalHeader()->mapToGlobal(pos);
+
+    if (!menu.actions().isEmpty())
+        menu.exec(global_pos);
+}
+
 void MainWindow::saveLibrary()
 {
     if (!_library._library_cache_loaded)
@@ -942,17 +1003,18 @@ void MainWindow::updateCurrentView()
 
     // hide unused columns
 
-    std::vector<AudioLibraryView::Column> visible_columns;
+    std::vector<AudioLibraryView::Column> available_columns;
     if (current_display_mode)
-        visible_columns = AudioLibraryView::getColumnsForDisplayMode(*current_display_mode);
+        available_columns = AudioLibraryView::getColumnsForDisplayMode(*current_display_mode);
 
-    visible_columns.push_back(AudioLibraryView::ZERO);
+    available_columns.push_back(AudioLibraryView::ZERO);
 
     for (const auto& column : AudioLibraryView::columnToStringMapping())
     {
-        auto it = std::find(visible_columns.begin(), visible_columns.end(), column.first);
+        bool is_available = std::find(available_columns.begin(), available_columns.end(), column.first) != available_columns.end();
+        bool is_hidden = _hidden_columns.find(column.first) != _hidden_columns.end();
 
-        _table->setColumnHidden(column.first, it == visible_columns.end());
+        _table->setColumnHidden(column.first, !is_available || is_hidden);
     }
 
     // create items

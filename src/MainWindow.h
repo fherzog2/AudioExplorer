@@ -115,6 +115,7 @@ private:
     void onViewTypeSelected(int index);
     void onItemDoubleClicked(const QModelIndex &index);
     void onTableHeaderSectionClicked();
+    void onTableHeaderContextMenu(const QPoint& pos);
 
     void saveLibrary();
     static void loadLibrary(QStringList audio_dir_paths, ThreadSafeLibrary& library);
@@ -196,6 +197,8 @@ private:
 
     // for each combination of display modes, remember the users choice
     std::vector<std::pair<std::vector<AudioLibraryView::DisplayMode>, AudioLibraryView::DisplayMode>> _selected_display_modes;
+
+    std::unordered_set<AudioLibraryView::Column> _hidden_columns;
 
     QStatusBar* _status_bar = nullptr;
 

@@ -105,6 +105,26 @@ std::vector<std::pair<AudioLibraryView::Column, QString>> AudioLibraryView::colu
     return result;
 }
 
+QString AudioLibraryView::getColumnId(Column column)
+{
+    for (const auto& i : columnToStringMapping())
+        if (i.first == column)
+            return i.second;
+
+    // should never happen as long as columnToStringMapping() is complete
+
+    return QString::null;
+}
+
+std::unique_ptr<AudioLibraryView::Column> AudioLibraryView::getColumnFromId(const QString& column_id)
+{
+    for (const auto& i : columnToStringMapping())
+        if (i.second == column_id)
+            return std::unique_ptr<Column>(new Column(i.first));
+
+    return std::unique_ptr<Column>();
+}
+
 QString AudioLibraryView::getDisplayModeFriendlyName(DisplayMode mode)
 {
     switch (mode)
