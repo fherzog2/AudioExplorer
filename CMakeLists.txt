@@ -171,7 +171,5 @@ else(MSVC)
   target_compile_options(test1 PRIVATE -Wall -Wextra -pedantic -Werror)
 endif(MSVC)
 
-# test
-
 enable_testing()
 add_test(NAME test1 COMMAND test1 ${CMAKE_SOURCE_DIR}/test/data ${CMAKE_BINARY_DIR})

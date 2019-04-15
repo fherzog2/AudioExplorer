@@ -179,6 +179,9 @@ private:
     std::unique_ptr<ViewRestoreData> saveViewSettings() const;
     void restoreViewSettings(ViewRestoreData* restore_data);
 
+    void restoreSettingsOnStart();
+    void saveSettingsOnExit();
+
     struct Breadcrumb
     {
         std::unique_ptr<QObject, LateDeleter> _button;

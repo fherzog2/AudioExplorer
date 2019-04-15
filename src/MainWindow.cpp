@@ -241,20 +241,9 @@ MainWindow::MainWindow(Settings& settings)
 
     _model = new AudioLibraryModel(this);
 
-    _icon_size_steps = { 64, 96, 128, 192, 256 };
-
-    int default_icon_size = 128;
-
-    for (int s : _icon_size_steps)
-    {
-        if (_settings.main_window_icon_size.getValue() == s)
-            default_icon_size = s;
-    }
-
     _list = new QListView(this);
     _list->setModel(_model);
     _list->setViewMode(QListView::IconMode);
-    _list->setIconSize(QSize(default_icon_size, default_icon_size));
     _list->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     _list->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
     _list->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -278,28 +267,6 @@ MainWindow::MainWindow(Settings& settings)
     _table->horizontalHeader()->setSectionsMovable(true);
     _table->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    // restore table column widths
-
-    const QHash<QString, QVariant> column_widths = _settings.audio_library_view_column_widths.getValue();
-    for (const auto& column : AudioLibraryView::columnToStringMapping())
-    {
-        auto found = column_widths.find(column.second);
-        if (found != column_widths.end())
-        {
-            bool int_ok;
-            int column_width = found.value().toInt(&int_ok);
-            if (int_ok)
-                _table->setColumnWidth(column.first, column_width);
-        }
-    }
-
-    const QStringList hidden_columns = _settings.audio_library_view_hidden_columns.getValue();
-    for (const QString& column_id : hidden_columns)
-    {
-        if (std::unique_ptr<AudioLibraryView::Column> column = AudioLibraryView::getColumnFromId(column_id))
-            _hidden_columns.insert(*column);
-    }
-
     _view_stack = new QStackedWidget(this);
     _view_stack->addWidget(_list);
     _view_stack->addWidget(_table);
@@ -308,22 +275,6 @@ MainWindow::MainWindow(Settings& settings)
     _view_type_tabs = new QTabBar(toolarea);
     addViewTypeTab(_list, "Icons", "icons");
     addViewTypeTab(_table, "Table", "table");
-
-    for (const auto& type : _view_type_map)
-        if (type.first == _settings.main_window_view_type.getValue())
-        {
-            _view_stack->setCurrentWidget(type.second);
-            for (int i = 0, end = _view_type_tabs->count(); i < end; ++i)
-            {
-                QVariant var = _view_type_tabs->tabData(i);
-                if (var.toString() == type.first)
-                {
-                    _view_type_tabs->setCurrentIndex(i);
-                    break;
-                }
-            }
-            break;
-        }
 
     _status_bar = new QStatusBar(this);
     _status_bar->setSizeGripEnabled(false);
@@ -370,7 +321,7 @@ MainWindow::MainWindow(Settings& settings)
 
     setBreadCrumb(new AudioLibraryViewAllArtists());
 
-    _settings.main_window_geometry.restore(this);
+    restoreSettingsOnStart();
 
     show();
 
@@ -393,33 +344,8 @@ void MainWindow::closeEvent(QCloseEvent* e)
 {
     hide();
 
-    QHash<QString, QVariant> column_widths;
-    for (const auto& column : AudioLibraryView::columnToStringMapping())
-    {
-        if (!_table->isColumnHidden(column.first))
-        {
-            column_widths[column.second] = _table->columnWidth(column.first);
-        }
-    }
-    _settings.audio_library_view_column_widths.setValue(column_widths);
+    saveSettingsOnExit();
 
-    QStringList hidden_columns;
-    for (AudioLibraryView::Column column : _hidden_columns)
-    {
-        hidden_columns.push_back(AudioLibraryView::getColumnId(column));
-    }
-    _settings.audio_library_view_hidden_columns.setValue(hidden_columns);
-
-    for(const auto& i : _view_type_map)
-        if (i.second == _view_stack->currentWidget())
-        {
-            _settings.main_window_view_type.setValue(i.first);
-            break;
-        }
-
-    _settings.main_window_icon_size.setValue(_list->iconSize().width());
-
-    _settings.main_window_geometry.save(this);
     saveLibrary();
 
     QFrame::closeEvent(e);
@@ -1525,4 +1451,143 @@ void MainWindow::restoreViewSettings(ViewRestoreData* restore_data)
     }
 
     qobject_cast<QAbstractItemView*>(_view_stack->currentWidget())->selectionModel()->select(selection, QItemSelectionModel::ClearAndSelect);
+}
+
+void MainWindow::restoreSettingsOnStart()
+{
+    // table column widths
+
+    const QHash<QString, QVariant> column_widths = _settings.audio_library_view_column_widths.getValue();
+    for (const auto& column : AudioLibraryView::columnToStringMapping())
+    {
+        auto found = column_widths.find(column.second);
+        if (found != column_widths.end())
+        {
+            bool int_ok;
+            int column_width = found.value().toInt(&int_ok);
+            if (int_ok)
+                _table->setColumnWidth(column.first, column_width);
+        }
+    }
+
+    // table visual indexes
+
+    const QHash<QString, QVariant> visual_indexes = _settings.audio_library_view_visual_indexes.getValue();
+
+    std::vector<std::pair<int, int>> logical_and_visual_indexes;
+
+    for (const auto& column : AudioLibraryView::columnToStringMapping())
+    {
+        auto found = visual_indexes.find(column.second);
+        if (found != visual_indexes.end())
+        {
+            bool int_ok;
+            int visual_index = found.value().toInt(&int_ok);
+            if (int_ok && visual_index >= 0 && visual_index < _table->horizontalHeader()->count())
+            {
+                logical_and_visual_indexes.push_back(std::make_pair(column.first, visual_index));
+            }
+        }
+    }
+
+    for (const auto& logical_and_visual_index : logical_and_visual_indexes)
+    {
+        _table->horizontalHeader()->moveSection(_table->horizontalHeader()->visualIndex(logical_and_visual_index.first), logical_and_visual_index.second);
+    }
+
+    // table hidden columns
+
+    const QStringList hidden_columns = _settings.audio_library_view_hidden_columns.getValue();
+    for (const QString& column_id : hidden_columns)
+    {
+        if (std::unique_ptr<AudioLibraryView::Column> column = AudioLibraryView::getColumnFromId(column_id))
+            _hidden_columns.insert(*column);
+    }
+
+    // current view
+
+    for (const auto& type : _view_type_map)
+        if (type.first == _settings.main_window_view_type.getValue())
+        {
+            _view_stack->setCurrentWidget(type.second);
+            for (int i = 0, end = _view_type_tabs->count(); i < end; ++i)
+            {
+                QVariant var = _view_type_tabs->tabData(i);
+                if (var.toString() == type.first)
+                {
+                    _view_type_tabs->setCurrentIndex(i);
+                    break;
+                }
+            }
+            break;
+        }
+
+    // icon size
+
+    _icon_size_steps = { 64, 96, 128, 192, 256 };
+
+    int default_icon_size = 128;
+
+    for (int s : _icon_size_steps)
+    {
+        if (_settings.main_window_icon_size.getValue() == s)
+            default_icon_size = s;
+    }
+    _list->setIconSize(QSize(default_icon_size, default_icon_size));
+
+    // window geometry
+
+    _settings.main_window_geometry.restore(this);
+}
+
+void MainWindow::saveSettingsOnExit()
+{
+    // table column widths
+
+    QHash<QString, QVariant> column_widths;
+    for (const auto& column : AudioLibraryView::columnToStringMapping())
+    {
+        if (!_table->isColumnHidden(column.first))
+        {
+            column_widths[column.second] = _table->columnWidth(column.first);
+        }
+    }
+    _settings.audio_library_view_column_widths.setValue(column_widths);
+
+    // table visual indexes
+
+    QHash<QString, QVariant> visual_indexes;
+
+    for (const auto& column : AudioLibraryView::columnToStringMapping())
+    {
+        visual_indexes[column.second] = _table->horizontalHeader()->visualIndex(column.first);
+    }
+
+    _settings.audio_library_view_visual_indexes.setValue(visual_indexes);
+
+    // table hidden columns
+
+    QStringList hidden_columns;
+    for (AudioLibraryView::Column column : _hidden_columns)
+    {
+        hidden_columns.push_back(AudioLibraryView::getColumnId(column));
+    }
+    _settings.audio_library_view_hidden_columns.setValue(hidden_columns);
+
+    // current view
+
+    for (const auto& i : _view_type_map)
+        if (i.second == _view_stack->currentWidget())
+        {
+            _settings.main_window_view_type.setValue(i.first);
+            break;
+        }
+
+    // icon size
+
+    _settings.main_window_icon_size.setValue(_list->iconSize().width());
+
+    // window geometry
+
+    _settings.main_window_geometry.save(this);
 }

@@ -2,7 +2,9 @@
 #include <AudioLibrary.h>
 
 #include <QtCore/qbuffer.h>
+#include <QtGui/qstandarditemmodel.h>
 #include <QtWidgets/qapplication.h>
+#include <QtWidgets/qheaderview.h>
 
 // print an error if the expression fails
 #define RETURN_IF_FAILED(expression)\
@@ -214,6 +216,56 @@ bool testLibraryTrackCleanup(const QString binary_dir)
     return true;
 }
 
+bool testVisualIndexRestorationStep(const std::vector<std::pair<int, int>>& logical_and_visual_indexes)
+{
+    QStandardItemModel model;
+
+    QHeaderView header(Qt::Horizontal);
+    header.setModel(&model);
+
+    // create the sections
+
+    QStringList header_labels;
+
+    for (const auto& logical_and_visual_index : logical_and_visual_indexes)
+        header_labels.push_back(QString("%1").arg(logical_and_visual_index.first));
+
+    model.setHorizontalHeaderLabels(header_labels);
+
+    // apply visual indexes
+
+    for (const auto& logical_and_visual_index : logical_and_visual_indexes)
+    {
+        header.moveSection(header.visualIndex(logical_and_visual_index.first), logical_and_visual_index.second);
+    }
+
+    // check
+
+    for (const auto& logical_and_visual_index : logical_and_visual_indexes)
+    {
+        RETURN_IF_FAILED(header.visualIndex(logical_and_visual_index.first) == logical_and_visual_index.second);
+    }
+
+    return true;
+}
+
+bool testVisualIndexRestoration()
+{
+    RETURN_IF_FAILED(testVisualIndexRestorationStep({ {0, 0},{ 1, 1 },{ 2, 2 },{ 3, 3 } }));
+
+    RETURN_IF_FAILED(testVisualIndexRestorationStep({ { 0, 3 },{ 1, 2 },{ 2, 1 },{ 3, 0 } }));
+
+    RETURN_IF_FAILED(testVisualIndexRestorationStep({ { 0, 0 },{ 1, 3 },{ 2, 1 },{ 3, 2 } }));
+
+    RETURN_IF_FAILED(testVisualIndexRestorationStep({ { 0, 3 },{ 1, 0 },{ 2, 1 },{ 3, 2 } }));
+
+    RETURN_IF_FAILED(testVisualIndexRestorationStep({ { 0, 2 },{ 1, 0 },{ 2, 3 },{ 3, 1 } }));
+
+    RETURN_IF_FAILED(testVisualIndexRestorationStep({ { 3, 0 },{ 2, 1 },{ 1, 2 },{ 0, 3 } }));
+
+    return true;
+}
+
 int main(int argc, char** argv)
 {
     QApplication app(argc, argv);
@@ -233,6 +285,8 @@ int main(int argc, char** argv)
     RESET_OK_IF_FAILED(testTrackInfoHeader(source_test_data_dir + "/noise.ape", original_cover_filepath));
 
     RESET_OK_IF_FAILED(testLibraryTrackCleanup(binary_dir));
+
+    RESET_OK_IF_FAILED(testVisualIndexRestoration());
 
     return ok ? 0 : 1;
 }
