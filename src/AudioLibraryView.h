@@ -27,6 +27,10 @@ public:
         COMMENT = 11,
         PATH = 12,
         TAG_TYPES = 13,
+        LENGTH_SECONDS = 14,
+        CHANNELS = 15,
+        BITRATE_KBS = 16,
+        SAMPLERATE_HZ = 17,
     };
     static QString getColumnFriendlyName(Column column);
     static std::vector<std::pair<Column, QString>> columnToStringMapping();

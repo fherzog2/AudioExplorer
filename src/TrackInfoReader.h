@@ -19,6 +19,11 @@ struct TrackInfo
     QString comment;
 
     QString tag_types;
+
+    int length_seconds = 0;
+    int channels = 0;
+    int bitrate_kbs = 0;
+    int samplerate_hz = 0;
 };
 
 bool readTrackInfo(const QString& filepath, TrackInfo& info);

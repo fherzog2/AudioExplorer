@@ -144,7 +144,11 @@ void AudioLibrary::addTrack(const QString& filepath, const QDateTime& last_modif
         track_info.track_number,
         track_info.disc_number,
         track_info.comment,
-        track_info.tag_types);
+        track_info.tag_types,
+        track_info.length_seconds,
+        track_info.channels,
+        track_info.bitrate_kbs,
+        track_info.samplerate_hz);
 
     _is_modified = true;
 }
@@ -257,7 +261,7 @@ void AudioLibrary::removeTracksExcept(const std::unordered_set<QString>& loaded_
 
 void AudioLibrary::save(QDataStream& s) const
 {
-    s << qint32(3); // version
+    s << qint32(4); // version
 
     s << quint64(_album_map.size());
 
@@ -279,6 +283,10 @@ void AudioLibrary::save(QDataStream& s) const
             s << qint32(track->_disc_number);
             s << track->_comment;
             s << track->_tag_types;
+            s << qint32(track->_length_seconds);
+            s << qint32(track->_channels);
+            s << qint32(track->_bitrate_kbs);
+            s << qint32(track->_samplerate_hz);
         }
     }
 }
@@ -301,9 +309,11 @@ void AudioLibrary::Loader::init(AudioLibrary& library, QDataStream& s)
     _library->_filepath_to_track_map.clear();
     _library->_is_modified = false;
 
+    // for simplicity's sake, don't try to migrate old cache versions
+
     qint32 version;
     s >> version;
-    if (version != 3)
+    if (version != 4)
         return;
 
     s >> _num_albums;
@@ -338,6 +348,10 @@ void AudioLibrary::Loader::loadNextAlbum()
         qint32 disc_number;
         QString comment;
         QString tag_types;
+        qint32 length_seconds;
+        qint32 channels;
+        qint32 bitrate_kbs;
+        qint32 samplerate_hz;
 
         *_s >> filepath;
         *_s >> last_modified;
@@ -348,8 +362,12 @@ void AudioLibrary::Loader::loadNextAlbum()
         *_s >> disc_number;
         *_s >> comment;
         *_s >> tag_types;
+        *_s >> length_seconds;
+        *_s >> channels;
+        *_s >> bitrate_kbs;
+        *_s >> samplerate_hz;
 
-        _library->addTrack(album, filepath, last_modified, artist, album_artist, title, track_number, disc_number, comment, tag_types);
+        _library->addTrack(album, filepath, last_modified, artist, album_artist, title, track_number, disc_number, comment, tag_types, length_seconds, channels, bitrate_kbs, samplerate_hz);
     }
 
     ++_albums_loaded;
@@ -375,7 +393,11 @@ AudioLibraryTrack* AudioLibrary::addTrack(AudioLibraryAlbum* album,
     int track_number,
     int disc_number,
     const QString& comment,
-    const QString& tag_types)
+    const QString& tag_types,
+    int length_seconds,
+    int channels,
+    int bitrate_kbs,
+    int samplerate_hz)
 {
     auto it = _filepath_to_track_map.find(filepath);
     if (it != _filepath_to_track_map.end())
@@ -385,7 +407,7 @@ AudioLibraryTrack* AudioLibrary::addTrack(AudioLibraryAlbum* album,
     }
 
     it = _filepath_to_track_map.insert(make_pair(filepath, std::unique_ptr<AudioLibraryTrack>(new AudioLibraryTrack(album,
-        filepath, last_modified, artist, album_artist, title, track_number, disc_number, comment, tag_types)))).first;
+        filepath, last_modified, artist, album_artist, title, track_number, disc_number, comment, tag_types, length_seconds, channels, bitrate_kbs, samplerate_hz)))).first;
     album->_tracks.push_back(it->second.get());
 
     return it->second.get();

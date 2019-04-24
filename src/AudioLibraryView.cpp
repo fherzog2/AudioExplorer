@@ -80,6 +80,14 @@ QString AudioLibraryView::getColumnFriendlyName(Column column)
         return "Path";
     case TAG_TYPES:
         return "Tag types";
+    case LENGTH_SECONDS:
+        return "Length";
+    case CHANNELS:
+        return "Channels";
+    case BITRATE_KBS:
+        return "Bit Rate";
+    case SAMPLERATE_HZ:
+        return "Sample Rate";
     }
 
     return QString();
@@ -102,6 +110,10 @@ std::vector<std::pair<AudioLibraryView::Column, QString>> AudioLibraryView::colu
     result.push_back(std::make_pair(COMMENT, "comment"));
     result.push_back(std::make_pair(PATH, "path"));
     result.push_back(std::make_pair(TAG_TYPES, "tag_types"));
+    result.push_back(std::make_pair(LENGTH_SECONDS, "length"));
+    result.push_back(std::make_pair(CHANNELS, "channels"));
+    result.push_back(std::make_pair(BITRATE_KBS, "bit_rate"));
+    result.push_back(std::make_pair(SAMPLERATE_HZ, "sample_rate"));
     return result;
 }
 
@@ -176,6 +188,10 @@ std::vector<AudioLibraryView::Column> AudioLibraryView::getColumnsForDisplayMode
             AudioLibraryView::COMMENT,
             AudioLibraryView::PATH,
             AudioLibraryView::TAG_TYPES,
+            AudioLibraryView::LENGTH_SECONDS,
+            AudioLibraryView::CHANNELS,
+            AudioLibraryView::BITRATE_KBS,
+            AudioLibraryView::SAMPLERATE_HZ,
         };
     }
 

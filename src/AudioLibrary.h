@@ -118,7 +118,11 @@ public:
         int track_number,
         int disc_number,
         const QString& comment,
-        const QString& tag_types)
+        const QString& tag_types,
+        int length_seconds,
+        int channels,
+        int bitrate_kbs,
+        int samplerate_hz)
         : _album(album)
         , _artist(artist)
         , _album_artist(album_artist)
@@ -129,16 +133,38 @@ public:
         , _disc_number(disc_number)
         , _comment(comment)
         , _tag_types(tag_types)
+        , _length_seconds(length_seconds)
+        , _channels(channels)
+        , _bitrate_kbs(bitrate_kbs)
+        , _samplerate_hz(samplerate_hz)
     {
-        _id = QString("%3.track(%4,%5,%6,%7,%1,%2,%8,%9)")
+        _id = QString("%7.track(%8,%9,%10,%11,%1,%2,%12,%13,%3,%4,%5,%6)")
             .arg(_track_number)
             .arg(_disc_number)
+            .arg(_length_seconds)
+            .arg(_channels)
+            .arg(_bitrate_kbs)
+            .arg(_samplerate_hz)
             .arg(_album->getId(), _artist, _album_artist, _filepath, _title, _comment, _tag_types);
     }
 
-    std::tuple<AudioLibraryAlbumKey, QByteArray, QString, QString, QString, QDateTime, QString, int, int, QString, QString> getMembersAsTuple() const
+    std::tuple<AudioLibraryAlbumKey, QByteArray, QString, QString, QString, QDateTime, QString, int, int, QString, QString, int, int, int, int> getMembersAsTuple() const
     {
-        return std::tie(_album->_key, _album->_cover, _artist, _album_artist, _filepath, _last_modified, _title, _track_number, _disc_number, _comment, _tag_types);
+        return std::tie(_album->_key,
+            _album->_cover,
+            _artist,
+            _album_artist,
+            _filepath,
+            _last_modified,
+            _title,
+            _track_number,
+            _disc_number,
+            _comment,
+            _tag_types,
+            _length_seconds,
+            _channels,
+            _bitrate_kbs,
+            _samplerate_hz);
     }
 
     bool operator==(const AudioLibraryTrack& other) const
@@ -163,6 +189,10 @@ public:
     int _disc_number;
     QString _comment;
     QString _tag_types;
+    int _length_seconds;
+    int _channels;
+    int _bitrate_kbs;
+    int _samplerate_hz;
 
     QString _id;
 };
@@ -213,7 +243,11 @@ private:
         int track_number,
         int disc_number,
         const QString& comment,
-        const QString& tag_types);
+        const QString& tag_types,
+        int length_seconds,
+        int channels,
+        int bitrate_kbs,
+        int samplerate_hz);
 
     std::map<AudioLibraryAlbumKey, std::unique_ptr<AudioLibraryAlbum>> _album_map;
     std::unordered_map<QString, std::unique_ptr<AudioLibraryTrack>> _filepath_to_track_map;

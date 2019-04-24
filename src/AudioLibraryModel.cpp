@@ -202,6 +202,20 @@ void AudioLibraryModel::addTrackItem(const AudioLibraryTrack* track)
         setAdditionalColumn(row, AudioLibraryView::PATH, track->_filepath);
         setAdditionalColumn(row, AudioLibraryView::TAG_TYPES, track->_tag_types);
 
+        {
+            QString formatted_length = track->_length_seconds < 3600 ?
+                QDateTime::fromTime_t(track->_length_seconds).toUTC().toString("mm:ss") :
+                QDateTime::fromTime_t(track->_length_seconds).toUTC().toString("hh:mm:ss");
+
+            QStandardItem* length_item = setAdditionalColumn(row, AudioLibraryView::LENGTH_SECONDS, formatted_length);
+
+            length_item->setData(QString("%1").arg(track->_length_seconds), AudioLibraryView::SORT_ROLE);
+        }
+
+        setAdditionalColumn(row, AudioLibraryView::CHANNELS, QString("%1").arg(track->_channels));
+        setAdditionalColumn(row, AudioLibraryView::BITRATE_KBS, QString("%1 kbit/s").arg(track->_bitrate_kbs));
+        setAdditionalColumn(row, AudioLibraryView::SAMPLERATE_HZ, QString("%1 Hz").arg(track->_samplerate_hz));
+
         return item;
     };
 
@@ -287,7 +301,9 @@ void AudioLibraryModel::onUpdateFinished()
         removeId(id);
 }
 
-void AudioLibraryModel::setAdditionalColumn(int row, AudioLibraryView::Column column, const QString& text)
+QStandardItem* AudioLibraryModel::setAdditionalColumn(int row, AudioLibraryView::Column column, const QString& text)
 {
-    setItem(row, static_cast<int>(column), new CollatedItem(text, _numeric_collator));
+    QStandardItem* item = new CollatedItem(text, _numeric_collator);
+    setItem(row, static_cast<int>(column), item);
+    return item;
 }
