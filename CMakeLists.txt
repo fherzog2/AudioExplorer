@@ -22,93 +22,24 @@ if(MSVC AND ENABLE_STATIC_RUNTIME)
         string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
     endforeach(flag_var)
 
-    # for static linking, some additional dependencies have to be spelled out
+    # linking Mincore.lib causes problems on Windows 7
+    # because then the program looks for a specific api-ms-win-core-file*.dll which is not present
 
-    find_package(harfbuzz CONFIG REQUIRED)
-    find_package(double-conversion CONFIG REQUIRED)
-    find_package(JPEG REQUIRED)
-    find_package(PNG REQUIRED)
-    find_package(ZLIB REQUIRED)
+    get_property(QT5_CORE_DEPENDENCIES TARGET Qt5::Core PROPERTY INTERFACE_LINK_LIBRARIES)
+    list(REMOVE_ITEM QT5_CORE_DEPENDENCIES "Mincore.lib")
+    set_property(TARGET Qt5::Core PROPERTY INTERFACE_LINK_LIBRARIES ${QT5_CORE_DEPENDENCIES})
 
-    # some Qt dependencies have to be searched by name
+    find_library(QWindowsVistaStyle_DEBUG NAMES qwindowsvistastyled PATH_SUFFIXES plugins/styles)
+    find_library(QJpegPlugin_DEBUG NAMES qjpegd PATH_SUFFIXES plugins/imageformats)
 
-    find_library(PCRE2_LIBRARY NAMES pcre2-16)
-    find_library(Qt5AccessibilitySupport_LIBRARY NAMES Qt5AccessibilitySupport)
-    find_library(Qt5EventDispatcherSupport_LIBRARY NAMES Qt5EventDispatcherSupport)
-    find_library(Qt5FontDatabaseSupport_LIBRARY NAMES Qt5FontDatabaseSupport)
-    find_library(Qt5ThemeSupport_LIBRARY NAMES Qt5ThemeSupport)
-    find_library(Qt5WindowsUIAutomationSupport_LIBRARY NAMES Qt5WindowsUIAutomationSupport)
-
-    # windows libraries
-
-    find_library(DWMAPI_LIBRARY NAMES dwmapi)
-    find_library(IMM32_LIBRARY NAMES imm32)
-    find_library(NETAPI32_LIBRARY NAMES netapi32)
-    find_library(USERENV_LIBRARY NAMES userenv)
-    find_library(VERSION_LIBRARY NAMES version)
-    find_library(WINMM_LIBRARY NAMES winmm)
-    find_library(WS2_32_LIBRARY NAMES ws2_32)
-    find_library(UXTHEME_LIBRARY NAMES uxtheme)
-    find_library(WTSAPI32_LIBRARY NAMES Wtsapi32)
-
-    if(CMAKE_BUILD_TYPE MATCHES "^Debug$" OR NOT DEFINED CMAKE_BUILD_TYPE)
-
-        # cannot use the harfbuzz package for debug builds, because it pulls in the release version of freetype
-        # so search for harfbuzz by name and use the freetype package directly
-
-        find_library(HARFBUZZ_LIBRARY_DEBUG NAMES harfbuzz)
-        find_package(freetype CONFIG REQUIRED)
-
-        # some Qt dependencies have to be searched by name
-
-        find_library(PCRE2_LIBRARY_DEBUG NAMES pcre2-16d)
-        find_library(Qt5AccessibilitySupport_LIBRARY_DEBUG NAMES Qt5AccessibilitySupportd)
-        find_library(Qt5EventDispatcherSupport_LIBRARY_DEBUG NAMES Qt5EventDispatcherSupportd)
-        find_library(Qt5FontDatabaseSupport_LIBRARY_DEBUG NAMES Qt5FontDatabaseSupportd)
-        find_library(Qt5ThemeSupport_LIBRARY_DEBUG NAMES Qt5ThemeSupportd)
-        find_library(Qt5WindowsUIAutomationSupport_LIBRARY_DEBUG NAMES Qt5WindowsUIAutomationSupportd)
-
-        find_library(QWindows_DEBUG NAMES qwindowsd PATH_SUFFIXES plugins/platforms)
-        find_library(QWindowsVistaStyle_DEBUG NAMES qwindowsvistastyled PATH_SUFFIXES plugins/styles)
-        find_library(QJpegPlugin_DEBUG NAMES qjpegd PATH_SUFFIXES plugins/imageformats)
-
-        set(STATIC_LINK_DEPENDENCIES_DEBUG debug freetype
-                                           debug ${HARFBUZZ_LIBRARY_DEBUG}
-                                           debug ${PCRE2_LIBRARY_DEBUG}
-                                           debug ${Qt5AccessibilitySupport_LIBRARY_DEBUG}
-                                           debug ${Qt5EventDispatcherSupport_LIBRARY_DEBUG}
-                                           debug ${Qt5FontDatabaseSupport_LIBRARY_DEBUG}
-                                           debug ${Qt5ThemeSupport_LIBRARY_DEBUG}
-                                           debug ${Qt5WindowsUIAutomationSupport_LIBRARY_DEBUG}
-                                           debug ${QWindows_DEBUG}
-                                           debug ${QWindowsVistaStyle_DEBUG}
-                                           debug ${QJpegPlugin_DEBUG})
-    endif()
-
-    set(STATIC_LINK_DEPENDENCIES double-conversion::double-conversion
-                                 ${JPEG_LIBRARIES}
-                                 PNG::PNG
-                                 ZLIB::ZLIB
-                                 ${DWMAPI_LIBRARY}
-                                 ${IMM32_LIBRARY}
-                                 ${NETAPI32_LIBRARY}
-                                 ${USERENV_LIBRARY}
-                                 ${VERSION_LIBRARY}
-                                 ${WINMM_LIBRARY}
-                                 ${WS2_32_LIBRARY}
-                                 ${UXTHEME_LIBRARY}
-                                 ${WTSAPI32_LIBRARY}
-                                 optimized harfbuzz::harfbuzz
-                                 optimized ${PCRE2_LIBRARY}
-                                 optimized ${Qt5AccessibilitySupport_LIBRARY}
-                                 optimized ${Qt5EventDispatcherSupport_LIBRARY}
-                                 optimized ${Qt5FontDatabaseSupport_LIBRARY}
-                                 optimized ${Qt5ThemeSupport_LIBRARY}
-                                 optimized ${Qt5WindowsUIAutomationSupport_LIBRARY}
-                                 optimized Qt5::QWindowsIntegrationPlugin
-                                 optimized Qt5::QWindowsVistaStylePlugin
+    set(STATIC_LINK_DEPENDENCIES debug ${QWindowsVistaStyle_DEBUG}
+                                 optimized Qt5::QWindowsVistaStylePlugin # without it, the program looks dated
+                                 debug ${QJpegPlugin_DEBUG}
                                  optimized Qt5::QJpegPlugin
-                                 ${STATIC_LINK_DEPENDENCIES_DEBUG})
+                                 Uxtheme.lib # prerequisite for Qt5::QWindowsVistaStylePlugin
+                                 Userenv.lib # replacement for Mincore.lib
+                                 version.lib # replacement for Mincore.lib
+                                 )
 
     set(STATIC_PLUGIN_INCLUDE src/static_plugin_include.cpp)
 endif()
