@@ -192,25 +192,6 @@ private:
     QString _genre;
 };
 
-class AudioLibraryViewSimpleSearch : public AudioLibraryView
-{
-public:
-    AudioLibraryViewSimpleSearch(const QString& search_text);
-
-    virtual AudioLibraryView* clone() const override;
-    virtual QString getDisplayName() const override;
-    virtual std::vector<DisplayMode> getSupportedModes() const override;
-    virtual void createItems(const AudioLibrary& library,
-        const DisplayMode* display_mode,
-        AudioLibraryModel* model) const override;
-    virtual QString getId() const override;
-
-private:
-    static bool match(const QString& input, const QVector<QStringRef>& strings_to_match);
-
-    QString _search_text;
-};
-
 class AudioLibraryViewAdvancedSearch : public AudioLibraryView
 {
 public:

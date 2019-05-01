@@ -22,6 +22,7 @@
 #include <QtWidgets/qfiledialog.h>
 #include <QtWidgets/qheaderview.h>
 #include <QtWidgets/qstyleditemdelegate.h>
+#include <QtWidgets/qtoolbutton.h>
 #include <QtWidgets/qtooltip.h>
 #include "project_version.h"
 #include "SettingsEditorWindow.h"
@@ -62,19 +63,6 @@ namespace
         QObject::connect(action, &QAction::triggered, rec, func);
         menu.addAction(action);
         return action;
-    }
-
-    template<class T>
-    QPushButton* createViewCreatorButton(QWidget* parent, MainWindow* main_window)
-    {
-        std::unique_ptr<T> dummy(new T());
-
-        QPushButton* button = new QPushButton(dummy->getDisplayName(), parent);
-        QObject::connect(button, &QPushButton::clicked, main_window, [main_window](){
-            main_window->setBreadCrumb(new T());
-        });
-
-        return button;
     }
 
     template<class FUNC>
@@ -190,6 +178,96 @@ namespace
 
 //=============================================================================
 
+ViewSelector::ViewSelector()
+    : QFrame()
+{
+    setWindowFlag(Qt::Popup);
+
+    setFrameShape(QFrame::Box);
+
+    _artist_button = new QRadioButton("Artists", this);
+    _album_button = new QRadioButton("Albums", this);
+    _track_button = new QRadioButton("Tracks", this);
+    _year_button = new QRadioButton("Years", this);
+    _genre_button = new QRadioButton("Genres", this);
+
+    _filter_box = new QLineEdit(this);
+    _filter_box->setPlaceholderText("Filter...");
+    _filter_box->setClearButtonEnabled(true);
+
+    auto layout = new QVBoxLayout(this);
+    layout->addWidget(_artist_button);
+    layout->addWidget(_album_button);
+    layout->addWidget(_track_button);
+    layout->addWidget(_year_button);
+    layout->addWidget(_genre_button);
+    layout->addWidget(_filter_box);
+
+    connect(_artist_button, &QRadioButton::clicked, this, &ViewSelector::radioButtonSelected);
+    connect(_album_button, &QRadioButton::clicked, this, &ViewSelector::radioButtonSelected);
+    connect(_track_button, &QRadioButton::clicked, this, &ViewSelector::radioButtonSelected);
+    connect(_year_button, &QRadioButton::clicked, this, &ViewSelector::radioButtonSelected);
+    connect(_genre_button, &QRadioButton::clicked, this, &ViewSelector::radioButtonSelected);
+
+    connect(_filter_box, &QLineEdit::textChanged, this, &ViewSelector::selectionChanged);
+
+    _artist_button->setChecked(true);
+}
+
+std::unique_ptr<AudioLibraryView> ViewSelector::getSelectedView() const
+{
+    // no filter box for years
+
+    if (_year_button->isChecked())
+        return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllYears());
+
+    // either use a full view or a search
+
+    QString filter_text = _filter_box->text();
+
+    if (filter_text.isEmpty())
+    {
+        if (_artist_button->isChecked())
+            return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllArtists());
+        if (_album_button->isChecked())
+            return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllAlbums());
+        if (_track_button->isChecked())
+            return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllTracks());
+        if (_genre_button->isChecked())
+            return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllGenres());
+    }
+    else
+    {
+        AudioLibraryViewAdvancedSearch::Query query;
+
+        if (_artist_button->isChecked())
+            query.artist = filter_text;
+        if (_album_button->isChecked())
+            query.album = filter_text;
+        if (_track_button->isChecked())
+            query.title = filter_text;
+        if (_genre_button->isChecked())
+            query.genre = filter_text;
+
+        return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAdvancedSearch(query));
+    }
+
+    // default to artist view if nothing is selected
+
+    return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllArtists());
+}
+
+void ViewSelector::radioButtonSelected()
+{
+    // filtering years makes no sense
+
+    _filter_box->setEnabled(sender() != _year_button);
+
+    emit selectionChanged();
+}
+
+//=============================================================================
+
 ThreadSafeLibrary::LibraryAccessor::LibraryAccessor(ThreadSafeLibrary& data)
     : _lock(data._library_spin_lock)
     , _library(data._library)
@@ -227,14 +305,24 @@ MainWindow::MainWindow(Settings& settings)
 
     auto toolarea = new QWidget(this);
 
-    QPushButton* artists_button = createViewCreatorButton<AudioLibraryViewAllArtists>(toolarea, this);
-    QPushButton* albums_button = createViewCreatorButton<AudioLibraryViewAllAlbums>(toolarea, this);
-    QPushButton* tracks_button = createViewCreatorButton<AudioLibraryViewAllTracks>(toolarea, this);
-    QPushButton* years_button = createViewCreatorButton<AudioLibraryViewAllYears>(toolarea, this);
-    QPushButton* genres_button = createViewCreatorButton<AudioLibraryViewAllGenres>(toolarea, this);
+    QToolButton* view_selector_popup_button = new QToolButton(toolarea);
+    view_selector_popup_button->setToolTip("Select view");
 
-    _search_field = new QLineEdit(toolarea);
-    _search_field->setPlaceholderText("Search");
+    QPixmap pm(24, 24);
+    pm.fill(Qt::transparent);
+    view_selector_popup_button->setIcon(pm);
+    view_selector_popup_button->setIconSize(pm.size());
+
+    connect(&_view_selector, &ViewSelector::selectionChanged, this, [=]() {
+        setBreadCrumb(_view_selector.getSelectedView().release());
+    });
+
+    connect(view_selector_popup_button, &QToolButton::clicked, this, [=](){
+        QPoint pos = view_selector_popup_button->mapToGlobal(view_selector_popup_button->rect().bottomLeft());
+
+        _view_selector.move(pos);
+        _view_selector.show();
+    });
 
     _display_mode_tabs = new QTabBar(toolarea);
     _display_mode_tabs->setAutoHide(true);
@@ -279,24 +367,15 @@ MainWindow::MainWindow(Settings& settings)
     _status_bar = new QStatusBar(this);
     _status_bar->setSizeGripEnabled(false);
 
-    QHBoxLayout* view_buttons_layout = new QHBoxLayout();
-    view_buttons_layout->addWidget(artists_button);
-    view_buttons_layout->addWidget(albums_button);
-    view_buttons_layout->addWidget(tracks_button);
-    view_buttons_layout->addWidget(years_button);
-    view_buttons_layout->addWidget(genres_button);
-    view_buttons_layout->addStretch(1);
-    view_buttons_layout->addWidget(_search_field);
-
     QHBoxLayout* breadcrumb_layout_wrapper = new QHBoxLayout();
     _breadcrumb_layout = new QHBoxLayout();
+    breadcrumb_layout_wrapper->addWidget(view_selector_popup_button);
     breadcrumb_layout_wrapper->addLayout(_breadcrumb_layout);
     breadcrumb_layout_wrapper->addStretch();
     breadcrumb_layout_wrapper->addWidget(_display_mode_tabs);
     breadcrumb_layout_wrapper->addWidget(_view_type_tabs);
 
     QVBoxLayout* tool_vbox = new QVBoxLayout(toolarea);
-    tool_vbox->addLayout(view_buttons_layout);
     tool_vbox->addLayout(breadcrumb_layout_wrapper);
 
     QVBoxLayout* vbox = new QVBoxLayout(this);
@@ -311,7 +390,6 @@ MainWindow::MainWindow(Settings& settings)
     connect(&_library, &ThreadSafeLibrary::libraryLoadProgressed, this, &MainWindow::onLibraryLoadProgressed);
     connect(&_library, &ThreadSafeLibrary::libraryLoadFinished, this, &MainWindow::onLibraryLoadFinished);
     connect(&_library, &ThreadSafeLibrary::coverLoadFinished, this, &MainWindow::onCoverLoadFinished);
-    connect(_search_field, &QLineEdit::returnPressed, this, &MainWindow::onSearchEnterPressed);
     connect(_display_mode_tabs, &QTabBar::tabBarClicked, this, &MainWindow::onDisplayModeSelected);
     connect(_view_type_tabs, &QTabBar::tabBarClicked, this, &MainWindow::onViewTypeSelected);
     connect(_list, &QAbstractItemView::doubleClicked, this, &MainWindow::onItemDoubleClicked);
@@ -518,14 +596,6 @@ void MainWindow::onCoverLoadFinished()
 void MainWindow::onShowDuplicateAlbums()
 {
     setBreadCrumb(new AudioLibraryViewDuplicateAlbums());
-}
-
-void MainWindow::onSearchEnterPressed()
-{
-    if (_search_field->text().isEmpty())
-        return;
-
-    setBreadCrumb(new AudioLibraryViewSimpleSearch(_search_field->text()));
 }
 
 void MainWindow::onBreadCrumbClicked()

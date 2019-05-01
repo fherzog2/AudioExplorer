@@ -11,6 +11,7 @@
 #include <QtWidgets/qlineedit.h>
 #include <QtWidgets/qlistview.h>
 #include <QtWidgets/qpushbutton.h>
+#include <QtWidgets/qradiobutton.h>
 #include <QtWidgets/qstatusbar.h>
 #include <QtWidgets/qtableview.h>
 #include <QtWidgets/qstackedwidget.h>
@@ -48,6 +49,30 @@ struct LateDeleter
         if(object)
             object->deleteLater();
     }
+};
+
+class ViewSelector : public QFrame
+{
+    Q_OBJECT
+
+public:
+    ViewSelector();
+
+    std::unique_ptr<AudioLibraryView> getSelectedView() const;
+
+signals:
+    void selectionChanged();
+
+private:
+    void radioButtonSelected();
+
+    QRadioButton* _artist_button = nullptr;
+    QRadioButton* _album_button = nullptr;
+    QRadioButton* _track_button = nullptr;
+    QRadioButton* _year_button = nullptr;
+    QRadioButton* _genre_button = nullptr;
+
+    QLineEdit* _filter_box = nullptr;
 };
 
 class ThreadSafeLibrary : public QObject
@@ -107,7 +132,6 @@ private:
     void onLibraryLoadFinished(int files_loaded, int files_in_cache, float duration_sec);
     void onCoverLoadFinished();
     void onShowDuplicateAlbums();
-    void onSearchEnterPressed();
     void onBreadCrumbClicked();
     void onBreadCrumpReverse();
     void onDisplayModeChanged(AudioLibraryView::DisplayMode display_mode);
@@ -147,6 +171,8 @@ private:
 
     AudioLibraryModel* _model = nullptr;
 
+    ViewSelector _view_selector;
+
     std::vector<std::pair<QString, QWidget*>> _view_type_map;
     QTabBar* _view_type_tabs = nullptr;
 
@@ -162,7 +188,6 @@ private:
 
     std::thread _cover_load_thread;
 
-    QLineEdit* _search_field = nullptr;
     QPointer<QWidget> _advanced_search_dialog = nullptr;
 
     struct ViewRestoreData
