@@ -25,6 +25,7 @@
 #include <QtWidgets/qtoolbutton.h>
 #include <QtWidgets/qtooltip.h>
 #include "project_version.h"
+#include "resource_helpers.h"
 #include "SettingsEditorWindow.h"
 #include "AdvancedSearchDialog.h"
 
@@ -308,10 +309,8 @@ MainWindow::MainWindow(Settings& settings)
     QToolButton* view_selector_popup_button = new QToolButton(toolarea);
     view_selector_popup_button->setToolTip("Select view");
 
-    QPixmap pm(24, 24);
-    pm.fill(Qt::transparent);
-    view_selector_popup_button->setIcon(pm);
-    view_selector_popup_button->setIconSize(pm.size());
+    view_selector_popup_button->setIcon(iconFromResource(res::VIEW_MENU_SVG()));
+    view_selector_popup_button->setIconSize(QSize(24, 24));
 
     connect(&_view_selector, &ViewSelector::selectionChanged, this, [=]() {
         setBreadCrumb(_view_selector.getSelectedView().release());

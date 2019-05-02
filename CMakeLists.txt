@@ -11,7 +11,6 @@ find_library(TAGLIB_LIBRARY
   NAMES tag
 )
 
-set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 find_package(Qt5Widgets CONFIG REQUIRED)
 find_package(Qt5Svg CONFIG REQUIRED)
@@ -49,6 +48,11 @@ if(WIN32)
                           src/project_version.rc)
 endif()
 
+set_source_files_properties(${CMAKE_BINARY_DIR}/compiled_resources.cpp
+                            ${CMAKE_BINARY_DIR}/compiled_resources.h
+                            PROPERTIES GENERATED TRUE
+                                       SKIP_AUTOMOC ON)
+
 add_executable(AudioExplorer WIN32 src/AdvancedSearchDialog.cpp
                                    src/AdvancedSearchDialog.h
                                    src/main.cpp
@@ -61,12 +65,16 @@ add_executable(AudioExplorer WIN32 src/AdvancedSearchDialog.cpp
                                    src/AudioLibraryView.cpp
                                    src/AudioLibraryView.h
                                    src/project_version.h
+                                   src/resource_helpers.cpp
+                                   src/resource_helpers.h
                                    src/Settings.h
                                    src/Settings.cpp
                                    src/SettingsEditorWindow.cpp
                                    src/SettingsEditorWindow.h
                                    src/TrackInfoReader.cpp
                                    src/TrackInfoReader.h
+                                   ${CMAKE_BINARY_DIR}/compiled_resources.cpp
+                                   ${CMAKE_BINARY_DIR}/compiled_resources.h
                                    ${WIN_RESOURCE_FILE}
                                    ${STATIC_PLUGIN_INCLUDE})
 target_link_libraries(AudioExplorer ${CMAKE_THREAD_LIBS_INIT} Qt5::Widgets Qt5::Svg ${TAGLIB_LIBRARY} ${STATIC_LINK_DEPENDENCIES})
@@ -74,12 +82,19 @@ target_link_libraries(AudioExplorer ${CMAKE_THREAD_LIBS_INIT} Qt5::Widgets Qt5::
 target_include_directories(AudioExplorer PRIVATE ${TAGLIB_INCLUDE_DIR})
 target_compile_definitions(AudioExplorer PRIVATE TAGLIB_STATIC)
 set_property(TARGET AudioExplorer PROPERTY CXX_STANDARD 11)
+set_property(TARGET AudioExplorer PROPERTY AUTOMOC ON)
 
 if(MSVC)
   target_compile_options(AudioExplorer PRIVATE /W4 /WX)
 else(MSVC)
   target_compile_options(AudioExplorer PRIVATE -Wall -Wextra -pedantic -Werror)
 endif(MSVC)
+
+add_executable(ResCompiler ResCompiler.cpp)
+set_property(TARGET ResCompiler PROPERTY CXX_STANDARD 11)
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/compiled_resources.cpp ${CMAKE_BINARY_DIR}/compiled_resources.h
+                   COMMAND ResCompiler -i ${CMAKE_CURRENT_LIST_DIR}/res/view_menu.svg -o ${CMAKE_BINARY_DIR}/compiled_resources.cpp
+                   DEPENDS ${CMAKE_CURRENT_LIST_DIR}/res/view_menu.svg)
 
 # test
 
