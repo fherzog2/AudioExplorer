@@ -155,6 +155,14 @@ namespace
     {
         QStyledItemDelegate::initStyleOption(option, index);
 
+        // reserve a square area for the decoration icon
+        // otherwise the layout may be uneven, depending on the icons
+
+        if (const QListView* list = qobject_cast<const QListView*>(option->widget))
+        {
+            option->decorationSize = list->iconSize();
+        }
+
         // bake elided text into the option
         // using the size of the pixmap as width
 
