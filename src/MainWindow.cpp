@@ -27,7 +27,6 @@
 #include "project_version.h"
 #include "resource_helpers.h"
 #include "SettingsEditorWindow.h"
-#include "AdvancedSearchDialog.h"
 
 namespace
 {
@@ -234,36 +233,18 @@ std::unique_ptr<AudioLibraryView> ViewSelector::getSelectedView() const
 
     QString filter_text = _filter_box->text();
 
-    if (filter_text.isEmpty())
-    {
-        if (_artist_button->isChecked())
-            return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllArtists());
-        if (_album_button->isChecked())
-            return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllAlbums());
-        if (_track_button->isChecked())
-            return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllTracks());
-        if (_genre_button->isChecked())
-            return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllGenres());
-    }
-    else
-    {
-        AudioLibraryViewAdvancedSearch::Query query;
-
-        if (_artist_button->isChecked())
-            query.artist = filter_text;
-        if (_album_button->isChecked())
-            query.album = filter_text;
-        if (_track_button->isChecked())
-            query.title = filter_text;
-        if (_genre_button->isChecked())
-            query.genre = filter_text;
-
-        return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAdvancedSearch(query));
-    }
+    if (_artist_button->isChecked())
+        return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllArtists(filter_text));
+    if (_album_button->isChecked())
+        return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllAlbums(filter_text));
+    if (_track_button->isChecked())
+        return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllTracks(filter_text));
+    if (_genre_button->isChecked())
+        return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllGenres(filter_text));
 
     // default to artist view if nothing is selected
 
-    return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllArtists());
+    return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllArtists(QString::null));
 }
 
 void ViewSelector::radioButtonSelected()
@@ -308,7 +289,6 @@ MainWindow::MainWindow(Settings& settings)
 
     auto viewmenu = menubar->addMenu("View");
     addMenuAction(*viewmenu, "Previous view", this, &MainWindow::onBreadCrumpReverse, Qt::Key_Backspace);
-    addMenuAction(*viewmenu, "Search...", this, &MainWindow::onOpenAdvancedSearch);
     addMenuAction(*viewmenu, "Badly tagged albums", this, &MainWindow::onShowDuplicateAlbums);
     addMenuAction(*viewmenu, "Reload all files", this, &MainWindow::scanAudioDirs, Qt::Key_F5);
 
@@ -404,7 +384,7 @@ MainWindow::MainWindow(Settings& settings)
     connect(_table->horizontalHeader(), &QHeaderView::sectionClicked, this, &MainWindow::onTableHeaderSectionClicked);
     connect(_table->horizontalHeader(), &QHeaderView::customContextMenuRequested, this, &MainWindow::onTableHeaderContextMenu);
 
-    setBreadCrumb(new AudioLibraryViewAllArtists());
+    setBreadCrumb(new AudioLibraryViewAllArtists(QString::null));
 
     restoreSettingsOnStart();
 
@@ -552,20 +532,6 @@ void MainWindow::onEditPreferences()
     }
 }
 
-void MainWindow::onOpenAdvancedSearch()
-{
-    if (_advanced_search_dialog)
-        return;
-
-    AdvancedSearchDialog * advanced_search_dialog = new AdvancedSearchDialog(this);
-    _advanced_search_dialog = advanced_search_dialog;
-    _advanced_search_dialog->setAttribute(Qt::WA_DeleteOnClose);
-
-    connect(advanced_search_dialog, &AdvancedSearchDialog::searchRequested, this, [=](AudioLibraryViewAdvancedSearch::Query query) {
-        setBreadCrumb(new AudioLibraryViewAdvancedSearch(query));
-    });
-}
-
 void MainWindow::onLibraryCacheLoading()
 {
     size_t num_tracks = 0;
@@ -624,17 +590,22 @@ void MainWindow::onDisplayModeChanged(AudioLibraryView::DisplayMode display_mode
 {
     auto modes = getCurrentView()->getSupportedModes();
 
-    auto found = std::find_if(_selected_display_modes.begin(), _selected_display_modes.end(), [modes](const std::pair<std::vector<AudioLibraryView::DisplayMode>, AudioLibraryView::DisplayMode>& i) {
-        return i.first == modes;
-    });
+    // if there is a choice, remember selected display mode for later
 
-    if (found != _selected_display_modes.end())
+    if (modes.size() > 1)
     {
-        found->second = display_mode;
-    }
-    else
-    {
-        _selected_display_modes.push_back(std::make_pair(modes, display_mode));
+        auto found = std::find_if(_selected_display_modes.begin(), _selected_display_modes.end(), [modes](const std::pair<std::vector<AudioLibraryView::DisplayMode>, AudioLibraryView::DisplayMode> & i) {
+            return i.first == modes;
+            });
+
+        if (found != _selected_display_modes.end())
+        {
+            found->second = display_mode;
+        }
+        else
+        {
+            _selected_display_modes.push_back(std::make_pair(modes, display_mode));
+        }
     }
 
     updateCurrentView();
@@ -951,15 +922,11 @@ void MainWindow::updateCurrentView()
 
     auto supported_modes = _breadcrumbs.back()._view->getSupportedModes();
 
-    std::unique_ptr<AudioLibraryView::DisplayMode> current_display_mode;
+    AudioLibraryView::DisplayMode current_display_mode = supported_modes.front();
 
     // restore user-selected display mode
 
-    if (supported_modes.size() == 1)
-    {
-        current_display_mode.reset(new AudioLibraryView::DisplayMode(supported_modes.front()));
-    }
-    else if (supported_modes.size() > 1)
+    if (supported_modes.size() > 1)
     {
         auto found_selected_display_mode = std::find_if(_selected_display_modes.begin(), _selected_display_modes.end(), [=](const std::pair<std::vector<AudioLibraryView::DisplayMode>, AudioLibraryView::DisplayMode>& i) {
             return i.first == supported_modes;
@@ -967,25 +934,17 @@ void MainWindow::updateCurrentView()
 
         if (found_selected_display_mode != _selected_display_modes.end())
         {
-            current_display_mode.reset(new AudioLibraryView::DisplayMode(found_selected_display_mode->second));
-        }
-        else
-        {
-            current_display_mode.reset(new AudioLibraryView::DisplayMode(supported_modes.front()));
+            current_display_mode = found_selected_display_mode->second;
         }
     }
 
     const bool same_view = _current_view_id == current_view_id;
-    const bool same_display_mode = (current_display_mode && _current_display_mode && *current_display_mode == *_current_display_mode) ||
-        (!current_display_mode || !_current_display_mode);
+    const bool same_display_mode = _current_display_mode && current_display_mode == *_current_display_mode;
 
     const bool incremental = same_view && same_display_mode;
 
     _current_view_id = current_view_id;
-    if (current_display_mode)
-        _current_display_mode.reset(new AudioLibraryView::DisplayMode(*current_display_mode));
-    else
-        _current_display_mode.reset();
+    _current_display_mode.reset(new AudioLibraryView::DisplayMode(current_display_mode));
 
     // create tabs for supported display modes
 
@@ -998,7 +957,7 @@ void MainWindow::updateCurrentView()
         int index = _display_mode_tabs->addTab(AudioLibraryView::getDisplayModeFriendlyName(display_mode));
         _display_mode_tab_indexes.push_back(std::make_pair(index, display_mode));
 
-        if (current_display_mode && *current_display_mode == display_mode)
+        if (current_display_mode == display_mode)
         {
             _display_mode_tabs->setCurrentIndex(index);
         }
@@ -1007,8 +966,7 @@ void MainWindow::updateCurrentView()
     // hide unused columns
 
     std::vector<AudioLibraryView::Column> available_columns;
-    if (current_display_mode)
-        available_columns = AudioLibraryView::getColumnsForDisplayMode(*current_display_mode);
+    available_columns = AudioLibraryView::getColumnsForDisplayMode(current_display_mode);
 
     available_columns.push_back(AudioLibraryView::ZERO);
 
@@ -1030,7 +988,7 @@ void MainWindow::updateCurrentView()
 
             ThreadSafeLibrary::LibraryAccessor acc(_library);
 
-            _breadcrumbs.back()._view->createItems(acc.getLibrary(), current_display_mode.get(), _model);
+            _breadcrumbs.back()._view->createItems(acc.getLibrary(), current_display_mode, _model);
         }
     }
     else
@@ -1048,7 +1006,7 @@ void MainWindow::updateCurrentView()
         {
             ThreadSafeLibrary::LibraryAccessor acc(_library);
 
-            _breadcrumbs.back()._view->createItems(acc.getLibrary(), current_display_mode.get(), model);
+            _breadcrumbs.back()._view->createItems(acc.getLibrary(), current_display_mode, model);
         }
 
         _model->deleteLater();

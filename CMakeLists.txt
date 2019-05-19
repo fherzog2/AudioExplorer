@@ -53,9 +53,7 @@ set_source_files_properties(${CMAKE_BINARY_DIR}/compiled_resources.cpp
                             PROPERTIES GENERATED TRUE
                                        SKIP_AUTOMOC ON)
 
-add_executable(AudioExplorer WIN32 src/AdvancedSearchDialog.cpp
-                                   src/AdvancedSearchDialog.h
-                                   src/main.cpp
+add_executable(AudioExplorer WIN32 src/main.cpp
                                    src/MainWindow.cpp
                                    src/MainWindow.h
                                    src/AudioLibrary.cpp

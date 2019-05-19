@@ -7,10 +7,10 @@
 namespace {
 
     void createAlbumOrTrackRow(const AudioLibraryAlbum* album,
-        const AudioLibraryView::DisplayMode* display_mode,
+        AudioLibraryView::DisplayMode display_mode,
         AudioLibraryModel* model)
     {
-        switch (*display_mode)
+        switch (display_mode)
         {
         case AudioLibraryView::DisplayMode::ALBUMS:
             model->addAlbumItem(album);
@@ -38,6 +38,72 @@ namespace {
         {
             displayed_groups[group] = album;
         }
+    }
+
+    //=============================================================================
+
+    /**
+    * Implements a filter which only lets through text that contains all the specified words.
+    * Word can also be forbidden by adding an exclamation mark in front (negative filter).
+    */
+    class FilterHandler
+    {
+    public:
+        FilterHandler(const QString& filter);
+
+        bool checkText(const QString& text) const;
+        QString formatFilterString(const QString& view_name) const;
+
+    private:
+        std::vector<QString> _words;
+        std::vector<QString> _forbidden_words;
+    };
+
+    FilterHandler::FilterHandler(const QString& filter)
+    {
+        for (const QString& word : filter.split(' ', QString::SkipEmptyParts))
+        {
+            if (word.startsWith('!'))
+            {
+                if (word.length() > 1)
+                {
+                    _forbidden_words.push_back(word.right(word.length() - 1));
+                }
+            }
+            else
+            {
+                _words.push_back(word);
+            }
+        }
+    }
+
+    bool FilterHandler::checkText(const QString& text) const
+    {
+        for (const QString& word : _forbidden_words)
+            if (text.contains(word, Qt::CaseInsensitive))
+                return false;
+
+        for (const QString& word : _words)
+            if (!text.contains(word, Qt::CaseInsensitive))
+                return false;
+
+        return true;
+    }
+
+    QString FilterHandler::formatFilterString(const QString& view_name) const
+    {
+        if (_words.empty() && _forbidden_words.empty())
+            return view_name;
+
+        QStringList result;
+
+        for (const QString& word : _words)
+            result.push_back('\"' + word + '\"');
+
+        for (const QString& word : _forbidden_words)
+            result.push_back("not \"" + word + '\"');
+
+        return QString("%1 (%2)").arg(view_name, result.join(", "));
     }
 
 }
@@ -141,10 +207,16 @@ QString AudioLibraryView::getDisplayModeFriendlyName(DisplayMode mode)
 {
     switch (mode)
     {
+    case DisplayMode::ARTISTS:
+        return "Artists";
     case DisplayMode::ALBUMS:
         return "Albums";
     case DisplayMode::TRACKS:
         return "Tracks";
+    case DisplayMode::YEARS:
+        return "Years";
+    case DisplayMode::GENRES:
+        return "Genres";
     }
 
     return QString();
@@ -153,8 +225,11 @@ QString AudioLibraryView::getDisplayModeFriendlyName(DisplayMode mode)
 std::vector<std::pair<AudioLibraryView::DisplayMode, QString>> AudioLibraryView::displayModeToStringMapping()
 {
     std::vector<std::pair<DisplayMode, QString>> result;
+    result.push_back(std::make_pair(DisplayMode::ARTISTS, "artists"));
     result.push_back(std::make_pair(DisplayMode::ALBUMS, "albums"));
     result.push_back(std::make_pair(DisplayMode::TRACKS, "tracks"));
+    result.push_back(std::make_pair(DisplayMode::YEARS, "years"));
+    result.push_back(std::make_pair(DisplayMode::GENRES, "genres"));
     return result;
 }
 
@@ -205,6 +280,10 @@ void AudioLibraryView::resolveToTracks(const AudioLibrary& /*library*/, std::vec
 
 //=============================================================================
 
+AudioLibraryViewAllArtists::AudioLibraryViewAllArtists(QString filter)
+    : _filter(filter)
+{}
+
 AudioLibraryView* AudioLibraryViewAllArtists::clone() const
 {
     return new AudioLibraryViewAllArtists(*this);
@@ -212,18 +291,20 @@ AudioLibraryView* AudioLibraryViewAllArtists::clone() const
 
 QString AudioLibraryViewAllArtists::getDisplayName() const
 {
-    return "Artists";
+    return FilterHandler(_filter).formatFilterString("Artists");
 }
 
 std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewAllArtists::getSupportedModes() const
 {
-    return{};
+    return{ DisplayMode::ARTISTS };
 }
 
 void AudioLibraryViewAllArtists::createItems(const AudioLibrary& library,
-    const DisplayMode* /*display_mode*/,
+    DisplayMode /*display_mode*/,
     AudioLibraryModel* model) const
 {
+    FilterHandler filter_handler(_filter);
+
     std::unordered_map<QString, const AudioLibraryAlbum*> displayed_groups;
 
     for (const AudioLibraryAlbum* album : library.getAlbums())
@@ -232,11 +313,13 @@ void AudioLibraryViewAllArtists::createItems(const AudioLibrary& library,
         {
             // always add an item for artist, even if this field is empty
 
-            addAlbumToGroup(track->_artist, album, displayed_groups);
+            if(filter_handler.checkText(track->_artist))
+                addAlbumToGroup(track->_artist, album, displayed_groups);
 
             // if the album has an album artist, add an extra item for this field
 
-            if (!track->_album_artist.isEmpty())
+            if (!track->_album_artist.isEmpty() &&
+                filter_handler.checkText(track->_album_artist))
             {
                 addAlbumToGroup(track->_album_artist, album, displayed_groups);
             }
@@ -257,10 +340,14 @@ void AudioLibraryViewAllArtists::createItems(const AudioLibrary& library,
 
 QString AudioLibraryViewAllArtists::getId() const
 {
-    return QLatin1String("AudioLibraryViewAllArtists");
+    return QString("AudioLibraryViewAllArtists, %1").arg(_filter);
 }
 
 //=============================================================================
+
+AudioLibraryViewAllAlbums::AudioLibraryViewAllAlbums(QString filter)
+    : _filter(filter)
+{}
 
 AudioLibraryView* AudioLibraryViewAllAlbums::clone() const
 {
@@ -269,7 +356,7 @@ AudioLibraryView* AudioLibraryViewAllAlbums::clone() const
 
 QString AudioLibraryViewAllAlbums::getDisplayName() const
 {
-    return "Albums";
+    return FilterHandler(_filter).formatFilterString("Albums");
 }
 
 std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewAllAlbums::getSupportedModes() const
@@ -278,21 +365,28 @@ std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewAllAlbums::getSupport
 }
 
 void AudioLibraryViewAllAlbums::createItems(const AudioLibrary& library,
-    const DisplayMode* /*display_mode*/,
+    DisplayMode /*display_mode*/,
     AudioLibraryModel* model) const
 {
+    FilterHandler filter_handler(_filter);
+
     for (const AudioLibraryAlbum* album : library.getAlbums())
     {
-        model->addAlbumItem(album);
+        if(filter_handler.checkText(album->_key._album))
+            model->addAlbumItem(album);
     }
 }
 
 QString AudioLibraryViewAllAlbums::getId() const
 {
-    return QLatin1String("AudioLibraryViewAllAlbums");
+    return QString("AudioLibraryViewAllAlbums, %1").arg(_filter);
 }
 
 //=============================================================================
+
+AudioLibraryViewAllTracks::AudioLibraryViewAllTracks(QString filter)
+    : _filter(filter)
+{}
 
 AudioLibraryView* AudioLibraryViewAllTracks::clone() const
 {
@@ -301,7 +395,7 @@ AudioLibraryView* AudioLibraryViewAllTracks::clone() const
 
 QString AudioLibraryViewAllTracks::getDisplayName() const
 {
-    return "Tracks";
+    return FilterHandler(_filter).formatFilterString("Tracks");
 }
 
 std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewAllTracks::getSupportedModes() const
@@ -310,21 +404,24 @@ std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewAllTracks::getSupport
 }
 
 void AudioLibraryViewAllTracks::createItems(const AudioLibrary& library,
-    const DisplayMode* /*display_mode*/,
+    DisplayMode /*display_mode*/,
     AudioLibraryModel* model) const
 {
+    FilterHandler filter_handler(_filter);
+
     for (const AudioLibraryAlbum* album : library.getAlbums())
     {
         for (const AudioLibraryTrack* track : album->_tracks)
         {
-            model->addTrackItem(track);
+            if(filter_handler.checkText(track->_title))
+                model->addTrackItem(track);
         }
     }
 }
 
 QString AudioLibraryViewAllTracks::getId() const
 {
-    return QLatin1String("AudioLibraryViewAllTracks");
+    return QString("AudioLibraryViewAllTracks, %1").arg(_filter);
 }
 
 //=============================================================================
@@ -341,11 +438,11 @@ QString AudioLibraryViewAllYears::getDisplayName() const
 
 std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewAllYears::getSupportedModes() const
 {
-    return{};
+    return{ DisplayMode::YEARS };
 }
 
 void AudioLibraryViewAllYears::createItems(const AudioLibrary& library,
-    const DisplayMode* /*display_mode*/,
+    DisplayMode /*display_mode*/,
     AudioLibraryModel* model) const
 {
     std::unordered_map<int, const AudioLibraryAlbum*> displayed_groups;
@@ -375,6 +472,11 @@ QString AudioLibraryViewAllYears::getId() const
 
 //=============================================================================
 
+AudioLibraryViewAllGenres::AudioLibraryViewAllGenres(const QString& filter)
+    : _filter(filter)
+{
+}
+
 AudioLibraryView* AudioLibraryViewAllGenres::clone() const
 {
     return new AudioLibraryViewAllGenres(*this);
@@ -382,40 +484,61 @@ AudioLibraryView* AudioLibraryViewAllGenres::clone() const
 
 QString AudioLibraryViewAllGenres::getDisplayName() const
 {
-    return "Genres";
+    return FilterHandler(_filter).formatFilterString("Genres");
 }
 
 std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewAllGenres::getSupportedModes() const
 {
-    return{};
+    if(_filter.isEmpty())
+        return { DisplayMode::GENRES };
+    else
+        return { DisplayMode::GENRES, DisplayMode::ALBUMS };
 }
 
 void AudioLibraryViewAllGenres::createItems(const AudioLibrary& library,
-    const DisplayMode* /*display_mode*/,
+    DisplayMode display_mode,
     AudioLibraryModel* model) const
 {
-    std::unordered_map<QString, const AudioLibraryAlbum*> displayed_groups;
+    FilterHandler filter_handler(_filter);
 
-    for (const AudioLibraryAlbum* album : library.getAlbums())
+    if(display_mode == DisplayMode::GENRES)
     {
-        addAlbumToGroup(album->_key._genre, album, displayed_groups);
+        std::unordered_map<QString, const AudioLibraryAlbum*> displayed_groups;
+
+        for (const AudioLibraryAlbum* album : library.getAlbums())
+        {
+            if (filter_handler.checkText(album->_key._genre))
+            {
+                addAlbumToGroup(album->_key._genre, album, displayed_groups);
+            }
+        }
+
+        for (const auto& group : displayed_groups)
+        {
+            QString id = QString("genre(%2,%3,%1)")
+                .arg(group.second->_key._cover_checksum)
+                .arg(group.first, group.second->_key._album);
+
+            model->addItem(id, group.first, group.second->getCoverPixmap(), [=]() {
+                return new AudioLibraryViewGenre(group.first);
+            });
+        }
     }
-
-    for (const auto& group : displayed_groups)
+    else if (display_mode == DisplayMode::ALBUMS)
     {
-        QString id = QString("genre(%2,%3,%1)")
-            .arg(group.second->_key._cover_checksum)
-            .arg(group.first, group.second->_key._album);
-
-        model->addItem(id, group.first, group.second->getCoverPixmap(), [=]() {
-            return new AudioLibraryViewGenre(group.first);
-        });
+        for (const AudioLibraryAlbum* album : library.getAlbums())
+        {
+            if (filter_handler.checkText(album->_key._genre))
+            {
+                model->addAlbumItem(album);
+            }
+        }
     }
 }
 
 QString AudioLibraryViewAllGenres::getId() const
 {
-    return QLatin1String("AudioLibraryViewAllGenres");
+    return QString("AudioLibraryViewAllGenres, %1").arg(_filter);
 }
 
 //=============================================================================
@@ -441,7 +564,7 @@ std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewArtist::getSupportedM
 }
 
 void AudioLibraryViewArtist::createItems(const AudioLibrary& library,
-    const DisplayMode* display_mode,
+    DisplayMode display_mode,
     AudioLibraryModel* model) const
 {
     for (const AudioLibraryAlbum* album : library.getAlbums())
@@ -453,7 +576,7 @@ void AudioLibraryViewArtist::createItems(const AudioLibrary& library,
             if (track->_artist == _artist ||
                 (!track->_album_artist.isEmpty() && track->_album_artist == _artist))
             {
-                switch (*display_mode)
+                switch (display_mode)
                 {
                 case DisplayMode::ALBUMS:
                     model->addAlbumItem(album);
@@ -514,7 +637,7 @@ std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewAlbum::getSupportedMo
 }
 
 void AudioLibraryViewAlbum::createItems(const AudioLibrary& library,
-    const DisplayMode* /*display_mode*/,
+    DisplayMode /*display_mode*/,
     AudioLibraryModel* model) const
 {
     if (const AudioLibraryAlbum* album = library.getAlbum(_key))
@@ -565,7 +688,7 @@ std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewYear::getSupportedMod
 }
 
 void AudioLibraryViewYear::createItems(const AudioLibrary& library,
-    const DisplayMode* display_mode,
+    DisplayMode display_mode,
     AudioLibraryModel* model) const
 {
     for (const AudioLibraryAlbum* album : library.getAlbums())
@@ -616,7 +739,7 @@ std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewGenre::getSupportedMo
 }
 
 void AudioLibraryViewGenre::createItems(const AudioLibrary& library,
-    const DisplayMode* display_mode,
+    DisplayMode display_mode,
     AudioLibraryModel* model) const
 {
     for (const AudioLibraryAlbum* album : library.getAlbums())
@@ -642,127 +765,6 @@ void AudioLibraryViewGenre::resolveToTracks(const AudioLibrary& library, std::ve
 QString AudioLibraryViewGenre::getId() const
 {
     return QString("AudioLibraryViewGenre,%1").arg(_genre);
-}
-
-//=============================================================================
-
-AudioLibraryViewAdvancedSearch::AudioLibraryViewAdvancedSearch(const Query& query)
-    : _query(query)
-{
-}
-
-AudioLibraryView* AudioLibraryViewAdvancedSearch::clone() const
-{
-    return new AudioLibraryViewAdvancedSearch(*this);
-}
-
-QString AudioLibraryViewAdvancedSearch::getDisplayName() const
-{
-    QString text = "Search: ";
-
-    if (!_query.artist.isEmpty())
-        text += QString("Artist ~ \"%1\" ").arg(_query.artist);
-    if (!_query.album.isEmpty())
-        text += QString("Album ~ \"%1\" ").arg(_query.album);
-    if (!_query.genre.isEmpty())
-        text += QString("Genre ~ \"%1\" ").arg(_query.genre);
-    if (!_query.title.isEmpty())
-        text += QString("Title ~ \"%1\" ").arg(_query.title);
-    if (!_query.comment.isEmpty())
-        text += QString("Comment ~ \"%1\" ").arg(_query.comment);
-
-    return text;
-}
-
-std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewAdvancedSearch::getSupportedModes() const
-{
-    return{ DisplayMode::ALBUMS, DisplayMode::TRACKS };
-}
-
-class AdvancedSearchComparer
-{
-public:
-    AdvancedSearchComparer(const QString& text, Qt::CaseSensitivity case_sensitivity, bool use_regex);
-
-    bool check(const QString& text) const;
-
-private:
-    QString _text;
-    Qt::CaseSensitivity _case_sensitivity;
-    QRegExp _regex;
-};
-
-AdvancedSearchComparer::AdvancedSearchComparer(const QString& text, Qt::CaseSensitivity case_sensitivity, bool use_regex)
-    : _case_sensitivity(case_sensitivity)
-{
-    if (use_regex)
-        _regex = QRegExp(text, _case_sensitivity);
-    else
-        _text = text;
-}
-
-bool AdvancedSearchComparer::check(const QString& text) const
-{
-    if (!_text.isEmpty())
-        return text.contains(_text, _case_sensitivity);
-
-    return text.contains(_regex);
-}
-
-void AudioLibraryViewAdvancedSearch::createItems(const AudioLibrary& library,
-    const DisplayMode* display_mode,
-    AudioLibraryModel* model) const
-{
-    if (*display_mode == DisplayMode::ALBUMS &&
-        _query.artist.isEmpty() &&
-        _query.album.isEmpty() &&
-        _query.genre.isEmpty())
-    {
-        // early out, this search won't find anything
-        return;
-    }
-
-    AdvancedSearchComparer compare_artist(_query.artist, _query.case_sensitive, _query.use_regex);
-    AdvancedSearchComparer compare_album(_query.album, _query.case_sensitive, _query.use_regex);
-    AdvancedSearchComparer compare_genre(_query.genre, _query.case_sensitive, _query.use_regex);
-    AdvancedSearchComparer compare_title(_query.title, _query.case_sensitive, _query.use_regex);
-    AdvancedSearchComparer compare_comment(_query.comment, _query.case_sensitive, _query.use_regex);
-
-    for (const AudioLibraryAlbum* album : library.getAlbums())
-    {
-        if (!_query.artist.isEmpty() && !compare_artist.check(album->_key._artist))
-            continue;
-        if (!_query.album.isEmpty() && !compare_album.check(album->_key._album))
-            continue;
-        if (!_query.genre.isEmpty() && !compare_genre.check(album->_key._genre))
-            continue;
-
-        switch (*display_mode)
-        {
-        case DisplayMode::ALBUMS:
-            model->addAlbumItem(album);
-            break;
-        case DisplayMode::TRACKS:
-            for (const AudioLibraryTrack* track : album->_tracks)
-            {
-                if (!_query.title.isEmpty() && !compare_title.check(track->_title))
-                    continue;
-                if (!_query.comment.isEmpty() && !compare_comment.check(track->_comment))
-                    continue;
-
-                model->addTrackItem(track);
-            }
-            break;
-        }
-    }
-}
-
-QString AudioLibraryViewAdvancedSearch::getId() const
-{
-    return QString("AudioLibraryViewAdvancedSearch(%3,%4,%5,%6,%7,%1,%2)")
-        .arg(_query.case_sensitive)
-        .arg(_query.use_regex)
-        .arg(_query.artist, _query.album, _query.genre, _query.title, _query.comment);
 }
 
 //=============================================================================
@@ -802,7 +804,7 @@ namespace {
 }
 
 void AudioLibraryViewDuplicateAlbums::createItems(const AudioLibrary& library,
-    const DisplayMode* /*display_mode*/,
+    DisplayMode /*display_mode*/,
     AudioLibraryModel* model) const
 {
     std::map<DuplicateAlbumKey, const AudioLibraryAlbum*> first_album_occurence;
