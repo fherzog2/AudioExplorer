@@ -289,6 +289,7 @@ MainWindow::MainWindow(Settings& settings)
 
     auto viewmenu = menubar->addMenu("View");
     addMenuAction(*viewmenu, "Previous view", this, &MainWindow::onBreadCrumpReverse, Qt::Key_Backspace);
+    addMenuAction(*viewmenu, "Find...", this, &MainWindow::onShowFindWidget, Qt::CTRL + Qt::Key_F);
     addMenuAction(*viewmenu, "Badly tagged albums", this, &MainWindow::onShowDuplicateAlbums);
     addMenuAction(*viewmenu, "Reload all files", this, &MainWindow::scanAudioDirs, Qt::Key_F5);
 
@@ -529,6 +530,76 @@ void MainWindow::onEditPreferences()
     if (_settings.audio_dir_paths.getValue() != old_audio_dir_paths)
     {
         scanAudioDirs();
+    }
+}
+
+void MainWindow::onShowFindWidget()
+{
+    if (!_find_widget)
+    {
+        _find_widget = new QWidget(this, Qt::Window);
+
+        _find_widget_line_edit = new QLineEdit(_find_widget);
+        _find_widget_line_edit->setPlaceholderText("Find...");
+        _find_widget_line_edit->setClearButtonEnabled(true);
+        connect(_find_widget_line_edit, &QLineEdit::returnPressed, this, &MainWindow::onFindNext);
+
+        QPushButton* search_button = new QPushButton(_find_widget);
+        search_button->setText("Find Next");
+        connect(search_button, &QPushButton::clicked, this, &MainWindow::onFindNext);
+
+        QShortcut* shortcut_escape = new QShortcut(Qt::Key_Escape, _find_widget);
+        connect(shortcut_escape, &QShortcut::activated, _find_widget, &QWidget::close);
+
+        QHBoxLayout* box = new QHBoxLayout(_find_widget);
+        box->addWidget(_find_widget_line_edit);
+        box->addWidget(search_button);
+    }
+
+    _find_widget_line_edit->selectAll();
+    _find_widget->show();
+    _find_widget->activateWindow();
+}
+
+void MainWindow::onFindNext()
+{
+    if (QAbstractItemView* view = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget()))
+    {
+        int start_row = 0;
+
+        QModelIndexList selected_indexes = view->selectionModel()->selectedIndexes();
+
+        for (const QModelIndex& index : selected_indexes)
+        {
+            start_row = std::max(start_row, index.row());
+        }
+
+        if (!selected_indexes.isEmpty())
+            ++start_row;
+
+        QString search_text = _find_widget_line_edit->text();
+
+        for (int i = 0, n = view->model()->rowCount(); i < n; ++i)
+        {
+            int row = (start_row + i) % n;
+
+            QModelIndex index = view->model()->index(row, 0);
+
+            QString item_text = view->model()->data(index, Qt::DisplayRole).toString();
+
+            if (item_text.contains(search_text, Qt::CaseInsensitive))
+            {
+                QItemSelection selection;
+                QModelIndex end = _model->index(index.row(), _model->columnCount() - 1);
+                selection.push_back(QItemSelectionRange(index, end));
+
+                view->selectionModel()->select(selection, QItemSelectionModel::ClearAndSelect);
+
+                view->scrollTo(index);
+
+                return;
+            }
+        }
     }
 }
 

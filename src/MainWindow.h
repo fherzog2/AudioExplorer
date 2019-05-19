@@ -126,6 +126,8 @@ protected:
 
 private:
     void onEditPreferences();
+    void onShowFindWidget();
+    void onFindNext();
     void onLibraryCacheLoading();
     void onLibraryLoadProgressed(int files_loaded, int files_in_cache);
     void onLibraryLoadFinished(int files_loaded, int files_in_cache, float duration_sec);
@@ -234,4 +236,7 @@ private:
     std::vector<QModelIndex> _dragged_indexes;
 
     std::vector<int> _icon_size_steps;
+
+    QWidget* _find_widget = nullptr;
+    QLineEdit* _find_widget_line_edit = nullptr;
 };
