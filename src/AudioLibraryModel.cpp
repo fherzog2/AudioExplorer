@@ -169,6 +169,7 @@ void AudioLibraryModel::addAlbumItem(const AudioLibraryAlbum* album)
         setAdditionalColumn(row, AudioLibraryView::GENRE, album->_key._genre);
         setAdditionalColumn(row, AudioLibraryView::COVER_CHECKSUM, QString("%1").arg(album->_key._cover_checksum));
         setAdditionalColumn(row, AudioLibraryView::COVER_TYPE, album->getCoverType());
+        setAdditionalColumn(row, AudioLibraryView::NUMBER_OF_TRACKS, QStringLiteral("%1").arg(album->_tracks.size()));
 
         return item;
     };
