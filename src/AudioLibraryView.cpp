@@ -250,6 +250,7 @@ std::vector<AudioLibraryView::Column> AudioLibraryView::getColumnsForDisplayMode
             AudioLibraryView::COVER_CHECKSUM,
             AudioLibraryView::COVER_TYPE,
             AudioLibraryView::NUMBER_OF_TRACKS,
+            AudioLibraryView::LENGTH_SECONDS,
         };
     case DisplayMode::TRACKS:
         return

@@ -171,6 +171,12 @@ void AudioLibraryModel::addAlbumItem(const AudioLibraryAlbum* album)
         setAdditionalColumn(row, AudioLibraryView::COVER_TYPE, album->getCoverType());
         setAdditionalColumn(row, AudioLibraryView::NUMBER_OF_TRACKS, QStringLiteral("%1").arg(album->_tracks.size()));
 
+        int length_milliseconds = 0;
+        for (const AudioLibraryTrack* track : album->_tracks)
+            length_milliseconds += track->_length_milliseconds;
+
+        setLengthColumn(row, length_milliseconds);
+
         return item;
     };
 
@@ -202,17 +208,7 @@ void AudioLibraryModel::addTrackItem(const AudioLibraryTrack* track)
         setAdditionalColumn(row, AudioLibraryView::COMMENT, track->_comment);
         setAdditionalColumn(row, AudioLibraryView::PATH, track->_filepath);
         setAdditionalColumn(row, AudioLibraryView::TAG_TYPES, track->_tag_types);
-
-        {
-            QString formatted_length = track->_length_seconds < 3600 ?
-                QDateTime::fromTime_t(track->_length_seconds).toUTC().toString("mm:ss") :
-                QDateTime::fromTime_t(track->_length_seconds).toUTC().toString("hh:mm:ss");
-
-            QStandardItem* length_item = setAdditionalColumn(row, AudioLibraryView::LENGTH_SECONDS, formatted_length);
-
-            length_item->setData(QString("%1").arg(track->_length_seconds), AudioLibraryView::SORT_ROLE);
-        }
-
+        setLengthColumn(row, track->_length_milliseconds);
         setAdditionalColumn(row, AudioLibraryView::CHANNELS, QString("%1").arg(track->_channels));
         setAdditionalColumn(row, AudioLibraryView::BITRATE_KBS, QString("%1 kbit/s").arg(track->_bitrate_kbs));
         setAdditionalColumn(row, AudioLibraryView::SAMPLERATE_HZ, QString("%1 Hz").arg(track->_samplerate_hz));
@@ -307,4 +303,17 @@ QStandardItem* AudioLibraryModel::setAdditionalColumn(int row, AudioLibraryView:
     QStandardItem* item = new CollatedItem(text, _numeric_collator);
     setItem(row, static_cast<int>(column), item);
     return item;
+}
+
+void AudioLibraryModel::setLengthColumn(int row, int length_milliseconds)
+{
+    int length_seconds = length_milliseconds / 1000;
+
+    QString formatted_length = length_seconds < 3600 ?
+        QDateTime::fromTime_t(length_seconds).toUTC().toString("mm:ss") :
+        QDateTime::fromTime_t(length_seconds).toUTC().toString("hh:mm:ss");
+
+    QStandardItem* length_item = setAdditionalColumn(row, AudioLibraryView::LENGTH_SECONDS, formatted_length);
+
+    length_item->setData(QString("%1").arg(length_seconds), AudioLibraryView::SORT_ROLE);
 }

@@ -119,7 +119,7 @@ public:
         int disc_number,
         const QString& comment,
         const QString& tag_types,
-        int length_seconds,
+        int length_milliseconds,
         int channels,
         int bitrate_kbs,
         int samplerate_hz)
@@ -133,7 +133,7 @@ public:
         , _disc_number(disc_number)
         , _comment(comment)
         , _tag_types(tag_types)
-        , _length_seconds(length_seconds)
+        , _length_milliseconds(length_milliseconds)
         , _channels(channels)
         , _bitrate_kbs(bitrate_kbs)
         , _samplerate_hz(samplerate_hz)
@@ -141,7 +141,7 @@ public:
         _id = QString("%7.track(%8,%9,%10,%11,%1,%2,%12,%13,%3,%4,%5,%6)")
             .arg(_track_number)
             .arg(_disc_number)
-            .arg(_length_seconds)
+            .arg(_length_milliseconds)
             .arg(_channels)
             .arg(_bitrate_kbs)
             .arg(_samplerate_hz)
@@ -161,7 +161,7 @@ public:
             _disc_number,
             _comment,
             _tag_types,
-            _length_seconds,
+            _length_milliseconds,
             _channels,
             _bitrate_kbs,
             _samplerate_hz);
@@ -189,7 +189,7 @@ public:
     int _disc_number;
     QString _comment;
     QString _tag_types;
-    int _length_seconds;
+    int _length_milliseconds;
     int _channels;
     int _bitrate_kbs;
     int _samplerate_hz;
@@ -244,7 +244,7 @@ private:
         int disc_number,
         const QString& comment,
         const QString& tag_types,
-        int length_seconds,
+        int length_milliseconds,
         int channels,
         int bitrate_kbs,
         int samplerate_hz);

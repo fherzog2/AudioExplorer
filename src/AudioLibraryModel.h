@@ -38,6 +38,7 @@ private:
     void onUpdateStarted();
     void onUpdateFinished();
     QStandardItem* setAdditionalColumn(int row, AudioLibraryView::Column column, const QString& text);
+    void setLengthColumn(int row, int length_milliseconds);
 
     std::unordered_map<QString, QStandardItem*> _id_to_item_map;
     std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>> _item_to_view_map;

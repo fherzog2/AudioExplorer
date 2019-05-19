@@ -155,7 +155,7 @@ bool testTrackInfoHeader(const QString& audio_filepath, const QString& cover_fil
     RETURN_IF_FAILED(info.album_artist == "albumartist");
     RETURN_IF_FAILED(info.disc_number == 1);
 
-    RETURN_IF_FAILED(info.length_seconds == 1);
+    RETURN_IF_FAILED(info.length_milliseconds / 1000 == 1);
 
     return true;
 }

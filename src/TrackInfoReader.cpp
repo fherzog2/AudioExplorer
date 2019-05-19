@@ -335,10 +335,10 @@ bool readTrackInfo(const QString& filepath, TrackInfo& info)
         {
             readBasicTrackInfo(file_ref.tag(), info);
 
-            info.length_seconds = file_ref.audioProperties()->length();
-            info.channels       = file_ref.audioProperties()->channels();
-            info.bitrate_kbs    = file_ref.audioProperties()->bitrate();
-            info.samplerate_hz  = file_ref.audioProperties()->sampleRate();
+            info.length_milliseconds = file_ref.audioProperties()->lengthInMilliseconds();
+            info.channels            = file_ref.audioProperties()->channels();
+            info.bitrate_kbs         = file_ref.audioProperties()->bitrate();
+            info.samplerate_hz       = file_ref.audioProperties()->sampleRate();
 
             if (TagLib::MPEG::File* file = dynamic_cast<TagLib::MPEG::File*>(file_ref.file()))
             {
