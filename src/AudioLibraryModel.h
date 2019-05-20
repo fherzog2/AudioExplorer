@@ -21,7 +21,7 @@ public:
         AudioLibraryModel& _model;
     };
 
-    void addItem(const QString& id, const QString& name, const QIcon& icon, std::function<AudioLibraryView*()> view_factory);
+    void addItem(const QString& id, const QString& name, const QIcon& icon, int number_of_albums, int number_of_tracks, std::function<AudioLibraryView*()> view_factory);
     void addAlbumItem(const AudioLibraryAlbum* album);
     void addTrackItem(const AudioLibraryTrack* track);
 

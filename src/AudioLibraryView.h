@@ -14,6 +14,7 @@ public:
     enum Column
     {
         ZERO = 0,
+        NUMBER_OF_ALBUMS,
         ARTIST,
         ALBUM,
         YEAR,

@@ -24,20 +24,27 @@ namespace {
         }
     }
 
+    struct AudioLibraryGroupData
+    {
+        const AudioLibraryAlbum* showcase_album = nullptr;
+        int num_albums = 0;
+        int num_tracks = 0;
+    };
+
     template<class GROUPED_TYPE>
     void addAlbumToGroup(GROUPED_TYPE group, const AudioLibraryAlbum* album,
-        std::unordered_map<GROUPED_TYPE, const AudioLibraryAlbum*>& displayed_groups)
+        std::unordered_map<GROUPED_TYPE, AudioLibraryGroupData>& displayed_groups)
     {
-        auto it = displayed_groups.find(group);
-        if (it != displayed_groups.end())
+        AudioLibraryGroupData& group_data = displayed_groups[group];
+
+        if (!group_data.showcase_album ||
+            group_data.showcase_album->getCoverPixmap().isNull())
         {
-            if (it->second->getCoverPixmap().isNull())
-                it->second = album;
+            group_data.showcase_album = album;
         }
-        else
-        {
-            displayed_groups[group] = album;
-        }
+
+        ++group_data.num_albums;
+        group_data.num_tracks += static_cast<int>(album->_tracks.size());
     }
 
     //=============================================================================
@@ -120,6 +127,8 @@ QString AudioLibraryView::getColumnFriendlyName(Column column)
     {
     case ZERO:
         return "";
+    case NUMBER_OF_ALBUMS:
+        return "Number of albums";
     case ARTIST:
         return "Artist";
     case ALBUM:
@@ -165,6 +174,7 @@ std::vector<std::pair<AudioLibraryView::Column, QString>> AudioLibraryView::colu
 {
     std::vector<std::pair<Column, QString>> result;
     result.push_back(std::make_pair(ZERO, "zero_column"));
+    result.push_back(std::make_pair(NUMBER_OF_ALBUMS, "number_of_albums"));
     result.push_back(std::make_pair(ARTIST, "artist"));
     result.push_back(std::make_pair(ALBUM, "album"));
     result.push_back(std::make_pair(YEAR, "year"));
@@ -240,6 +250,14 @@ std::vector<AudioLibraryView::Column> AudioLibraryView::getColumnsForDisplayMode
 {
     switch (mode)
     {
+    case DisplayMode::ARTISTS:
+    case DisplayMode::YEARS:
+    case DisplayMode::GENRES:
+        return
+        {
+            AudioLibraryView::NUMBER_OF_ALBUMS,
+            AudioLibraryView::NUMBER_OF_TRACKS,
+        };
     case DisplayMode::ALBUMS:
         return
         {
@@ -310,7 +328,17 @@ void AudioLibraryViewAllArtists::createItems(const AudioLibrary& library,
 {
     FilterHandler filter_handler(_filter);
 
-    std::unordered_map<QString, const AudioLibraryAlbum*> displayed_groups;
+    std::unordered_map<QString, AudioLibraryGroupData> displayed_groups;
+
+    struct AlbumAdded
+    {
+        bool added_for_artist = false;
+        bool added_for_album_artist = false;
+    };
+
+    // only add each album once for artist and album_artist
+
+    std::unordered_map<const AudioLibraryAlbum*, AlbumAdded> albums_added;
 
     for (const AudioLibraryAlbum* album : library.getAlbums())
     {
@@ -318,26 +346,34 @@ void AudioLibraryViewAllArtists::createItems(const AudioLibrary& library,
         {
             // always add an item for artist, even if this field is empty
 
-            if(filter_handler.checkText(track->_artist))
+            if (filter_handler.checkText(track->_artist) &&
+                !albums_added[album].added_for_artist)
+            {
                 addAlbumToGroup(track->_artist, album, displayed_groups);
+                albums_added[album].added_for_artist = true;
+            }
 
             // if the album has an album artist, add an extra item for this field
 
             if (!track->_album_artist.isEmpty() &&
-                filter_handler.checkText(track->_album_artist))
+                filter_handler.checkText(track->_album_artist) &&
+                !albums_added[album].added_for_album_artist)
             {
                 addAlbumToGroup(track->_album_artist, album, displayed_groups);
+                albums_added[album].added_for_album_artist = true;
             }
         }
     }
 
     for (const auto& group : displayed_groups)
     {
-        QString id = QString("artist(%2,%3,%1)")
-            .arg(group.second->_key._cover_checksum)
-            .arg(group.first, group.second->_key._album);
+        QString id = QString("artist(%4,%5,%1,%2,%3)")
+            .arg(group.second.showcase_album->_key._cover_checksum)
+            .arg(group.second.num_albums)
+            .arg(group.second.num_tracks)
+            .arg(group.first, group.second.showcase_album->_key._album);
 
-        model->addItem(id, group.first, group.second->getCoverPixmap(), [=](){
+        model->addItem(id, group.first, group.second.showcase_album->getCoverPixmap(), group.second.num_albums, group.second.num_tracks, [=](){
             return new AudioLibraryViewArtist(group.first);
         });
     }
@@ -450,7 +486,7 @@ void AudioLibraryViewAllYears::createItems(const AudioLibrary& library,
     DisplayMode /*display_mode*/,
     AudioLibraryModel* model) const
 {
-    std::unordered_map<int, const AudioLibraryAlbum*> displayed_groups;
+    std::unordered_map<int, AudioLibraryGroupData> displayed_groups;
 
     for (const AudioLibraryAlbum* album : library.getAlbums())
     {
@@ -459,12 +495,14 @@ void AudioLibraryViewAllYears::createItems(const AudioLibrary& library,
 
     for (const auto& group : displayed_groups)
     {
-        QString id = QString("year(%1,%3,%2)")
+        QString id = QString("year(%1,%5,%2,%3,%4)")
             .arg(group.first)
-            .arg(group.second->_key._cover_checksum)
-            .arg(group.second->_key._album);
+            .arg(group.second.showcase_album->_key._cover_checksum)
+            .arg(group.second.num_albums)
+            .arg(group.second.num_tracks)
+            .arg(group.second.showcase_album->_key._album);
 
-        model->addItem(id, QString("%1").arg(group.first), group.second->getCoverPixmap(), [=]() {
+        model->addItem(id, QString("%1").arg(group.first), group.second.showcase_album->getCoverPixmap(), group.second.num_albums, group.second.num_tracks, [=]() {
             return new AudioLibraryViewYear(group.first);
         });
     }
@@ -508,7 +546,7 @@ void AudioLibraryViewAllGenres::createItems(const AudioLibrary& library,
 
     if(display_mode == DisplayMode::GENRES)
     {
-        std::unordered_map<QString, const AudioLibraryAlbum*> displayed_groups;
+        std::unordered_map<QString, AudioLibraryGroupData> displayed_groups;
 
         for (const AudioLibraryAlbum* album : library.getAlbums())
         {
@@ -520,11 +558,13 @@ void AudioLibraryViewAllGenres::createItems(const AudioLibrary& library,
 
         for (const auto& group : displayed_groups)
         {
-            QString id = QString("genre(%2,%3,%1)")
-                .arg(group.second->_key._cover_checksum)
-                .arg(group.first, group.second->_key._album);
+            QString id = QString("genre(%4,%5,%1,%2,%3)")
+                .arg(group.second.showcase_album->_key._cover_checksum)
+                .arg(group.second.num_albums)
+                .arg(group.second.num_tracks)
+                .arg(group.first, group.second.showcase_album->_key._album);
 
-            model->addItem(id, group.first, group.second->getCoverPixmap(), [=]() {
+            model->addItem(id, group.first, group.second.showcase_album->getCoverPixmap(), group.second.num_albums, group.second.num_tracks, [=]() {
                 return new AudioLibraryViewGenre(group.first);
             });
         }

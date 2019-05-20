@@ -142,11 +142,15 @@ void AudioLibraryModel::addItemInternal(const QString& id, const QIcon& icon,
         _item_to_view_map[item].reset(view);
 }
 
-void AudioLibraryModel::addItem(const QString& id, const QString& name, const QIcon& icon, std::function<AudioLibraryView*()> view_factory)
+void AudioLibraryModel::addItem(const QString& id, const QString& name, const QIcon& icon, int number_of_albums, int number_of_tracks, std::function<AudioLibraryView*()> view_factory)
 {
     auto item_factory = [=](int row) {
         QStandardItem* item = new CollatedItem(icon.isNull() ? _default_icon : icon, name, _numeric_collator);
         setItem(row, item);
+
+        setAdditionalColumn(row, AudioLibraryView::NUMBER_OF_ALBUMS, QStringLiteral("%1").arg(number_of_albums));
+        setAdditionalColumn(row, AudioLibraryView::NUMBER_OF_TRACKS, QStringLiteral("%1").arg(number_of_tracks));
+
         return item;
     };
 
