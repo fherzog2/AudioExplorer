@@ -64,10 +64,13 @@ public:
 
     QString toString() const
     {
-        return QString("%3,%4,%5,%1,%2")
-            .arg(_year)
-            .arg(_cover_checksum)
-            .arg(_artist, _album, _genre);
+        QLatin1Char sep(',');
+
+        return _artist + sep +
+            _album + sep +
+            _genre + sep +
+            QString::number(_year) + sep +
+            QString::number(_cover_checksum);
     }
 
     QString _artist;
@@ -138,14 +141,22 @@ public:
         , _bitrate_kbs(bitrate_kbs)
         , _samplerate_hz(samplerate_hz)
     {
-        _id = QString("%7.track(%8,%9,%10,%11,%1,%2,%12,%13,%3,%4,%5,%6)")
-            .arg(_track_number)
-            .arg(_disc_number)
-            .arg(_length_milliseconds)
-            .arg(_channels)
-            .arg(_bitrate_kbs)
-            .arg(_samplerate_hz)
-            .arg(_album->getId(), _artist, _album_artist, _filepath, _title, _comment, _tag_types);
+        QLatin1Char sep(',');
+
+        _id = _album->getId() +
+            QLatin1String(".track(") +
+            _artist + sep +
+            _album_artist + sep +
+            _filepath + sep +
+            _title + sep +
+            QString::number(_track_number) + sep +
+            QString::number(_disc_number) + sep +
+            _comment + sep +
+            _tag_types + sep +
+            QString::number(_length_milliseconds) + sep +
+            QString::number(_channels) + sep +
+            QString::number(_bitrate_kbs) + sep +
+            QString::number(_samplerate_hz) + QLatin1Char(')');
     }
 
     std::tuple<AudioLibraryAlbumKey, QByteArray, QString, QString, QString, QDateTime, QString, int, int, QString, QString, int, int, int, int> getMembersAsTuple() const

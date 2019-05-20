@@ -29,6 +29,16 @@ namespace {
         const AudioLibraryAlbum* showcase_album = nullptr;
         int num_albums = 0;
         int num_tracks = 0;
+
+        QString getId() const
+        {
+            QLatin1Char sep(',');
+
+            return showcase_album->_key._album + sep +
+                QString::number(showcase_album->_key._cover_checksum) + sep +
+                QString::number(num_albums) + sep +
+                QString::number(num_tracks) + QLatin1Char(')');
+        }
     };
 
     template<class GROUPED_TYPE>
@@ -367,11 +377,9 @@ void AudioLibraryViewAllArtists::createItems(const AudioLibrary& library,
 
     for (const auto& group : displayed_groups)
     {
-        QString id = QString("artist(%4,%5,%1,%2,%3)")
-            .arg(group.second.showcase_album->_key._cover_checksum)
-            .arg(group.second.num_albums)
-            .arg(group.second.num_tracks)
-            .arg(group.first, group.second.showcase_album->_key._album);
+        QString id = QLatin1String("artist(") +
+            group.first + QLatin1Char(',') +
+            group.second.getId() + QLatin1Char(')');
 
         model->addItem(id, group.first, group.second.showcase_album->getCoverPixmap(), group.second.num_albums, group.second.num_tracks, [=](){
             return new AudioLibraryViewArtist(group.first);
@@ -495,12 +503,9 @@ void AudioLibraryViewAllYears::createItems(const AudioLibrary& library,
 
     for (const auto& group : displayed_groups)
     {
-        QString id = QString("year(%1,%5,%2,%3,%4)")
-            .arg(group.first)
-            .arg(group.second.showcase_album->_key._cover_checksum)
-            .arg(group.second.num_albums)
-            .arg(group.second.num_tracks)
-            .arg(group.second.showcase_album->_key._album);
+        QString id = QLatin1String("year(") +
+            QString::number(group.first) + QLatin1Char(',') +
+            group.second.getId() + QLatin1Char(')');
 
         model->addItem(id, QString::number(group.first), group.second.showcase_album->getCoverPixmap(), group.second.num_albums, group.second.num_tracks, [=]() {
             return new AudioLibraryViewYear(group.first);
@@ -558,11 +563,9 @@ void AudioLibraryViewAllGenres::createItems(const AudioLibrary& library,
 
         for (const auto& group : displayed_groups)
         {
-            QString id = QString("genre(%4,%5,%1,%2,%3)")
-                .arg(group.second.showcase_album->_key._cover_checksum)
-                .arg(group.second.num_albums)
-                .arg(group.second.num_tracks)
-                .arg(group.first, group.second.showcase_album->_key._album);
+            QString id = QLatin1String("genre(") +
+                group.first + QLatin1Char(',') +
+                group.second.getId() + QLatin1Char(')');
 
             model->addItem(id, group.first, group.second.showcase_album->getCoverPixmap(), group.second.num_albums, group.second.num_tracks, [=]() {
                 return new AudioLibraryViewGenre(group.first);

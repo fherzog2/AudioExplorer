@@ -60,10 +60,7 @@ AudioLibraryAlbum::AudioLibraryAlbum(const AudioLibraryAlbumKey& key, const QByt
     : _key(key)
     , _cover(cover)
 {
-    _id = QString("album(%3,%4,%5,%1,%2)")
-        .arg(_key._year)
-        .arg(_key._cover_checksum)
-        .arg(_key._artist, _key._album, _key._genre);
+    _id = QLatin1String("album(") + _key.toString() + QLatin1Char(')');
 
     _cover_type = getCoverTypeInternal();
 }

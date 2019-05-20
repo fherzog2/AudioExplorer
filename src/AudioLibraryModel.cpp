@@ -47,9 +47,12 @@ namespace {
     AlbumModelItem::AlbumModelItem(const QIcon& icon, const QString& text, const AudioLibraryAlbum* album, const QCollator& collator)
         : CollatedItem(icon, text, collator)
     {
-        QString sort_key = QString("%2 %1 %3")
-            .arg(album->_key._year)
-            .arg(album->_key._artist, album->_key._album);
+        QLatin1Char sep(' ');
+
+        QString sort_key = album->_key._artist + sep +
+            QString::number(album->_key._year) + sep +
+            album->_key._album;
+
         setData(sort_key, AudioLibraryView::SORT_ROLE);
     }
 
@@ -79,11 +82,14 @@ namespace {
     TrackModelItem::TrackModelItem(const QIcon& icon, const QString& text, const AudioLibraryTrack* track, const QCollator& collator)
         : CollatedItem(icon, text, collator)
     {
-        QString sort_key = QString("%4 %1 %5 %2 %3")
-            .arg(track->_album->_key._year)
-            .arg(track->_disc_number)
-            .arg(track->_track_number)
-            .arg(track->_album->_key._artist, track->_album->_key._album);
+        QLatin1Char sep(' ');
+
+        QString sort_key = track->_album->_key._artist + sep +
+            QString::number(track->_album->_key._year) + sep +
+            track->_album->_key._album + sep +
+            QString::number(track->_disc_number) + sep +
+            QString::number(track->_track_number);
+
         setData(sort_key, AudioLibraryView::SORT_ROLE);
     }
 
