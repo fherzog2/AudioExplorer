@@ -148,8 +148,8 @@ void AudioLibraryModel::addItem(const QString& id, const QString& name, const QI
         QStandardItem* item = new CollatedItem(icon.isNull() ? _default_icon : icon, name, _numeric_collator);
         setItem(row, item);
 
-        setAdditionalColumn(row, AudioLibraryView::NUMBER_OF_ALBUMS, QStringLiteral("%1").arg(number_of_albums));
-        setAdditionalColumn(row, AudioLibraryView::NUMBER_OF_TRACKS, QStringLiteral("%1").arg(number_of_tracks));
+        setAdditionalColumn(row, AudioLibraryView::NUMBER_OF_ALBUMS, QString::number(number_of_albums));
+        setAdditionalColumn(row, AudioLibraryView::NUMBER_OF_TRACKS, QString::number(number_of_tracks));
 
         return item;
     };
@@ -169,11 +169,11 @@ void AudioLibraryModel::addAlbumItem(const AudioLibraryAlbum* album)
 
         setAdditionalColumn(row, AudioLibraryView::ARTIST, album->_key._artist);
         setAdditionalColumn(row, AudioLibraryView::ALBUM, album->_key._album);
-        setAdditionalColumn(row, AudioLibraryView::YEAR, QString("%1").arg(album->_key._year));
+        setAdditionalColumn(row, AudioLibraryView::YEAR, QString::number(album->_key._year));
         setAdditionalColumn(row, AudioLibraryView::GENRE, album->_key._genre);
-        setAdditionalColumn(row, AudioLibraryView::COVER_CHECKSUM, QString("%1").arg(album->_key._cover_checksum));
+        setAdditionalColumn(row, AudioLibraryView::COVER_CHECKSUM, QString::number(album->_key._cover_checksum));
         setAdditionalColumn(row, AudioLibraryView::COVER_TYPE, album->getCoverType());
-        setAdditionalColumn(row, AudioLibraryView::NUMBER_OF_TRACKS, QStringLiteral("%1").arg(album->_tracks.size()));
+        setAdditionalColumn(row, AudioLibraryView::NUMBER_OF_TRACKS, QString::number(album->_tracks.size()));
 
         int length_milliseconds = 0;
         for (const AudioLibraryTrack* track : album->_tracks)
@@ -201,21 +201,21 @@ void AudioLibraryModel::addTrackItem(const AudioLibraryTrack* track)
 
         setAdditionalColumn(row, AudioLibraryView::ARTIST, track->_artist);
         setAdditionalColumn(row, AudioLibraryView::ALBUM, track->_album->_key._album);
-        setAdditionalColumn(row, AudioLibraryView::YEAR, QString("%1").arg(track->_album->_key._year));
+        setAdditionalColumn(row, AudioLibraryView::YEAR, QString::number(track->_album->_key._year));
         setAdditionalColumn(row, AudioLibraryView::GENRE, track->_album->_key._genre);
-        setAdditionalColumn(row, AudioLibraryView::COVER_CHECKSUM, QString("%1").arg(track->_album->_key._cover_checksum));
+        setAdditionalColumn(row, AudioLibraryView::COVER_CHECKSUM, QString::number(track->_album->_key._cover_checksum));
         setAdditionalColumn(row, AudioLibraryView::COVER_TYPE, track->_album->getCoverType());
         setAdditionalColumn(row, AudioLibraryView::TITLE, track->_title);
-        setAdditionalColumn(row, AudioLibraryView::TRACK_NUMBER, QString("%1").arg(track->_track_number));
-        setAdditionalColumn(row, AudioLibraryView::DISC_NUMBER, QString("%1").arg(track->_disc_number));
+        setAdditionalColumn(row, AudioLibraryView::TRACK_NUMBER, QString::number(track->_track_number));
+        setAdditionalColumn(row, AudioLibraryView::DISC_NUMBER, QString::number(track->_disc_number));
         setAdditionalColumn(row, AudioLibraryView::ALBUM_ARTIST, track->_album_artist);
         setAdditionalColumn(row, AudioLibraryView::COMMENT, track->_comment);
         setAdditionalColumn(row, AudioLibraryView::PATH, track->_filepath);
         setAdditionalColumn(row, AudioLibraryView::TAG_TYPES, track->_tag_types);
         setLengthColumn(row, track->_length_milliseconds);
-        setAdditionalColumn(row, AudioLibraryView::CHANNELS, QString("%1").arg(track->_channels));
-        setAdditionalColumn(row, AudioLibraryView::BITRATE_KBS, QString("%1 kbit/s").arg(track->_bitrate_kbs));
-        setAdditionalColumn(row, AudioLibraryView::SAMPLERATE_HZ, QString("%1 Hz").arg(track->_samplerate_hz));
+        setAdditionalColumn(row, AudioLibraryView::CHANNELS, QString::number(track->_channels));
+        setAdditionalColumn(row, AudioLibraryView::BITRATE_KBS, QString::number(track->_bitrate_kbs) + QLatin1String(" kbit/s"));
+        setAdditionalColumn(row, AudioLibraryView::SAMPLERATE_HZ, QString::number(track->_samplerate_hz) + QLatin1String(" Hz"));
 
         return item;
     };
@@ -319,5 +319,5 @@ void AudioLibraryModel::setLengthColumn(int row, int length_milliseconds)
 
     QStandardItem* length_item = setAdditionalColumn(row, AudioLibraryView::LENGTH_SECONDS, formatted_length);
 
-    length_item->setData(QString("%1").arg(length_seconds), AudioLibraryView::SORT_ROLE);
+    length_item->setData(QString::number(length_seconds), AudioLibraryView::SORT_ROLE);
 }

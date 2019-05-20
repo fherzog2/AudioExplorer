@@ -502,7 +502,7 @@ void AudioLibraryViewAllYears::createItems(const AudioLibrary& library,
             .arg(group.second.num_tracks)
             .arg(group.second.showcase_album->_key._album);
 
-        model->addItem(id, QString("%1").arg(group.first), group.second.showcase_album->getCoverPixmap(), group.second.num_albums, group.second.num_tracks, [=]() {
+        model->addItem(id, QString::number(group.first), group.second.showcase_album->getCoverPixmap(), group.second.num_albums, group.second.num_tracks, [=]() {
             return new AudioLibraryViewYear(group.first);
         });
     }
@@ -724,7 +724,7 @@ AudioLibraryView* AudioLibraryViewYear::clone() const
 
 QString AudioLibraryViewYear::getDisplayName() const
 {
-    return QString("%1").arg(_year);
+    return QString::number(_year);
 }
 
 std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewYear::getSupportedModes() const
