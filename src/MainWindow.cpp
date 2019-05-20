@@ -320,6 +320,7 @@ MainWindow::MainWindow(Settings& settings)
     _list = new QListView(this);
     _list->setModel(_model);
     _list->setViewMode(QListView::IconMode);
+    _list->setResizeMode(QListView::Adjust);
     _list->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     _list->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
     _list->setEditTriggers(QAbstractItemView::NoEditTriggers);
