@@ -175,9 +175,11 @@ void AudioLibraryModel::addAlbumItem(const AudioLibraryAlbum* album)
 
         setAdditionalColumn(row, AudioLibraryView::ARTIST, album->_key._artist);
         setAdditionalColumn(row, AudioLibraryView::ALBUM, album->_key._album);
-        setAdditionalColumn(row, AudioLibraryView::YEAR, QString::number(album->_key._year));
+        if(album->_key._year != 0)
+            setAdditionalColumn(row, AudioLibraryView::YEAR, QString::number(album->_key._year));
         setAdditionalColumn(row, AudioLibraryView::GENRE, album->_key._genre);
-        setAdditionalColumn(row, AudioLibraryView::COVER_CHECKSUM, QString::number(album->_key._cover_checksum));
+        if(!album->getCoverPixmap().isNull())
+            setAdditionalColumn(row, AudioLibraryView::COVER_CHECKSUM, QString::number(album->_key._cover_checksum));
         setAdditionalColumn(row, AudioLibraryView::COVER_TYPE, album->getCoverType());
         setAdditionalColumn(row, AudioLibraryView::NUMBER_OF_TRACKS, QString::number(album->_tracks.size()));
 
@@ -207,13 +209,17 @@ void AudioLibraryModel::addTrackItem(const AudioLibraryTrack* track)
 
         setAdditionalColumn(row, AudioLibraryView::ARTIST, track->_artist);
         setAdditionalColumn(row, AudioLibraryView::ALBUM, track->_album->_key._album);
-        setAdditionalColumn(row, AudioLibraryView::YEAR, QString::number(track->_album->_key._year));
+        if(track->_album->_key._year != 0)
+            setAdditionalColumn(row, AudioLibraryView::YEAR, QString::number(track->_album->_key._year));
         setAdditionalColumn(row, AudioLibraryView::GENRE, track->_album->_key._genre);
-        setAdditionalColumn(row, AudioLibraryView::COVER_CHECKSUM, QString::number(track->_album->_key._cover_checksum));
+        if (!track->_album->getCoverPixmap().isNull())
+            setAdditionalColumn(row, AudioLibraryView::COVER_CHECKSUM, QString::number(track->_album->_key._cover_checksum));
         setAdditionalColumn(row, AudioLibraryView::COVER_TYPE, track->_album->getCoverType());
         setAdditionalColumn(row, AudioLibraryView::TITLE, track->_title);
-        setAdditionalColumn(row, AudioLibraryView::TRACK_NUMBER, QString::number(track->_track_number));
-        setAdditionalColumn(row, AudioLibraryView::DISC_NUMBER, QString::number(track->_disc_number));
+        if(track->_track_number != 0)
+            setAdditionalColumn(row, AudioLibraryView::TRACK_NUMBER, QString::number(track->_track_number));
+        if(track->_disc_number != 0)
+            setAdditionalColumn(row, AudioLibraryView::DISC_NUMBER, QString::number(track->_disc_number));
         setAdditionalColumn(row, AudioLibraryView::ALBUM_ARTIST, track->_album_artist);
         setAdditionalColumn(row, AudioLibraryView::COMMENT, track->_comment);
         setAdditionalColumn(row, AudioLibraryView::PATH, track->_filepath);
