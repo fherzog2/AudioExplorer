@@ -349,9 +349,19 @@ MainWindow::MainWindow(Settings& settings)
     _view_stack->addWidget(_table);
     _view_stack->setCurrentWidget(_list);
 
+    _details = new DetailsPane(this);
+
+    _details_splitter = new QSplitter(Qt::Horizontal);
+    _details_splitter->addWidget(_view_stack);
+    _details_splitter->addWidget(_details);
+
     _view_type_tabs = new QTabBar(toolarea);
     addViewTypeTab(_list, "Icons", "icons");
     addViewTypeTab(_table, "Table", "table");
+
+    QToolButton* details_toggle_button = new QToolButton(toolarea);
+    details_toggle_button->setText("Details");
+    details_toggle_button->setToolTip("Show details pane");
 
     _status_bar = new QStatusBar(this);
     _status_bar->setSizeGripEnabled(false);
@@ -363,6 +373,7 @@ MainWindow::MainWindow(Settings& settings)
     breadcrumb_layout_wrapper->addStretch();
     breadcrumb_layout_wrapper->addWidget(_display_mode_tabs);
     breadcrumb_layout_wrapper->addWidget(_view_type_tabs);
+    breadcrumb_layout_wrapper->addWidget(details_toggle_button);
 
     QVBoxLayout* tool_vbox = new QVBoxLayout(toolarea);
     tool_vbox->addLayout(breadcrumb_layout_wrapper);
@@ -372,7 +383,7 @@ MainWindow::MainWindow(Settings& settings)
     vbox->setSpacing(0);
     vbox->setMenuBar(menubar);
     vbox->addWidget(toolarea);
-    vbox->addWidget(_view_stack);
+    vbox->addWidget(_details_splitter, 1);
     vbox->addWidget(_status_bar);
 
     connect(&_library, &ThreadSafeLibrary::libraryCacheLoading, this, &MainWindow::onLibraryCacheLoading);
@@ -385,12 +396,18 @@ MainWindow::MainWindow(Settings& settings)
     connect(_table, &QAbstractItemView::doubleClicked, this, &MainWindow::onItemDoubleClicked);
     connect(_table->horizontalHeader(), &QHeaderView::sectionClicked, this, &MainWindow::onTableHeaderSectionClicked);
     connect(_table->horizontalHeader(), &QHeaderView::customContextMenuRequested, this, &MainWindow::onTableHeaderContextMenu);
+    connect(details_toggle_button, &QToolButton::clicked, this, &MainWindow::onToggleDetails);
+    connect(_list->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onModelSelectionChanged);
+    connect(_table->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onModelSelectionChanged);
 
     setBreadCrumb(new AudioLibraryViewAllArtists(QString::null));
 
     restoreSettingsOnStart();
 
     show();
+
+    // must be done after the main window is visible
+    restoreDetailsSizeOnStart();
 
     if (_settings.audio_dir_paths.getValue().isEmpty())
     {
@@ -813,6 +830,18 @@ void MainWindow::onTableHeaderContextMenu(const QPoint& pos)
         menu.exec(global_pos);
 }
 
+void MainWindow::onToggleDetails()
+{
+    _details->setVisible(!_details->isVisibleTo(_details->parentWidget()));
+}
+
+void MainWindow::onModelSelectionChanged()
+{
+    QAbstractItemView* current_view = static_cast<QAbstractItemView*>(_view_stack->currentWidget());
+
+    _details->setSelection(_model, current_view, *_current_display_mode);
+}
+
 void MainWindow::saveLibrary()
 {
     if (!_library._library_cache_loaded)
@@ -1085,9 +1114,14 @@ void MainWindow::updateCurrentView()
         _model = model;
         _list->setModel(model);
         _table->setModel(model);
+
+        connect(_list->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onModelSelectionChanged);
+        connect(_table->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onModelSelectionChanged);
     }
 
     restoreViewSettings(view_settings.get());
+
+    onModelSelectionChanged();
 
     _last_view_update_time = std::chrono::steady_clock::now();
     _is_last_view_update_time_valid = true;
@@ -1697,4 +1731,35 @@ void MainWindow::saveSettingsOnExit()
     // window geometry
 
     _settings.main_window_geometry.save(this);
+
+    // details
+
+    const QList<int> details_splitter_sizes = _details_splitter->sizes();
+    if (details_splitter_sizes.size() >= 2)
+    {
+        _settings.details_width.setValue(details_splitter_sizes[1]);
+    }
+}
+
+void MainWindow::restoreDetailsSizeOnStart()
+{
+    const int details_width = _settings.details_width.getValue();
+
+    const bool details_visible = details_width > 0;
+
+    _details->setVisible(details_visible);
+
+    if (details_visible)
+    {
+        QList<int> sizes = _details_splitter->sizes();
+
+        // redistribute sizes between view and details
+
+        int size_view = sizes[0] + sizes[1] - details_width;
+
+        sizes[0] = size_view;
+        sizes[1] = details_width;
+
+        _details_splitter->setSizes(sizes);
+    }
 }

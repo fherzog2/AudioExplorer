@@ -12,6 +12,7 @@
 #include <QtWidgets/qlistview.h>
 #include <QtWidgets/qpushbutton.h>
 #include <QtWidgets/qradiobutton.h>
+#include <QtWidgets/qsplitter.h>
 #include <QtWidgets/qstatusbar.h>
 #include <QtWidgets/qtableview.h>
 #include <QtWidgets/qstackedwidget.h>
@@ -20,6 +21,7 @@
 #include "AudioLibrary.h"
 #include "AudioLibraryView.h"
 #include "AudioLibraryModel.h"
+#include "DetailsPane.h"
 
 class SpinLock
 {
@@ -141,6 +143,8 @@ private:
     void onItemDoubleClicked(const QModelIndex &index);
     void onTableHeaderSectionClicked();
     void onTableHeaderContextMenu(const QPoint& pos);
+    void onToggleDetails();
+    void onModelSelectionChanged();
 
     void saveLibrary();
     static void loadLibrary(QStringList audio_dir_paths, ThreadSafeLibrary& library);
@@ -208,6 +212,8 @@ private:
     void restoreSettingsOnStart();
     void saveSettingsOnExit();
 
+    void restoreDetailsSizeOnStart();
+
     struct Breadcrumb
     {
         std::unique_ptr<QObject, LateDeleter> _button;
@@ -239,4 +245,7 @@ private:
 
     QWidget* _find_widget = nullptr;
     QLineEdit* _find_widget_line_edit = nullptr;
+
+    QSplitter* _details_splitter = nullptr;
+    DetailsPane* _details = nullptr;
 };

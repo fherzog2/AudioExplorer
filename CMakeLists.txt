@@ -62,6 +62,8 @@ add_executable(AudioExplorer WIN32 src/main.cpp
                                    src/AudioLibraryModel.h
                                    src/AudioLibraryView.cpp
                                    src/AudioLibraryView.h
+                                   src/DetailsPane.cpp
+                                   src/DetailsPane.h
                                    src/project_version.h
                                    src/resource_helpers.cpp
                                    src/resource_helpers.h
