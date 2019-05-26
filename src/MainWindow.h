@@ -197,11 +197,11 @@ private:
 
     struct ViewRestoreData
     {
-        double _list_scroll_pos;
-        double _table_scroll_pos;
+        double _list_scroll_pos = 0;
+        double _table_scroll_pos = 0;
 
-        int _table_sort_indicator_section;
-        Qt::SortOrder _table_sort_indicator_order;
+        int _table_sort_indicator_section = 0;
+        Qt::SortOrder _table_sort_indicator_order = Qt::AscendingOrder;
 
         std::vector<QString> _selected_items;
     };

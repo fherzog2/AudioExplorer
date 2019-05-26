@@ -93,12 +93,16 @@ namespace
 
     double getRelativeScrollPos(QScrollBar* scroll_bar)
     {
-        return double(scroll_bar->value()) / double(scroll_bar->maximum() - scroll_bar->minimum());
+        int64_t maximum = scroll_bar->maximum();
+        int64_t minimum = scroll_bar->minimum();
+        return double(scroll_bar->value()) / double(maximum - minimum);
     }
 
     void setRelativeScrollPos(QScrollBar* scroll_bar, double scroll_pos)
     {
-        scroll_bar->setValue(int(scroll_pos * double(scroll_bar->maximum() - scroll_bar->minimum())));
+        int64_t maximum = scroll_bar->maximum();
+        int64_t minimum = scroll_bar->minimum();
+        scroll_bar->setValue(int(scroll_pos * double(maximum - minimum)));
     }
 
     /**

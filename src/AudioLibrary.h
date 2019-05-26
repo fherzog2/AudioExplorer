@@ -76,8 +76,8 @@ public:
     QString _artist;
     QString _album;
     QString _genre;
-    int _year;
-    quint16 _cover_checksum;
+    int _year = 0;
+    quint16 _cover_checksum = 0;
 };
 
 class AudioLibraryAlbum
