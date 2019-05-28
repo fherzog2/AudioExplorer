@@ -151,6 +151,12 @@ QString AudioLibraryView::getColumnFriendlyName(Column column)
         return "Cover checksum";
     case COVER_TYPE:
         return "Cover type";
+    case COVER_WIDTH:
+        return "Cover width";
+    case COVER_HEIGHT:
+        return "Cover height";
+    case COVER_DATASIZE:
+        return "Cover size";
     case NUMBER_OF_TRACKS:
         return "Number of tracks";
     case TITLE:
@@ -191,6 +197,9 @@ std::vector<std::pair<AudioLibraryView::Column, QString>> AudioLibraryView::colu
     result.push_back(std::make_pair(GENRE, "genre"));
     result.push_back(std::make_pair(COVER_CHECKSUM, "cover_checksum"));
     result.push_back(std::make_pair(COVER_TYPE, "cover_type"));
+    result.push_back(std::make_pair(COVER_WIDTH, "cover_width"));
+    result.push_back(std::make_pair(COVER_HEIGHT, "cover_height"));
+    result.push_back(std::make_pair(COVER_DATASIZE, "cover_datasize"));
     result.push_back(std::make_pair(NUMBER_OF_TRACKS, "number_of_tracks"));
     result.push_back(std::make_pair(TITLE, "title"));
     result.push_back(std::make_pair(TRACK_NUMBER, "track_number"));
@@ -277,6 +286,9 @@ std::vector<AudioLibraryView::Column> AudioLibraryView::getColumnsForDisplayMode
             AudioLibraryView::GENRE,
             AudioLibraryView::COVER_CHECKSUM,
             AudioLibraryView::COVER_TYPE,
+            AudioLibraryView::COVER_WIDTH,
+            AudioLibraryView::COVER_HEIGHT,
+            AudioLibraryView::COVER_DATASIZE,
             AudioLibraryView::NUMBER_OF_TRACKS,
             AudioLibraryView::LENGTH_SECONDS,
         };
@@ -289,6 +301,9 @@ std::vector<AudioLibraryView::Column> AudioLibraryView::getColumnsForDisplayMode
             AudioLibraryView::GENRE,
             AudioLibraryView::COVER_CHECKSUM,
             AudioLibraryView::COVER_TYPE,
+            AudioLibraryView::COVER_WIDTH,
+            AudioLibraryView::COVER_HEIGHT,
+            AudioLibraryView::COVER_DATASIZE,
             AudioLibraryView::TITLE,
             AudioLibraryView::TRACK_NUMBER,
             AudioLibraryView::DISC_NUMBER,

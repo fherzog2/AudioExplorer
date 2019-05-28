@@ -31,6 +31,14 @@ namespace {
 
     bool CollatedItem::operator<(const QStandardItem& other) const
     {
+        QVariant var_sort_key1 = data(AudioLibraryView::SORT_ROLE);
+        QVariant var_sort_key2 = other.data(AudioLibraryView::SORT_ROLE);
+
+        if (var_sort_key1.type() == QVariant::String && var_sort_key2.type() == QVariant::String)
+        {
+            return collator().compare(var_sort_key1.toString(), var_sort_key2.toString()) < 0;
+        }
+
         return _collator.compare(text(), other.text()) < 0;
     }
 
@@ -40,8 +48,6 @@ namespace {
     {
     public:
         AlbumModelItem(const QIcon& icon, const QString& text, const AudioLibraryAlbum* album, const QCollator& collator);
-
-        bool operator<(const QStandardItem& other) const;
     };
 
     AlbumModelItem::AlbumModelItem(const QIcon& icon, const QString& text, const AudioLibraryAlbum* album, const QCollator& collator)
@@ -56,27 +62,12 @@ namespace {
         setData(sort_key, AudioLibraryView::SORT_ROLE);
     }
 
-    bool AlbumModelItem::operator<(const QStandardItem& other) const
-    {
-        QVariant var_sort_key1 = data(AudioLibraryView::SORT_ROLE);
-        QVariant var_sort_key2 = other.data(AudioLibraryView::SORT_ROLE);
-
-        if (var_sort_key1.type() == QVariant::String && var_sort_key2.type() == QVariant::String)
-        {
-            return collator().compare(var_sort_key1.toString(), var_sort_key2.toString()) < 0;
-        }
-
-        return QStandardItem::operator<(other);
-    }
-
     //=========================================================================
 
     class TrackModelItem : public CollatedItem
     {
     public:
         TrackModelItem(const QIcon& icon, const QString& text, const AudioLibraryTrack* track, const QCollator& collator);
-
-        bool operator<(const QStandardItem& other) const;
     };
 
     TrackModelItem::TrackModelItem(const QIcon& icon, const QString& text, const AudioLibraryTrack* track, const QCollator& collator)
@@ -91,19 +82,6 @@ namespace {
             QString::number(track->_track_number);
 
         setData(sort_key, AudioLibraryView::SORT_ROLE);
-    }
-
-    bool TrackModelItem::operator<(const QStandardItem& other) const
-    {
-        QVariant var_sort_key1 = data(AudioLibraryView::SORT_ROLE);
-        QVariant var_sort_key2 = other.data(AudioLibraryView::SORT_ROLE);
-
-        if (var_sort_key1.type() == QVariant::String && var_sort_key2.type() == QVariant::String)
-        {
-            return collator().compare(var_sort_key1.toString(), var_sort_key2.toString()) < 0;
-        }
-
-        return QStandardItem::operator<(other);
     }
 
 } // nameless namespace
@@ -173,14 +151,8 @@ void AudioLibraryModel::addAlbumItem(const AudioLibraryAlbum* album)
         item->setData(album->_key._artist + QChar(QChar::LineSeparator) + album->_key._album, AudioLibraryView::MULTILINE_DISPLAY_ROLE);
         setItem(row, item);
 
+        setAlbumColumns(row, album);
         setAdditionalColumn(row, AudioLibraryView::ARTIST, album->_key._artist);
-        setAdditionalColumn(row, AudioLibraryView::ALBUM, album->_key._album);
-        if(album->_key._year != 0)
-            setAdditionalColumn(row, AudioLibraryView::YEAR, QString::number(album->_key._year));
-        setAdditionalColumn(row, AudioLibraryView::GENRE, album->_key._genre);
-        if(!album->getCoverPixmap().isNull())
-            setAdditionalColumn(row, AudioLibraryView::COVER_CHECKSUM, QString::number(album->_key._cover_checksum));
-        setAdditionalColumn(row, AudioLibraryView::COVER_TYPE, album->getCoverType());
         setAdditionalColumn(row, AudioLibraryView::NUMBER_OF_TRACKS, QString::number(album->_tracks.size()));
 
         int length_milliseconds = 0;
@@ -207,14 +179,8 @@ void AudioLibraryModel::addTrackItem(const AudioLibraryTrack* track)
         item->setData(track->_artist + QChar(QChar::LineSeparator) + track->_title, AudioLibraryView::MULTILINE_DISPLAY_ROLE);
         setItem(row, item);
 
+        setAlbumColumns(row, track->_album);
         setAdditionalColumn(row, AudioLibraryView::ARTIST, track->_artist);
-        setAdditionalColumn(row, AudioLibraryView::ALBUM, track->_album->_key._album);
-        if(track->_album->_key._year != 0)
-            setAdditionalColumn(row, AudioLibraryView::YEAR, QString::number(track->_album->_key._year));
-        setAdditionalColumn(row, AudioLibraryView::GENRE, track->_album->_key._genre);
-        if (!track->_album->getCoverPixmap().isNull())
-            setAdditionalColumn(row, AudioLibraryView::COVER_CHECKSUM, QString::number(track->_album->_key._cover_checksum));
-        setAdditionalColumn(row, AudioLibraryView::COVER_TYPE, track->_album->getCoverType());
         setAdditionalColumn(row, AudioLibraryView::TITLE, track->_title);
         if(track->_track_number != 0)
             setAdditionalColumn(row, AudioLibraryView::TRACK_NUMBER, QString::number(track->_track_number));
@@ -332,4 +298,30 @@ void AudioLibraryModel::setLengthColumn(int row, int length_milliseconds)
     QStandardItem* length_item = setAdditionalColumn(row, AudioLibraryView::LENGTH_SECONDS, formatted_length);
 
     length_item->setData(QString::number(length_seconds), AudioLibraryView::SORT_ROLE);
+}
+
+void AudioLibraryModel::setAlbumColumns(int row, const AudioLibraryAlbum* album)
+{
+    setAdditionalColumn(row, AudioLibraryView::ALBUM, album->_key._album);
+
+    if (album->_key._year != 0)
+        setAdditionalColumn(row, AudioLibraryView::YEAR, QString::number(album->_key._year));
+
+    setAdditionalColumn(row, AudioLibraryView::GENRE, album->_key._genre);
+
+    if (!album->_cover.isEmpty())
+    {
+        setAdditionalColumn(row, AudioLibraryView::COVER_CHECKSUM, QString::number(album->_key._cover_checksum));
+
+        QStandardItem* datasize_item = setAdditionalColumn(row, AudioLibraryView::COVER_DATASIZE, QLocale().formattedDataSize(album->_cover.size()));
+        datasize_item->setData(QString::number(album->_cover.size()), AudioLibraryView::SORT_ROLE);
+    }
+
+    setAdditionalColumn(row, AudioLibraryView::COVER_TYPE, album->getCoverType());
+
+    if (!album->getCoverPixmap().isNull())
+    {
+        setAdditionalColumn(row, AudioLibraryView::COVER_WIDTH, QString::number(album->getCoverPixmap().width()));
+        setAdditionalColumn(row, AudioLibraryView::COVER_HEIGHT, QString::number(album->getCoverPixmap().height()));
+    }
 }
