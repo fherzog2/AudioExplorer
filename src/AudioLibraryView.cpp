@@ -381,6 +381,7 @@ void AudioLibraryViewAllArtists::createItems(const AudioLibrary& library,
             // if the album has an album artist, add an extra item for this field
 
             if (!track->_album_artist.isEmpty() &&
+                track->_artist != track->_album_artist &&
                 filter_handler.checkText(track->_album_artist) &&
                 !albums_added[album].added_for_album_artist)
             {
