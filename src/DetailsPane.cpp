@@ -148,7 +148,7 @@ bool ElidedLabel::event(QEvent* e)
 
         QString elided = fontMetrics().elidedText(_text, Qt::ElideRight, width());
         if (elided == _text)
-        { 
+        {
             return true;
         }
     }
