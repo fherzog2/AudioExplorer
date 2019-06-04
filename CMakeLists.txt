@@ -71,6 +71,8 @@ add_executable(AudioExplorer WIN32 src/main.cpp
                                    src/Settings.cpp
                                    src/SettingsEditorWindow.cpp
                                    src/SettingsEditorWindow.h
+                                   src/ThreadSafeAudioLibrary.cpp
+                                   src/ThreadSafeAudioLibrary.h
                                    src/TrackInfoReader.cpp
                                    src/TrackInfoReader.h
                                    ${CMAKE_BINARY_DIR}/compiled_resources.cpp
@@ -101,6 +103,8 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/compiled_resources.cpp ${CMAKE_BIN
 add_executable(test1 test/test.cpp
                      src/AudioLibrary.cpp
                      src/AudioLibrary.h
+                     src/ThreadSafeAudioLibrary.cpp
+                     src/ThreadSafeAudioLibrary.h
                      src/TrackInfoReader.h
                      src/TrackInfoReader.cpp
                      ${STATIC_PLUGIN_INCLUDE})
@@ -109,6 +113,7 @@ target_link_libraries(test1 Qt5::Widgets ${TAGLIB_LIBRARY} ${STATIC_LINK_DEPENDE
 target_include_directories(test1 PRIVATE ${TAGLIB_INCLUDE_DIR})
 target_compile_definitions(test1 PRIVATE TAGLIB_STATIC)
 set_property(TARGET test1 PROPERTY CXX_STANDARD 11)
+set_property(TARGET test1 PROPERTY AUTOMOC ON)
 target_include_directories(test1 PRIVATE "src")
 
 if(MSVC)

@@ -294,17 +294,16 @@ void AudioLibrary::load(QDataStream& s)
 
     loader.init(*this, s);
     while (loader.hasNextAlbum())
-        loader.loadNextAlbum();
+        loader.loadNextAlbum(*this);
 }
 
 void AudioLibrary::Loader::init(AudioLibrary& library, QDataStream& s)
 {
-    _library = &library;
     _s = &s;
 
-    _library->_album_map.clear();
-    _library->_filepath_to_track_map.clear();
-    _library->_is_modified = false;
+    library._album_map.clear();
+    library._filepath_to_track_map.clear();
+    library._is_modified = false;
 
     // for simplicity's sake, don't try to migrate old cache versions
 
@@ -321,7 +320,7 @@ bool AudioLibrary::Loader::hasNextAlbum() const
     return _albums_loaded < _num_albums;
 }
 
-void AudioLibrary::Loader::loadNextAlbum()
+void AudioLibrary::Loader::loadNextAlbum(AudioLibrary& library)
 {
     AudioLibraryAlbumKey key;
     QByteArray cover;
@@ -329,7 +328,7 @@ void AudioLibrary::Loader::loadNextAlbum()
     *_s >> key;
     *_s >> cover;
 
-    AudioLibraryAlbum* album = _library->addAlbum(key, cover);
+    AudioLibraryAlbum* album = library.addAlbum(key, cover);
 
     quint64 num_tracks;
     *_s >> num_tracks;
@@ -364,7 +363,7 @@ void AudioLibrary::Loader::loadNextAlbum()
         *_s >> bitrate_kbs;
         *_s >> samplerate_hz;
 
-        _library->addTrack(album, filepath, last_modified, artist, album_artist, title, track_number, disc_number, comment, tag_types, length_milliseconds, channels, bitrate_kbs, samplerate_hz);
+        library.addTrack(album, filepath, last_modified, artist, album_artist, title, track_number, disc_number, comment, tag_types, length_milliseconds, channels, bitrate_kbs, samplerate_hz);
     }
 
     ++_albums_loaded;

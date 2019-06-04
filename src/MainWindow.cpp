@@ -7,7 +7,6 @@
 #include <set>
 #include <QtCore/qmimedata.h>
 #include <QtCore/qprocess.h>
-#include <QtCore/qsavefile.h>
 #include <QtCore/qsettings.h>
 #include <QtCore/qstandardpaths.h>
 #include <QtCore/qtimer.h>
@@ -30,30 +29,6 @@
 
 namespace
 {
-    template<class T, class V>
-    class SetValueOnDestroy
-    {
-    public:
-        SetValueOnDestroy(T& variable, V value)
-            : _variable(variable)
-            , _value(value)
-        {}
-
-        ~SetValueOnDestroy()
-        {
-            _variable = _value;
-        }
-
-        SetValueOnDestroy(const SetValueOnDestroy& other) = delete;
-        SetValueOnDestroy& operator=(const SetValueOnDestroy& other) = delete;
-        SetValueOnDestroy(SetValueOnDestroy&& other) = delete;
-        SetValueOnDestroy& operator=(SetValueOnDestroy&& other) = delete;
-
-    private:
-        T& _variable;
-        V _value;
-    };
-
     template<class RECEIVER, class FUNC>
     QAction* addMenuAction(QMenu& menu, const QString& text, RECEIVER rec, FUNC func, const QKeySequence& shortcut = 0)
     {
@@ -63,32 +38,6 @@ namespace
         QObject::connect(action, &QAction::triggered, rec, func);
         menu.addAction(action);
         return action;
-    }
-
-    template<class FUNC>
-    void forEachFileInDirectory(const QString& dirpath, FUNC func)
-    {
-        std::vector<QString> queue;
-        queue.push_back(dirpath);
-
-        while (!queue.empty())
-        {
-            QString current_dir = queue.front();
-            queue.erase(queue.begin());
-
-            QDir dir(current_dir);
-
-            QStringList subdirs = dir.entryList(QDir::AllDirs | QDir::NoDotAndDotDot);
-            for (const QString& subdir : subdirs)
-                queue.push_back(current_dir + "/" + subdir);
-
-            QFileInfoList files = dir.entryInfoList(QDir::Files | QDir::NoDotAndDotDot);
-            for (const QFileInfo& file : files)
-            {
-                if (!func(file))
-                    return;
-            }
-        }
     }
 
     double getRelativeScrollPos(QScrollBar* scroll_bar)
@@ -262,26 +211,9 @@ void ViewSelector::radioButtonSelected()
 
 //=============================================================================
 
-ThreadSafeLibrary::LibraryAccessor::LibraryAccessor(ThreadSafeLibrary& data)
-    : _lock(data._library_spin_lock)
-    , _library(data._library)
-{
-}
-
-const AudioLibrary& ThreadSafeLibrary::LibraryAccessor::getLibrary() const
-{
-    return _library;
-}
-
-AudioLibrary& ThreadSafeLibrary::LibraryAccessor::getLibraryForUpdate() const
-{
-    return _library;
-}
-
-//=============================================================================
-
 MainWindow::MainWindow(Settings& settings)
     : _settings(settings)
+    , _audio_files_loader(_library)
 {
     setWindowTitle(APPLICATION_NAME);
 
@@ -390,10 +322,10 @@ MainWindow::MainWindow(Settings& settings)
     vbox->addWidget(_details_splitter, 1);
     vbox->addWidget(_status_bar);
 
-    connect(&_library, &ThreadSafeLibrary::libraryCacheLoading, this, &MainWindow::onLibraryCacheLoading);
-    connect(&_library, &ThreadSafeLibrary::libraryLoadProgressed, this, &MainWindow::onLibraryLoadProgressed);
-    connect(&_library, &ThreadSafeLibrary::libraryLoadFinished, this, &MainWindow::onLibraryLoadFinished);
-    connect(&_library, &ThreadSafeLibrary::coverLoadFinished, this, &MainWindow::onCoverLoadFinished);
+    connect(&_audio_files_loader, &AudioFilesLoader::libraryCacheLoading, this, &MainWindow::onLibraryCacheLoading);
+    connect(&_audio_files_loader, &AudioFilesLoader::libraryLoadProgressed, this, &MainWindow::onLibraryLoadProgressed);
+    connect(&_audio_files_loader, &AudioFilesLoader::libraryLoadFinished, this, &MainWindow::onLibraryLoadFinished);
+    connect(&_audio_files_loader, &AudioFilesLoader::coverLoadFinished, this, &MainWindow::onCoverLoadFinished);
     connect(_display_mode_tabs, &QTabBar::tabBarClicked, this, &MainWindow::onDisplayModeSelected);
     connect(_view_type_tabs, &QTabBar::tabBarClicked, this, &MainWindow::onViewTypeSelected);
     connect(_list, &QAbstractItemView::doubleClicked, this, &MainWindow::onItemDoubleClicked);
@@ -424,8 +356,6 @@ MainWindow::MainWindow(Settings& settings)
 
 MainWindow::~MainWindow()
 {
-    abortScanAudioDirs();
-    abortLoadingCovers();
 }
 
 void MainWindow::closeEvent(QCloseEvent* e)
@@ -630,7 +560,7 @@ void MainWindow::onLibraryCacheLoading()
     size_t num_tracks = 0;
 
     {
-        ThreadSafeLibrary::LibraryAccessor acc(_library);
+        ThreadSafeAudioLibrary::LibraryAccessor acc(_library);
 
         num_tracks += acc.getLibrary().getNumberOfTracks();
     }
@@ -848,170 +778,18 @@ void MainWindow::onModelSelectionChanged()
 
 void MainWindow::saveLibrary()
 {
-    if (!_library._library_cache_loaded)
-        return; // don't save back a partially loaded library
-
-    {
-        ThreadSafeLibrary::LibraryAccessor acc(_library);
-
-        if (!acc.getLibrary().isModified())
-            return; // no need to save if the library has not changed
-    }
-
     QString cache_dir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
     QString filepath = cache_dir + "/AudioLibrary";
 
-    {
-        QDir dir(cache_dir);
-        if (!dir.mkpath(cache_dir))
-            return;
-    }
-
-    QSaveFile file(filepath);
-    if (!file.open(QIODevice::WriteOnly))
-        return;
-
-    {
-        QDataStream stream(&file);
-
-        ThreadSafeLibrary::LibraryAccessor acc(_library);
-
-        acc.getLibrary().save(stream);
-    }
-
-    file.commit();
-}
-
-void MainWindow::loadLibrary(QStringList audio_dir_paths, ThreadSafeLibrary& library)
-{
-    QString cache_dir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
-    QString filepath = cache_dir + "/AudioLibrary";
-
-    {
-        QFile file(filepath);
-        if (!file.open(QIODevice::ReadOnly))
-            return;
-
-        {
-            QDataStream stream(&file);
-
-            AudioLibrary::Loader loader;
-
-            {
-                ThreadSafeLibrary::LibraryAccessor acc(library);
-
-                loader.init(acc.getLibraryForUpdate(), stream);
-            }
-
-            int album_counter = 0;
-
-            while (loader.hasNextAlbum())
-            {
-                {
-                    ThreadSafeLibrary::LibraryAccessor acc(library);
-
-                    loader.loadNextAlbum();
-                }
-
-                ++album_counter;
-
-                if((album_counter % 10) == 0)
-                    library.libraryCacheLoading();
-            }
-        }
-    }
+    _library.saveToCache(cache_dir, filepath);
 }
 
 void MainWindow::scanAudioDirs()
 {
-    abortScanAudioDirs();
-    abortLoadingCovers();
+    QString cache_dir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+    QString filepath = cache_dir + "/AudioLibrary";
 
-    _library._is_libary_loading = true;
-
-    _library_load_thread = std::thread([=]() {
-        scanAudioDirsThreadFunc(_settings.audio_dir_paths.getValue(), _library);
-    });
-
-    startLoadingCovers();
-}
-
-void MainWindow::abortScanAudioDirs()
-{
-    _library._abort_loading = true;
-    SetValueOnDestroy<std::atomic_bool, bool> reset_abort_flag(_library._abort_loading, false);
-
-    if (_library_load_thread.joinable())
-        _library_load_thread.join();
-}
-
-void MainWindow::scanAudioDirsThreadFunc(QStringList audio_dir_paths, ThreadSafeLibrary& library)
-{
-    SetValueOnDestroy<std::atomic_bool, bool> reset_loading_flag(library._is_libary_loading, false);
-
-    int files_loaded = 0;
-    int files_in_cache = 0;
-    auto start_time = std::chrono::system_clock::now();
-
-    if(!library._library_cache_loaded)
-    {
-        loadLibrary(audio_dir_paths, library);
-        library._library_cache_loaded = true;
-        library.libraryCacheLoading();
-    }
-
-    std::unordered_set<QString> visited_audio_files;
-
-    for (const QString& dirpath : audio_dir_paths)
-    {
-        forEachFileInDirectory(dirpath, [&library, &files_loaded, &files_in_cache, &visited_audio_files](const QFileInfo& file) {
-            if (library._abort_loading)
-                return false; // stop iteration
-
-            QString filepath = file.filePath();
-            QDateTime last_modified = file.lastModified();
-
-            {
-                ThreadSafeLibrary::LibraryAccessor acc(library);
-
-                if (AudioLibraryTrack* track = acc.getLibrary().findTrack(filepath))
-                    if (track->_last_modified == last_modified)
-                    {
-                        ++files_in_cache;
-                        visited_audio_files.insert(filepath);
-                        library.libraryLoadProgressed(files_loaded, files_in_cache);
-                        return true; // nothing to do
-                    }
-            }
-
-            TrackInfo track_info;
-            if (readTrackInfo(filepath, track_info))
-            {
-                {
-                    ThreadSafeLibrary::LibraryAccessor acc(library);
-
-                    acc.getLibraryForUpdate().addTrack(filepath, last_modified, track_info);
-                }
-
-                ++files_loaded;
-                visited_audio_files.insert(filepath);
-                library.libraryLoadProgressed(files_loaded, files_in_cache);
-            }
-            return true;
-        });
-    }
-
-    if (!library._abort_loading)
-    {
-        ThreadSafeLibrary::LibraryAccessor acc(library);
-
-        acc.getLibraryForUpdate().removeTracksExcept(visited_audio_files);
-    }
-
-    auto end_time = std::chrono::system_clock::now();
-    auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-
-    library.libraryLoadFinished(files_loaded, files_in_cache, float(millis.count()) / 1000.0);
+    _audio_files_loader.startLoading(filepath, _settings.audio_dir_paths.getValue());
 }
 
 const AudioLibraryView* MainWindow::getCurrentView() const
@@ -1091,7 +869,7 @@ void MainWindow::updateCurrentView()
         {
             AudioLibraryModel::IncrementalUpdateScope update_scope(*_model);
 
-            ThreadSafeLibrary::LibraryAccessor acc(_library);
+            ThreadSafeAudioLibrary::LibraryAccessor acc(_library);
 
             _breadcrumbs.back()._view->createItems(acc.getLibrary(), current_display_mode, _model);
         }
@@ -1109,7 +887,7 @@ void MainWindow::updateCurrentView()
 
         if (!_breadcrumbs.empty())
         {
-            ThreadSafeLibrary::LibraryAccessor acc(_library);
+            ThreadSafeAudioLibrary::LibraryAccessor acc(_library);
 
             _breadcrumbs.back()._view->createItems(acc.getLibrary(), current_display_mode, model);
         }
@@ -1186,7 +964,7 @@ void MainWindow::getFilepathsFromIndex(const QModelIndex& index, std::vector<QSt
     {
         if (const AudioLibraryView* view = _model->getViewForItem(item))
         {
-            ThreadSafeLibrary::LibraryAccessor acc(_library);
+            ThreadSafeAudioLibrary::LibraryAccessor acc(_library);
 
             std::vector<const AudioLibraryTrack*> tracks;
             view->resolveToTracks(acc.getLibrary(), tracks);
@@ -1214,7 +992,7 @@ void MainWindow::forEachFilepathAtIndex(const QModelIndex& index, std::function<
     {
         if (const AudioLibraryView* view = _model->getViewForItem(item))
         {
-            ThreadSafeLibrary::LibraryAccessor acc(_library);
+            ThreadSafeAudioLibrary::LibraryAccessor acc(_library);
 
             std::vector<const AudioLibraryTrack*> tracks;
             view->resolveToTracks(acc.getLibrary(), tracks);
@@ -1235,83 +1013,6 @@ void MainWindow::forEachFilepathAtIndex(const QModelIndex& index, std::function<
     if (!path.isEmpty())
     {
         callback(path);
-    }
-}
-
-void MainWindow::startLoadingCovers()
-{
-    _cover_load_thread = std::thread([=](){
-        loadCoversThreadFunc(_library);
-    });
-}
-
-void MainWindow::abortLoadingCovers()
-{
-    _library._abort_cover_loading = true;
-    SetValueOnDestroy<std::atomic_bool, bool> reset_abort_flag(_library._abort_cover_loading, false);
-
-    if (_cover_load_thread.joinable())
-        _cover_load_thread.join();
-}
-
-void MainWindow::loadCoversThreadFunc(ThreadSafeLibrary& library)
-{
-    while (true)
-    {
-        // get cover bytes from library
-
-        std::map<AudioLibraryAlbumKey, std::pair<QByteArray, QPixmap>> covers_to_load;
-        bool enough_bytes_for_now = false;
-
-        {
-            ThreadSafeLibrary::LibraryAccessor acc(library);
-            for (const AudioLibraryAlbum* album : acc.getLibrary().getAlbums())
-            {
-                if (library._abort_loading)
-                    return;
-
-                if (!album->_cover.isEmpty() && !album->isCoverPixmapSet())
-                {
-                    covers_to_load[album->_key].first = album->_cover;
-                }
-
-                if (covers_to_load.size() >= 100)
-                {
-                    enough_bytes_for_now = true;
-                    break;
-                }
-            }
-        }
-
-        if (covers_to_load.empty() && !enough_bytes_for_now && !library._is_libary_loading)
-        {
-            library.coverLoadFinished();
-            return; // ok, finished
-        }
-
-        // decode covers
-
-        for (auto& cover : covers_to_load)
-        {
-            if (library._abort_loading)
-                return;
-
-            cover.second.second.loadFromData(cover.second.first);
-        }
-
-        // write decoded covers to library
-
-        {
-            ThreadSafeLibrary::LibraryAccessor acc(library);
-
-            for (auto& cover : covers_to_load)
-            {
-                if (library._abort_loading)
-                    return;
-
-                acc.getLibraryForUpdate().getAlbum(cover.first)->setCoverPixmap(cover.second.second);
-            }
-        }
     }
 }
 

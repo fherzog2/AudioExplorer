@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 #pragma once
 
-#include <atomic>
-#include <thread>
-#include <mutex>
 #include <QtCore/qpointer.h>
 #include <QtGui/qstandarditemmodel.h>
 #include <QtWidgets/qboxlayout.h>
@@ -22,24 +19,7 @@
 #include "AudioLibraryView.h"
 #include "AudioLibraryModel.h"
 #include "DetailsPane.h"
-
-class SpinLock
-{
-public:
-    void lock()
-    {
-        while (locked.test_and_set(std::memory_order_acquire))
-            ;
-    }
-
-    void unlock()
-    {
-        locked.clear(std::memory_order_release);
-    }
-
-private:
-    std::atomic_flag locked = ATOMIC_FLAG_INIT;
-};
+#include "ThreadSafeAudioLibrary.h"
 
 /**
 * For managing a QObject with std::unique_ptr
@@ -77,41 +57,6 @@ private:
     QLineEdit* _filter_box = nullptr;
 };
 
-class ThreadSafeLibrary : public QObject
-{
-    Q_OBJECT
-
-public:
-    class LibraryAccessor
-    {
-    public:
-        LibraryAccessor(ThreadSafeLibrary& data);
-
-        const AudioLibrary& getLibrary() const;
-        AudioLibrary& getLibraryForUpdate() const;
-
-    private:
-        std::lock_guard<SpinLock> _lock;
-        AudioLibrary& _library;
-    };
-
-    std::atomic_bool _abort_loading = ATOMIC_VAR_INIT(false);
-    std::atomic_bool _library_cache_loaded = ATOMIC_VAR_INIT(false);
-    std::atomic_bool _is_libary_loading = ATOMIC_VAR_INIT(false);
-
-    std::atomic_bool _abort_cover_loading = ATOMIC_VAR_INIT(false);
-
-signals:
-    void libraryCacheLoading();
-    void libraryLoadProgressed(int files_loaded, int files_in_cache);
-    void libraryLoadFinished(int files_loaded, int files_in_cache, float duration_sec);
-    void coverLoadFinished();
-
-private:
-    SpinLock _library_spin_lock;
-    AudioLibrary _library;
-};
-
 class MainWindow : public QFrame
 {
     Q_OBJECT
@@ -147,10 +92,7 @@ private:
     void onModelSelectionChanged();
 
     void saveLibrary();
-    static void loadLibrary(QStringList audio_dir_paths, ThreadSafeLibrary& library);
     void scanAudioDirs();
-    void abortScanAudioDirs();
-    static void scanAudioDirsThreadFunc(QStringList audio_dir_paths, ThreadSafeLibrary& library);
     const AudioLibraryView* getCurrentView() const;
     void updateCurrentView();
     void updateCurrentViewIfOlderThan(int msecs);
@@ -158,10 +100,6 @@ private:
     void addViewTypeTab(QWidget* view, const QString& friendly_name, const QString& internal_name);
     void getFilepathsFromIndex(const QModelIndex& index, std::vector<QString>& filepaths);
     void forEachFilepathAtIndex(const QModelIndex& index, std::function<void(const QString&)> callback);
-
-    void startLoadingCovers();
-    void abortLoadingCovers();
-    static void loadCoversThreadFunc(ThreadSafeLibrary& library);
 
     void addBreadCrumb(AudioLibraryView* view);
     void clearBreadCrumbs();
@@ -185,13 +123,11 @@ private:
     QTableView* _table = nullptr;
     QStackedWidget* _view_stack = nullptr;
 
-    ThreadSafeLibrary _library;
+    ThreadSafeAudioLibrary _library;
+    AudioFilesLoader _audio_files_loader;
 
-    std::thread _library_load_thread;
     std::chrono::steady_clock::time_point _last_view_update_time;
     bool _is_last_view_update_time_valid = false;
-
-    std::thread _cover_load_thread;
 
     QPointer<QWidget> _advanced_search_dialog = nullptr;
 

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 #include <AudioLibrary.h>
+#include <ThreadSafeAudioLibrary.h>
 
 #include <QtCore/qbuffer.h>
 #include <QtGui/qstandarditemmodel.h>
@@ -268,6 +269,25 @@ bool testVisualIndexRestoration()
     return true;
 }
 
+bool testThreadSafeAudioLibrary(const QString& audio_files_dir)
+{
+    ThreadSafeAudioLibrary library;
+    AudioFilesLoader audio_files_loader(library);
+
+    audio_files_loader.startLoading(QString::null, { audio_files_dir });
+
+    // wait until the thread is finished
+
+    while (audio_files_loader.isLoading())
+        ;
+
+    // check result
+
+    ThreadSafeAudioLibrary::LibraryAccessor acc(library);
+
+    return acc.getLibrary().getAlbums().size() == 1;
+}
+
 int main(int argc, char** argv)
 {
     QApplication app(argc, argv);
@@ -289,6 +309,8 @@ int main(int argc, char** argv)
     RESET_OK_IF_FAILED(testLibraryTrackCleanup(binary_dir));
 
     RESET_OK_IF_FAILED(testVisualIndexRestoration());
+
+    RESET_OK_IF_FAILED(testThreadSafeAudioLibrary(source_test_data_dir));
 
     return ok ? 0 : 1;
 }

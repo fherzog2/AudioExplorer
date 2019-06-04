@@ -234,10 +234,9 @@ public:
     public:
         void init(AudioLibrary& library, QDataStream& s);
         bool hasNextAlbum() const;
-        void loadNextAlbum();
+        void loadNextAlbum(AudioLibrary& library);
 
     private:
-        AudioLibrary* _library = nullptr;
         QDataStream* _s = nullptr;
         quint64 _num_albums = 0;
         quint64 _albums_loaded = 0;
