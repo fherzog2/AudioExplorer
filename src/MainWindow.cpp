@@ -14,6 +14,7 @@
 #include <QtGui/qdrag.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qimagereader.h>
+#include <QtGui/qpainter.h>
 #include <QtWidgets/qapplication.h>
 #include <QtWidgets/qmenubar.h>
 #include <QtWidgets/qscrollbar.h>
@@ -464,6 +465,13 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event)
             break;
         case QEvent::ContextMenu:
             contextMenuEventForView(view, static_cast<QContextMenuEvent*>(event));
+            break;
+        case QEvent::Paint:
+            if (view->model()->rowCount() == 0)
+            {
+                QPainter p(view->viewport());
+                p.drawText(QRect(QPoint(0, 0), view->viewport()->size()), Qt::AlignCenter, "This view is empty");
+            }
             break;
         default:
             break;
