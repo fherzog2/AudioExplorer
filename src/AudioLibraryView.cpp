@@ -24,6 +24,23 @@ namespace {
         }
     }
 
+    struct AudioLibraryArtistGroupData
+    {
+        const AudioLibraryAlbum* showcase_album = nullptr;
+        std::unordered_set<const AudioLibraryAlbum*> albums;
+        int num_tracks = 0;
+
+        QString getId() const
+        {
+            QLatin1Char sep(',');
+
+            return showcase_album->_key._album + sep +
+                QString::number(showcase_album->_key._cover_checksum) + sep +
+                QString::number(albums.size()) + sep +
+                QString::number(num_tracks) + QLatin1Char(')');
+        }
+    };
+
     struct AudioLibraryGroupData
     {
         const AudioLibraryAlbum* showcase_album = nullptr;
@@ -40,6 +57,21 @@ namespace {
                 QString::number(num_tracks) + QLatin1Char(')');
         }
     };
+
+    void addTrackToArtistGroup(QString artist, const AudioLibraryTrack* track,
+        std::unordered_map<QString, AudioLibraryArtistGroupData>& displayed_groups)
+    {
+        AudioLibraryArtistGroupData& group_data = displayed_groups[artist];
+
+        if (!group_data.showcase_album ||
+            group_data.showcase_album->getCoverPixmap().isNull())
+        {
+            group_data.showcase_album = track->_album;
+        }
+
+        group_data.albums.insert(track->_album);
+        ++group_data.num_tracks;
+    }
 
     template<class GROUPED_TYPE>
     void addAlbumToGroup(GROUPED_TYPE group, const AudioLibraryAlbum* album,
@@ -353,17 +385,7 @@ void AudioLibraryViewAllArtists::createItems(const AudioLibrary& library,
 {
     FilterHandler filter_handler(_filter);
 
-    std::unordered_map<QString, AudioLibraryGroupData> displayed_groups;
-
-    struct AlbumAdded
-    {
-        bool added_for_artist = false;
-        bool added_for_album_artist = false;
-    };
-
-    // only add each album once for artist and album_artist
-
-    std::unordered_map<const AudioLibraryAlbum*, AlbumAdded> albums_added;
+    std::unordered_map<QString, AudioLibraryArtistGroupData> displayed_groups;
 
     for (const AudioLibraryAlbum* album : library.getAlbums())
     {
@@ -371,22 +393,18 @@ void AudioLibraryViewAllArtists::createItems(const AudioLibrary& library,
         {
             // always add an item for artist, even if this field is empty
 
-            if (filter_handler.checkText(track->_artist) &&
-                !albums_added[album].added_for_artist)
+            if (filter_handler.checkText(track->_artist))
             {
-                addAlbumToGroup(track->_artist, album, displayed_groups);
-                albums_added[album].added_for_artist = true;
+                addTrackToArtistGroup(track->_artist, track, displayed_groups);
             }
 
             // if the album has an album artist, add an extra item for this field
 
             if (!track->_album_artist.isEmpty() &&
                 track->_artist != track->_album_artist &&
-                filter_handler.checkText(track->_album_artist) &&
-                !albums_added[album].added_for_album_artist)
+                filter_handler.checkText(track->_album_artist))
             {
-                addAlbumToGroup(track->_album_artist, album, displayed_groups);
-                albums_added[album].added_for_album_artist = true;
+                addTrackToArtistGroup(track->_album_artist, track, displayed_groups);
             }
         }
     }
@@ -397,7 +415,7 @@ void AudioLibraryViewAllArtists::createItems(const AudioLibrary& library,
             group.first + QLatin1Char(',') +
             group.second.getId() + QLatin1Char(')');
 
-        model->addItem(id, group.first, group.second.showcase_album->getCoverPixmap(), group.second.num_albums, group.second.num_tracks, [=](){
+        model->addItem(id, group.first, group.second.showcase_album->getCoverPixmap(), static_cast<int>(group.second.albums.size()), group.second.num_tracks, [=](){
             return new AudioLibraryViewArtist(group.first);
         });
     }
