@@ -103,6 +103,10 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/compiled_resources.cpp ${CMAKE_BIN
 add_executable(test1 test/test.cpp
                      src/AudioLibrary.cpp
                      src/AudioLibrary.h
+                     src/AudioLibraryModel.cpp
+                     src/AudioLibraryModel.h
+                     src/AudioLibraryView.cpp
+                     src/AudioLibraryView.h
                      src/ThreadSafeAudioLibrary.cpp
                      src/ThreadSafeAudioLibrary.h
                      src/TrackInfoReader.h

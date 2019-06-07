@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 #include <AudioLibrary.h>
 #include <ThreadSafeAudioLibrary.h>
+#include <AudioLibraryModel.h>
 
 #include <QtCore/qbuffer.h>
 #include <QtGui/qstandarditemmodel.h>
@@ -29,24 +30,24 @@
     }
 
 TrackInfo createTrackInfo(QString artist,
+    QString album_artist,
     QString album,
     int year,
     QString genre,
     QByteArray cover,
     QString title,
-    int track_number,
-    QString comment)
+    int track_number)
 {
     TrackInfo info;
 
     info.artist = artist;
+    info.album_artist = album_artist;
     info.album = album;
     info.year = year;
     info.genre = genre;
     info.cover = cover;
     info.title = title;
     info.track_number = track_number;
-    info.comment = comment;
 
     return info;
 }
@@ -102,11 +103,11 @@ bool testLibrarySaveAndLoad()
 {
     AudioLibrary lib;
 
-    lib.addTrack("a", QDateTime(), createTrackInfo("artist 1", "album 1", 2000, "genre 1", QByteArray(), "title 1", 1, ""));
-    lib.addTrack("b", QDateTime(), createTrackInfo("artist 1", "album 1", 2000, "genre 1", QByteArray(), "title 2", 2, ""));
-    lib.addTrack("c", QDateTime(), createTrackInfo("artist 1", "album 1", 2000, "genre 1", QByteArray(), "title 3", 3, ""));
+    lib.addTrack("a", QDateTime(), createTrackInfo("artist 1", QString::null, "album 1", 2000, "genre 1", QByteArray(), "title 1", 1));
+    lib.addTrack("b", QDateTime(), createTrackInfo("artist 1", QString::null, "album 1", 2000, "genre 1", QByteArray(), "title 2", 2));
+    lib.addTrack("c", QDateTime(), createTrackInfo("artist 1", QString::null, "album 1", 2000, "genre 1", QByteArray(), "title 3", 3));
 
-    lib.addTrack("d", QDateTime(), createTrackInfo("artist 2", "album 2", 2000, "genre 1", QByteArray(), "title 1", 1, ""));
+    lib.addTrack("d", QDateTime(), createTrackInfo("artist 2", QString::null, "album 2", 2000, "genre 1", QByteArray(), "title 1", 1));
 
     QByteArray bytes;
 
@@ -288,6 +289,105 @@ bool testThreadSafeAudioLibrary(const QString& audio_files_dir)
     return acc.getLibrary().getAlbums().size() == 1;
 }
 
+void printModel(const QStandardItemModel& model)
+{
+    for (int row = 0; row < model.rowCount(); ++row)
+    {
+        for (int col = 0; col < model.columnCount(); ++col)
+        {
+            QString text = model.data(model.index(row, col), Qt::DisplayRole).toString();
+            fprintf(stderr, "%s\t", qPrintable(text));
+        }
+
+        fprintf(stderr, "\n");
+    }
+
+    fprintf(stderr, "\n");
+}
+
+void addModelRow(QStandardItemModel& model, const std::vector<std::pair<AudioLibraryView::Column, QString>>& data)
+{
+    int row = model.rowCount();
+
+    for (const auto& i : data)
+        model.setItem(row, i.first, new QStandardItem(i.second));
+}
+
+#define CHECK_MODEL(expression, model1, model2) \
+    if (!(expression)) \
+    { \
+        printModel((model1)); \
+        printModel((model2)); \
+        RETURN_IF_FAILED((expression)); \
+    }
+
+bool compareModels(const AudioLibraryModel& model1, const AudioLibraryModel& model2)
+{
+    CHECK_MODEL(model1.rowCount() == model2.rowCount(), model1, model2);
+
+    for (int row = 0; row < model1.rowCount(); ++row)
+    {
+        for (int col = 0; col < model1.columnCount(); ++col)
+        {
+            QString text1 = model1.data(model1.index(row, col), Qt::DisplayRole).toString();
+            QString text2 = model2.data(model2.index(row, col), Qt::DisplayRole).toString();
+
+            CHECK_MODEL(text1 == text2, model1, model2);
+        }
+    }
+
+    return true;
+}
+
+bool testAudioLibraryViewAllArtists()
+{
+    // build library
+
+    AudioLibrary library;
+
+    for (int i = 1; i <= 10; ++i)
+        library.addTrack(QString("Artist 1 - %1").arg(i), QDateTime(), createTrackInfo("Artist 1", QString::null, "Album", 2000, "Genre 1", QByteArray(), QString::number(i), i));
+
+    for (int i = 1; i <= 10; ++i)
+        library.addTrack(QString("Artist 2 - %1").arg(i), QDateTime(), createTrackInfo("Artist 2", "Artist 2", "Album", 2001, "Genre 2", QByteArray(), QString::number(i), i));
+
+    library.addTrack("Sampler - 1", QDateTime(), createTrackInfo("Artist 1", "Various Artists", "Sampler", 2001, "Genre 3", QByteArray(), "1", 1));
+    library.addTrack("Sampler - 2", QDateTime(), createTrackInfo("Artist 3", "Various Artists", "Sampler", 2001, "Genre 3", QByteArray(), "2", 2));
+
+    AudioLibraryModel model(nullptr);
+
+    // unfiltered view
+
+    AudioLibraryViewAllArtists all_artists_view(QString::null);
+
+    all_artists_view.createItems(library, AudioLibraryView::DisplayMode::ARTISTS, &model);
+
+    AudioLibraryModel expected_artists(nullptr);
+
+    addModelRow(expected_artists, { {AudioLibraryView::ZERO, "Artist 1"}, {AudioLibraryView::NUMBER_OF_ALBUMS, "2"}, {AudioLibraryView::NUMBER_OF_TRACKS, "11"} });
+    addModelRow(expected_artists, { {AudioLibraryView::ZERO, "Artist 2"}, {AudioLibraryView::NUMBER_OF_ALBUMS, "1"}, {AudioLibraryView::NUMBER_OF_TRACKS, "10"} });
+    addModelRow(expected_artists, { {AudioLibraryView::ZERO, "Various Artists"}, {AudioLibraryView::NUMBER_OF_ALBUMS, "1"}, {AudioLibraryView::NUMBER_OF_TRACKS, "2"} });
+    addModelRow(expected_artists, { {AudioLibraryView::ZERO, "Artist 3"}, {AudioLibraryView::NUMBER_OF_ALBUMS, "1"}, {AudioLibraryView::NUMBER_OF_TRACKS, "1"} });
+
+    RETURN_IF_FAILED(compareModels(model, expected_artists));
+
+    // filtered view
+
+    all_artists_view = AudioLibraryViewAllArtists("1");
+
+    {
+        AudioLibraryModel::IncrementalUpdateScope update_scope(model);
+        all_artists_view.createItems(library, AudioLibraryView::DisplayMode::ARTISTS, &model);
+    }
+
+    expected_artists.clear();
+    addModelRow(expected_artists, { {AudioLibraryView::ZERO, "Artist 1"}, {AudioLibraryView::NUMBER_OF_ALBUMS, "2"}, {AudioLibraryView::NUMBER_OF_TRACKS, "11"} });
+
+    RETURN_IF_FAILED(compareModels(model, expected_artists));
+
+    return true;
+}
+
 int main(int argc, char** argv)
 {
     QApplication app(argc, argv);
@@ -311,6 +411,8 @@ int main(int argc, char** argv)
     RESET_OK_IF_FAILED(testVisualIndexRestoration());
 
     RESET_OK_IF_FAILED(testThreadSafeAudioLibrary(source_test_data_dir));
+
+    RESET_OK_IF_FAILED(testAudioLibraryViewAllArtists());
 
     return ok ? 0 : 1;
 }
