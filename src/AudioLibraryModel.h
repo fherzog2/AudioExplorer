@@ -38,6 +38,7 @@ private:
     void onUpdateStarted();
     void onUpdateFinished();
     QStandardItem* setAdditionalColumn(int row, AudioLibraryView::Column column, const QString& text);
+    void setDateTimeColumn(int row, AudioLibraryView::Column column, const QDateTime& date);
     void setLengthColumn(int row, int length_milliseconds);
     void setAlbumColumns(int row, const AudioLibraryAlbum* album);
 

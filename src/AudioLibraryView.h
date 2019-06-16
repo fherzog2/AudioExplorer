@@ -31,6 +31,7 @@ public:
         ALBUM_ARTIST,
         COMMENT,
         PATH,
+        DATE_MODIFIED,
         TAG_TYPES,
         LENGTH_SECONDS,
         CHANNELS,

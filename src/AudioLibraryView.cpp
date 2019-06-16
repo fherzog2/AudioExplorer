@@ -203,6 +203,8 @@ QString AudioLibraryView::getColumnFriendlyName(Column column)
         return "Comment";
     case PATH:
         return "Path";
+    case DATE_MODIFIED:
+        return "Date modified";
     case TAG_TYPES:
         return "Tag types";
     case LENGTH_SECONDS:
@@ -239,6 +241,7 @@ std::vector<std::pair<AudioLibraryView::Column, QString>> AudioLibraryView::colu
     result.push_back(std::make_pair(ALBUM_ARTIST, "album_artist"));
     result.push_back(std::make_pair(COMMENT, "comment"));
     result.push_back(std::make_pair(PATH, "path"));
+    result.push_back(std::make_pair(DATE_MODIFIED, "date_modified"));
     result.push_back(std::make_pair(TAG_TYPES, "tag_types"));
     result.push_back(std::make_pair(LENGTH_SECONDS, "length"));
     result.push_back(std::make_pair(CHANNELS, "channels"));
@@ -342,6 +345,7 @@ std::vector<AudioLibraryView::Column> AudioLibraryView::getColumnsForDisplayMode
             AudioLibraryView::ALBUM_ARTIST,
             AudioLibraryView::COMMENT,
             AudioLibraryView::PATH,
+            AudioLibraryView::DATE_MODIFIED,
             AudioLibraryView::TAG_TYPES,
             AudioLibraryView::LENGTH_SECONDS,
             AudioLibraryView::CHANNELS,

@@ -189,6 +189,7 @@ void AudioLibraryModel::addTrackItem(const AudioLibraryTrack* track)
         setAdditionalColumn(row, AudioLibraryView::ALBUM_ARTIST, track->_album_artist);
         setAdditionalColumn(row, AudioLibraryView::COMMENT, track->_comment);
         setAdditionalColumn(row, AudioLibraryView::PATH, track->_filepath);
+        setDateTimeColumn(row, AudioLibraryView::DATE_MODIFIED, track->_last_modified);
         setAdditionalColumn(row, AudioLibraryView::TAG_TYPES, track->_tag_types);
         setLengthColumn(row, track->_length_milliseconds);
         setAdditionalColumn(row, AudioLibraryView::CHANNELS, QString::number(track->_channels));
@@ -285,6 +286,13 @@ QStandardItem* AudioLibraryModel::setAdditionalColumn(int row, AudioLibraryView:
     QStandardItem* item = new CollatedItem(text, _numeric_collator);
     setItem(row, static_cast<int>(column), item);
     return item;
+}
+
+void AudioLibraryModel::setDateTimeColumn(int row, AudioLibraryView::Column column, const QDateTime& date)
+{
+    QStandardItem* item = setAdditionalColumn(row, column, date.toString(Qt::DefaultLocaleShortDate));
+
+    item->setData(date.toString(Qt::ISODate), AudioLibraryView::SORT_ROLE);
 }
 
 void AudioLibraryModel::setLengthColumn(int row, int length_milliseconds)
