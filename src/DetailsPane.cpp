@@ -2,6 +2,7 @@
 #include "DetailsPane.h"
 
 #include <QtWidgets/qlabel.h>
+#include <QtWidgets/qscrollarea.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qpainter.h>
 
@@ -78,8 +79,11 @@ int PictureBox::heightForWidth(int width) const
 {
     QSize sh = sizeHint();
 
-    if (width > sh.width())
-        return sh.height();
+    int size_steps[] = { 256, 128, 64, 32 };
+
+    for (int size_step : size_steps)
+        if (size_step < width)
+            return size_step;
 
     return width;
 }
@@ -171,15 +175,27 @@ void ElidedLabel::paintEvent(QPaintEvent* e)
 DetailsPane::DetailsPane(QWidget* parent)
     : QFrame(parent)
 {
+    _picture_box = new PictureBox(this);
+
+    QWidget* data_grid_widget = new QWidget();
+
+    QScrollArea* data_grid_scroll_area = new QScrollArea(this);
+    data_grid_scroll_area->setWidget(data_grid_widget);
+    data_grid_scroll_area->setFrameShape(QFrame::NoFrame);
+    data_grid_scroll_area->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    data_grid_scroll_area->setWidgetResizable(true);
+
     _data_grid = new QGridLayout();
     _data_grid->setColumnStretch(1, 1);
 
-    _picture_box = new PictureBox(this);
+    QVBoxLayout* data_grid_padding_layout = new QVBoxLayout(data_grid_widget);
+    data_grid_padding_layout->addLayout(_data_grid);
+    data_grid_padding_layout->addStretch(1);
 
     QVBoxLayout* vbox = new QVBoxLayout(this);
+    vbox->setMargin(0);
     vbox->addWidget(_picture_box);
-    vbox->addLayout(_data_grid);
-    vbox->addStretch(1);
+    vbox->addWidget(data_grid_scroll_area, 1);
 
     setFrameShape(QFrame::StyledPanel);
 }

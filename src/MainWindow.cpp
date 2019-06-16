@@ -291,6 +291,7 @@ MainWindow::MainWindow(Settings& settings)
     _details_splitter = new QSplitter(Qt::Horizontal);
     _details_splitter->addWidget(_view_stack);
     _details_splitter->addWidget(_details);
+    _details_splitter->setChildrenCollapsible(false);
 
     _view_type_tabs = new QTabBar(toolarea);
     addViewTypeTab(_list, "Icons", "icons");
