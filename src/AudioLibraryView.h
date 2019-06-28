@@ -38,10 +38,6 @@ public:
         BITRATE_KBS,
         SAMPLERATE_HZ,
     };
-    static QString getColumnFriendlyName(Column column);
-    static std::vector<std::pair<Column, QString>> columnToStringMapping();
-    static QString getColumnId(Column column);
-    static std::unique_ptr<Column> getColumnFromId(const QString& column_id);
 
     enum class DisplayMode
     {
@@ -51,9 +47,16 @@ public:
         YEARS,
         GENRES,
     };
+
+    static QString getColumnFriendlyName(Column column, DisplayMode mode);
+    static std::vector<std::pair<Column, QString>> columnToStringMapping();
+    static QString getColumnId(Column column);
+    static std::unique_ptr<Column> getColumnFromId(const QString& column_id);
+
     static QString getDisplayModeFriendlyName(DisplayMode mode);
     static std::vector<std::pair<DisplayMode, QString>> displayModeToStringMapping();
     static std::vector<Column> getColumnsForDisplayMode(DisplayMode mode);
+    static bool isGroupDisplayMode(DisplayMode mode);
 
     static const int SORT_ROLE = Qt::UserRole + 1;
     static const int MULTILINE_DISPLAY_ROLE = Qt::UserRole + 2;

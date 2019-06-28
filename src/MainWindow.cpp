@@ -750,7 +750,7 @@ void MainWindow::onTableHeaderContextMenu(const QPoint& pos)
 
     for (AudioLibraryView::Column column : AudioLibraryView::getColumnsForDisplayMode(*_current_display_mode))
     {
-        QString name = AudioLibraryView::getColumnFriendlyName(column);
+        QString name = AudioLibraryView::getColumnFriendlyName(column, *_current_display_mode);
 
         bool column_hidden = _table->isColumnHidden(column);
 
@@ -890,7 +890,7 @@ void MainWindow::updateCurrentView()
         QStringList model_headers;
         for (const auto& column : AudioLibraryView::columnToStringMapping())
         {
-            model_headers.push_back(AudioLibraryView::getColumnFriendlyName(column.first));
+            model_headers.push_back(AudioLibraryView::getColumnFriendlyName(column.first, *_current_display_mode));
         }
         model->setHorizontalHeaderLabels(model_headers);
 

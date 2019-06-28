@@ -219,7 +219,12 @@ void DetailsPane::setSelection(const QStandardItemModel* model, const QAbstractI
 
         int next_row = 0;
 
-        for (AudioLibraryView::Column view_column : AudioLibraryView::getColumnsForDisplayMode(display_mode))
+        auto columns = AudioLibraryView::getColumnsForDisplayMode(display_mode);
+
+        if(AudioLibraryView::isGroupDisplayMode(display_mode))
+            columns.insert(columns.begin(), AudioLibraryView::ZERO);
+
+        for (AudioLibraryView::Column view_column : columns)
         {
             int logical_index = static_cast<int>(view_column);
 

@@ -163,12 +163,23 @@ AudioLibraryView::~AudioLibraryView()
 {
 }
 
-QString AudioLibraryView::getColumnFriendlyName(Column column)
+QString AudioLibraryView::getColumnFriendlyName(Column column, DisplayMode mode)
 {
     switch (column)
     {
     case ZERO:
-        return "";
+        switch (mode)
+        {
+        case DisplayMode::ARTISTS:
+            return getColumnFriendlyName(ARTIST, mode);
+        case DisplayMode::YEARS:
+            return getColumnFriendlyName(YEAR, mode);
+        case DisplayMode::GENRES:
+            return getColumnFriendlyName(GENRE, mode);
+        case DisplayMode::ALBUMS:
+        case DisplayMode::TRACKS:
+            return "Name";
+        }
     case NUMBER_OF_ALBUMS:
         return "Number of albums";
     case ARTIST:
@@ -355,6 +366,25 @@ std::vector<AudioLibraryView::Column> AudioLibraryView::getColumnsForDisplayMode
     }
 
     return std::vector<AudioLibraryView::Column>();
+}
+
+/**
+* Groups of albums, aggregated over e.g. artist, year, genre
+*/
+bool AudioLibraryView::isGroupDisplayMode(DisplayMode mode)
+{
+    switch (mode)
+    {
+    case DisplayMode::ARTISTS:
+    case DisplayMode::YEARS:
+    case DisplayMode::GENRES:
+        return true;
+    case DisplayMode::ALBUMS:
+    case DisplayMode::TRACKS:
+        break;
+    }
+
+    return false;
 }
 
 void AudioLibraryView::resolveToTracks(const AudioLibrary& /*library*/, std::vector<const AudioLibraryTrack*>& /*tracks*/) const
