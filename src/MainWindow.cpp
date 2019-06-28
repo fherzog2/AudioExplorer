@@ -748,9 +748,26 @@ void MainWindow::onTableHeaderContextMenu(const QPoint& pos)
         menu.addSeparator();
     }
 
+    // get and sort columns
+
+    std::vector<std::pair<AudioLibraryView::Column, QString>> columns_and_names;
+
     for (AudioLibraryView::Column column : AudioLibraryView::getColumnsForDisplayMode(*_current_display_mode))
     {
         QString name = AudioLibraryView::getColumnFriendlyName(column, *_current_display_mode);
+        columns_and_names.push_back(std::make_pair(column, name));
+    }
+
+    std::sort(columns_and_names.begin(), columns_and_names.end(), [](const std::pair<AudioLibraryView::Column, QString>& a, const std::pair<AudioLibraryView::Column, QString>& b){
+        return a.second < b.second;
+    });
+
+    // add columns to menu
+
+    for (const auto& column_and_name : columns_and_names)
+    {
+        AudioLibraryView::Column column = column_and_name.first;
+        QString name = column_and_name.second;
 
         bool column_hidden = _table->isColumnHidden(column);
 
@@ -761,7 +778,20 @@ void MainWindow::onTableHeaderContextMenu(const QPoint& pos)
             _table->setColumnHidden(column, !column_hidden);
 
             if (column_hidden)
+            {
+                if (column_hidden)
+                {
+                    int column_visual_index = _table->horizontalHeader()->visualIndex(column);
+                    int clicked_visual_index = _table->horizontalHeader()->visualIndexAt(pos.x());
+
+                    if (column_visual_index != -1 && clicked_visual_index != -1)
+                    {
+                        _table->horizontalHeader()->moveSection(column_visual_index, clicked_visual_index);
+                    }
+                }
+
                 _hidden_columns.erase(column);
+            }
             else
                 _hidden_columns.insert(column);
         });
