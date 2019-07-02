@@ -110,6 +110,8 @@ private:
     static QString getVlcPath();
     void startVlc(const QList<QPersistentModelIndex>& indexes, bool only_add_to_playlist);
 
+    void setCurrentSelectedIndex(const QModelIndex& index);
+
     Settings& _settings;
 
     AudioLibraryModel* _model = nullptr;
@@ -139,7 +141,7 @@ private:
         int _table_sort_indicator_section = 0;
         Qt::SortOrder _table_sort_indicator_order = Qt::AscendingOrder;
 
-        std::vector<QString> _selected_items;
+        QString _selected_item;
     };
 
     std::unique_ptr<ViewRestoreData> saveViewSettings() const;

@@ -550,11 +550,7 @@ void MainWindow::onFindNext()
 
             if (item_text.contains(search_text, Qt::CaseInsensitive))
             {
-                QItemSelection selection;
-                QModelIndex end = _model->index(index.row(), _model->columnCount() - 1);
-                selection.push_back(QItemSelectionRange(index, end));
-
-                view->selectionModel()->select(selection, QItemSelectionModel::ClearAndSelect);
+                setCurrentSelectedIndex(index);
 
                 view->scrollTo(index);
 
@@ -1272,6 +1268,20 @@ void MainWindow::startVlc(const QList<QPersistentModelIndex>& indexes, bool only
     QProcess::startDetached(getVlcPath(), arguments);
 }
 
+void MainWindow::setCurrentSelectedIndex(const QModelIndex& index)
+{
+    QItemSelection selection;
+
+    const QModelIndex end = index.siblingAtColumn(_model->columnCount() - 1);
+    selection.push_back(QItemSelectionRange(index, end));
+
+    if (QAbstractItemView* view = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget()))
+    {
+        view->selectionModel()->select(selection, QItemSelectionModel::ClearAndSelect);
+        view->setCurrentIndex(index);
+    }
+}
+
 std::unique_ptr<MainWindow::ViewRestoreData> MainWindow::saveViewSettings() const
 {
     std::unique_ptr<MainWindow::ViewRestoreData> restore_data(new ViewRestoreData());
@@ -1285,14 +1295,26 @@ std::unique_ptr<MainWindow::ViewRestoreData> MainWindow::saveViewSettings() cons
     // save selection
 
     QModelIndexList selected_indexes = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget())->selectionModel()->selectedIndexes();
+
+    QModelIndex first_index;
+    bool multiple_rows_selected = false;
+
     for (const QModelIndex& index : selected_indexes)
     {
         if (index.column() != AudioLibraryView::ZERO)
             continue;
 
-        QString id = _model->getItemId(_model->itemFromIndex(index));
+        if (first_index.isValid())
+            multiple_rows_selected = true;
+        else
+            first_index = index;
+    }
+
+    if (first_index.isValid() && !multiple_rows_selected)
+    {
+        const QString id = _model->getItemId(_model->itemFromIndex(first_index));
         if (!id.isEmpty())
-            restore_data->_selected_items.push_back(id);
+            restore_data->_selected_item = id;
     }
 
     return restore_data;
@@ -1308,34 +1330,22 @@ void MainWindow::restoreViewSettings(ViewRestoreData* restore_data)
 
     // restore selection
 
-    std::unordered_map<QString, QModelIndex> id_to_index_map;
-
-    for (int i = 0, end = _model->rowCount(); i < end; ++i)
+    if (!restore_data->_selected_item.isEmpty())
     {
-        QModelIndex index = _model->index(i, AudioLibraryView::ZERO);
-        if (QStandardItem* item = _model->itemFromIndex(index))
+        for (int i = 0, end = _model->rowCount(); i < end; ++i)
         {
-            QString id = _model->getItemId(item);
-            if (!id.isEmpty())
+            const QModelIndex index = _model->index(i, AudioLibraryView::ZERO);
+            if (QStandardItem* item = _model->itemFromIndex(index))
             {
-                id_to_index_map[id] = index;
+                const QString id = _model->getItemId(item);
+                if (id == restore_data->_selected_item)
+                {
+                    setCurrentSelectedIndex(index);
+                    break;
+                }
             }
         }
     }
-
-    QItemSelection selection;
-
-    for (const QString& id : restore_data->_selected_items)
-    {
-        auto item_it = id_to_index_map.find(id);
-        if (item_it != id_to_index_map.end())
-        {
-            QModelIndex end = _model->index(item_it->second.row(), _model->columnCount() - 1);
-            selection.push_back(QItemSelectionRange(item_it->second, end));
-        }
-    }
-
-    qobject_cast<QAbstractItemView*>(_view_stack->currentWidget())->selectionModel()->select(selection, QItemSelectionModel::ClearAndSelect);
 }
 
 void MainWindow::restoreSettingsOnStart()
