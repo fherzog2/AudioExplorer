@@ -212,6 +212,47 @@ void ViewSelector::radioButtonSelected()
 
 //=============================================================================
 
+class ContainingFolderOpener
+{
+public:
+    ContainingFolderOpener(const QString& filepath);
+    ContainingFolderOpener(const ContainingFolderOpener& other) = default;
+    ContainingFolderOpener& operator=(const ContainingFolderOpener& other) = default;
+
+    bool isSupported() const;
+    void operator()() const;
+
+private:
+    QString _filepath;
+};
+
+ContainingFolderOpener::ContainingFolderOpener(const QString& filepath)
+    : _filepath(filepath)
+{
+}
+
+bool ContainingFolderOpener::isSupported() const
+{
+#ifdef _WIN32
+    return true;
+#else
+    return false;
+#endif
+}
+
+void ContainingFolderOpener::operator()() const
+{
+#ifdef _WIN32
+    // the explorer expects backslashes
+    QString filepath = _filepath;
+    filepath.replace('/', '\\');
+
+    QProcess::startDetached("explorer /select," + filepath);
+#endif
+}
+
+//=============================================================================
+
 MainWindow::MainWindow(Settings& settings)
     : _settings(settings)
     , _audio_files_loader(_library)
@@ -1192,7 +1233,9 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
 
             // only for tracks: show album
 
-            if (_model->item(mouse_index.row(), AudioLibraryView::PATH) &&
+            QString filepath = _model->getFilepathFromIndex(mouse_index);
+
+            if (!filepath.isEmpty() &&
                 artist_item && album_item && year_item && genre_item && cover_checksum_item)
             {
                 AudioLibraryAlbumKey key;
@@ -1222,6 +1265,15 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
 
                         connect(artist_action, &QAction::triggered, this, slot);
                     }
+                }
+
+                ContainingFolderOpener containing_folder_opener(filepath);
+
+                if (containing_folder_opener.isSupported())
+                {
+                    QAction* action = menu.addAction("Open containing folder");
+
+                    connect(action, &QAction::triggered, this, containing_folder_opener);
                 }
             }
         }
