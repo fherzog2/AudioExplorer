@@ -95,6 +95,7 @@ private:
 public:
     SettingsItemWindowGeometry main_window_geometry;
     SettingsItemWindowGeometry settings_window_geometry;
+    SettingsItemWindowGeometry coverart_window_geometry;
     SettingsItem<QStringList> audio_dir_paths;
     SettingsItem<QHash<QString, QVariant>> audio_library_view_column_widths;
     SettingsItem<QHash<QString, QVariant>> audio_library_view_visual_indexes;

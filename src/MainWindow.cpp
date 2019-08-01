@@ -24,6 +24,7 @@
 #include <QtWidgets/qstyleditemdelegate.h>
 #include <QtWidgets/qtoolbutton.h>
 #include <QtWidgets/qtooltip.h>
+#include "ImageViewWindow.h"
 #include "project_version.h"
 #include "resource_helpers.h"
 #include "SettingsEditorWindow.h"
@@ -1274,6 +1275,26 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
                     QAction* action = menu.addAction("Open containing folder");
 
                     connect(action, &QAction::triggered, this, containing_folder_opener);
+                }
+            }
+
+            if(const QStandardItem * zero_item = _model->item(mouse_index.row(), AudioLibraryView::ZERO))
+            {
+                QIcon icon = zero_item->icon();
+
+                if (!icon.availableSizes().empty())
+                {
+                    QPixmap pixmap = icon.pixmap(icon.availableSizes().front());
+
+                    QAction* action = menu.addAction("View coverart");
+
+                    auto slot = [=]() {
+                        ImageViewWindow* image_view = new ImageViewWindow(_settings);
+                        image_view->setPixmap(pixmap);
+                        image_view->show();
+                    };
+
+                    connect(action, &QAction::triggered, this, slot);
                 }
             }
         }
