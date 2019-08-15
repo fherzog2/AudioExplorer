@@ -457,7 +457,12 @@ void AudioLibraryViewAllArtists::createItems(const AudioLibrary& library,
 
 QString AudioLibraryViewAllArtists::getId() const
 {
-    return QString("AudioLibraryViewAllArtists, %1").arg(_filter);
+    return QString("%1, %2").arg(getBaseId()).arg(_filter);
+}
+
+QString AudioLibraryViewAllArtists::getBaseId()
+{
+    return "AudioLibraryViewAllArtists";
 }
 
 //=============================================================================
@@ -496,7 +501,12 @@ void AudioLibraryViewAllAlbums::createItems(const AudioLibrary& library,
 
 QString AudioLibraryViewAllAlbums::getId() const
 {
-    return QString("AudioLibraryViewAllAlbums, %1").arg(_filter);
+    return QString("%1, %2").arg(getBaseId()).arg(_filter);
+}
+
+QString AudioLibraryViewAllAlbums::getBaseId()
+{
+    return "AudioLibraryViewAllAlbums";
 }
 
 //=============================================================================
@@ -538,7 +548,12 @@ void AudioLibraryViewAllTracks::createItems(const AudioLibrary& library,
 
 QString AudioLibraryViewAllTracks::getId() const
 {
-    return QString("AudioLibraryViewAllTracks, %1").arg(_filter);
+    return QString("%1, %2").arg(getBaseId()).arg(_filter);
+}
+
+QString AudioLibraryViewAllTracks::getBaseId()
+{
+    return "AudioLibraryViewAllTracks";
 }
 
 //=============================================================================
@@ -583,7 +598,12 @@ void AudioLibraryViewAllYears::createItems(const AudioLibrary& library,
 
 QString AudioLibraryViewAllYears::getId() const
 {
-    return QLatin1String("AudioLibraryViewAllYears");
+    return getBaseId();
+}
+
+QString AudioLibraryViewAllYears::getBaseId()
+{
+    return "AudioLibraryViewAllYears";
 }
 
 //=============================================================================
@@ -654,7 +674,12 @@ void AudioLibraryViewAllGenres::createItems(const AudioLibrary& library,
 
 QString AudioLibraryViewAllGenres::getId() const
 {
-    return QString("AudioLibraryViewAllGenres, %1").arg(_filter);
+    return QString("%1, %2").arg(getBaseId()).arg(_filter);
+}
+
+QString AudioLibraryViewAllGenres::getBaseId()
+{
+    return "AudioLibraryViewAllGenres";
 }
 
 //=============================================================================

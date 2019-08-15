@@ -85,6 +85,8 @@ public:
         AudioLibraryModel* model) const override;
     virtual QString getId() const override;
 
+    static QString getBaseId();
+
 private:
     QString _filter;
 };
@@ -101,6 +103,8 @@ public:
         DisplayMode display_mode,
         AudioLibraryModel* model) const override;
     virtual QString getId() const override;
+
+    static QString getBaseId();
 
 private:
     QString _filter;
@@ -119,6 +123,8 @@ public:
         AudioLibraryModel* model) const override;
     virtual QString getId() const override;
 
+    static QString getBaseId();
+
 private:
     QString _filter;
 };
@@ -133,6 +139,8 @@ public:
         DisplayMode display_mode,
         AudioLibraryModel* model) const override;
     virtual QString getId() const override;
+
+    static QString getBaseId();
 };
 
 class AudioLibraryViewAllGenres : public AudioLibraryView
@@ -147,6 +155,8 @@ public:
         DisplayMode display_mode,
         AudioLibraryModel* model) const override;
     virtual QString getId() const override;
+
+    static QString getBaseId();
 
 private:
     QString _filter;

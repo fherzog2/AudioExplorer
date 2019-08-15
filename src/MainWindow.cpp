@@ -202,6 +202,40 @@ std::unique_ptr<AudioLibraryView> ViewSelector::getSelectedView() const
     return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllArtists(QString::null));
 }
 
+void ViewSelector::triggerDefaultView()
+{
+    _artist_button->click();
+}
+
+void ViewSelector::setButtonCheckedFromId(const QString& id)
+{
+    std::vector<std::pair<QRadioButton*, QString>> buttons_and_ids = {
+        std::make_pair(_artist_button, AudioLibraryViewAllArtists::getBaseId()),
+        std::make_pair(_album_button, AudioLibraryViewAllAlbums::getBaseId()),
+        std::make_pair(_track_button, AudioLibraryViewAllTracks::getBaseId()),
+        std::make_pair(_year_button, AudioLibraryViewAllYears::getBaseId()),
+        std::make_pair(_genre_button, AudioLibraryViewAllGenres::getBaseId()),
+    };
+
+    for (const auto& button_and_id : buttons_and_ids)
+    {
+        if (id.startsWith(button_and_id.second))
+        {
+            button_and_id.first->setChecked(true);
+            return;
+        }
+    }
+
+    for (const auto& button_and_id : buttons_and_ids)
+        button_and_id.first->setAutoExclusive(false);
+
+    for (const auto& button_and_id : buttons_and_ids)
+        button_and_id.first->setChecked(false);
+
+    for (const auto& button_and_id : buttons_and_ids)
+        button_and_id.first->setAutoExclusive(true);
+}
+
 void ViewSelector::radioButtonSelected()
 {
     // filtering years makes no sense
@@ -380,7 +414,7 @@ MainWindow::MainWindow(Settings& settings)
     connect(_list->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onModelSelectionChanged);
     connect(_table->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onModelSelectionChanged);
 
-    setBreadCrumb(new AudioLibraryViewAllArtists(QString::null));
+    _view_selector.triggerDefaultView();
 
     restoreSettingsOnStart();
 
@@ -1097,6 +1131,8 @@ void MainWindow::setBreadCrumb(AudioLibraryView* view)
 {
     clearBreadCrumbs();
     addBreadCrumb(view);
+
+    _view_selector.setButtonCheckedFromId(view->getId());
 }
 
 void MainWindow::addBreadCrumb(AudioLibraryView* view)

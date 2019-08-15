@@ -41,6 +41,8 @@ public:
     ViewSelector();
 
     std::unique_ptr<AudioLibraryView> getSelectedView() const;
+    void triggerDefaultView();
+    void setButtonCheckedFromId(const QString& id);
 
 signals:
     void selectionChanged();
