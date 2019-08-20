@@ -22,5 +22,7 @@ cmake %AudioExplorer_PATH% -G "Visual Studio 14 2015 Win64" -DCMAKE_TOOLCHAIN_FI
 ### Linux
 
 ```console
+apt install qtbase5-dev libqt5svg5-dev libtag1-dev
+
 cmake $AudioExplorer_PATH -G "Unix Makefiles"
 ```
