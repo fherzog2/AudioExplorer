@@ -95,7 +95,7 @@ else(MSVC)
 endif(MSVC)
 
 add_executable(ResCompiler ResCompiler.cpp)
-set_property(TARGET ResCompiler PROPERTY CXX_STANDARD 11)
+set_property(TARGET ResCompiler PROPERTY CXX_STANDARD 14)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/compiled_resources.cpp ${CMAKE_BINARY_DIR}/compiled_resources.h
                    COMMAND ResCompiler -i ${CMAKE_CURRENT_LIST_DIR}/res/view_menu.svg -o ${CMAKE_BINARY_DIR}/compiled_resources.cpp
                    DEPENDS ${CMAKE_CURRENT_LIST_DIR}/res/view_menu.svg)
@@ -114,7 +114,7 @@ add_executable(test1 test/test.cpp
                      src/TrackInfoReader.h
                      src/TrackInfoReader.cpp
                      ${STATIC_PLUGIN_INCLUDE})
-target_link_libraries(test1 Qt5::Widgets ${TAGLIB_LIBRARY} ${STATIC_LINK_DEPENDENCIES})
+target_link_libraries(test1 ${CMAKE_THREAD_LIBS_INIT} Qt5::Widgets ${TAGLIB_LIBRARY} ${STATIC_LINK_DEPENDENCIES})
 
 target_include_directories(test1 PRIVATE ${TAGLIB_INCLUDE_DIR})
 target_compile_definitions(test1 PRIVATE TAGLIB_STATIC)

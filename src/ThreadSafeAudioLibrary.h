@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <thread>
 #include <QtCore/qobject.h>
 #include "AudioLibrary.h"
 

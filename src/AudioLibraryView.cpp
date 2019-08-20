@@ -21,6 +21,10 @@ namespace {
                 model->addTrackItem(track);
         }
         break;
+        case AudioLibraryView::DisplayMode::ARTISTS:
+        case AudioLibraryView::DisplayMode::YEARS:
+        case AudioLibraryView::DisplayMode::GENRES:
+            break;
         }
     }
 
@@ -725,6 +729,10 @@ void AudioLibraryViewArtist::createItems(const AudioLibrary& library,
                     break;
                 case DisplayMode::TRACKS:
                     model->addTrackItem(track);
+                    break;
+                case AudioLibraryView::DisplayMode::ARTISTS:
+                case AudioLibraryView::DisplayMode::YEARS:
+                case AudioLibraryView::DisplayMode::GENRES:
                     break;
                 }
             }

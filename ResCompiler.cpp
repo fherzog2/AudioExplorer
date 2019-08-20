@@ -120,7 +120,7 @@ void build_file_content(const OutputBuffer& content, std::string& header, std::s
         "        d.ptr = ptr;\n"
         "        d.size = size;\n"
         "        return d;\n"
-        "    };\n"
+        "    }\n"
         "\n";
     for (const std::string& name : content.names)
     {

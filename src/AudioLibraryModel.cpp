@@ -321,7 +321,13 @@ void AudioLibraryModel::setAlbumColumns(int row, const AudioLibraryAlbum* album)
     {
         setAdditionalColumn(row, AudioLibraryView::COVER_CHECKSUM, QString::number(album->_key._cover_checksum));
 
-        QStandardItem* datasize_item = setAdditionalColumn(row, AudioLibraryView::COVER_DATASIZE, QLocale().formattedDataSize(album->_cover.size()));
+#if QT_VERSION >= QT_VERSION_CHECK(5,10,0)
+        QString data_size = QLocale().formattedDataSize(album->_cover.size());
+#else
+        QString data_size = QString("%1 Bytes").arg(album->_cover.size());
+#endif
+
+        QStandardItem* datasize_item = setAdditionalColumn(row, AudioLibraryView::COVER_DATASIZE, data_size);
         datasize_item->setData(QString::number(album->_cover.size()), AudioLibraryView::SORT_ROLE);
     }
 

@@ -1381,7 +1381,7 @@ void MainWindow::setCurrentSelectedIndex(const QModelIndex& index)
 {
     QItemSelection selection;
 
-    const QModelIndex end = index.siblingAtColumn(_model->columnCount() - 1);
+    const QModelIndex end = index.sibling(index.row(), _model->columnCount() - 1);
     selection.push_back(QItemSelectionRange(index, end));
 
     if (QAbstractItemView* view = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget()))

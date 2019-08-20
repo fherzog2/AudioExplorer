@@ -86,7 +86,7 @@ bool compareSignature(const ARRAY& signature, const QByteArray& bytes)
 {
     const size_t signature_size = std::distance(std::begin(signature), std::end(signature));
 
-    return bytes.size() >= signature_size &&
+    return bytes.size() >= static_cast<int>(signature_size) &&
         memcmp(bytes.constData(), signature, signature_size) == 0;
 }
 

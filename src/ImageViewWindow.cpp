@@ -42,9 +42,6 @@ void ImageView::paintEvent(QPaintEvent* /*event*/)
 {
     QPainter p(this);
 
-    QSize image_size = _pixmap.size();
-    QSize viewport_size = size();
-
     QRectF source_rect (0, 0, _pixmap.width(), _pixmap.height());
 
     QRectF target_rect(
