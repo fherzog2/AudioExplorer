@@ -1434,8 +1434,20 @@ void MainWindow::restoreViewSettings(ViewRestoreData* restore_data)
     setRelativeScrollPos(_list->verticalScrollBar(), restore_data->_list_scroll_pos);
     setRelativeScrollPos(_table->verticalScrollBar(), restore_data->_table_scroll_pos);
 
-    if (restore_data->_table_sort_indicator_section >= 0)
-        _table->sortByColumn(restore_data->_table_sort_indicator_section, restore_data->_table_sort_indicator_order);
+    int sort_indicator_section = restore_data->_table_sort_indicator_section;
+    Qt::SortOrder sort_indicator_order = restore_data->_table_sort_indicator_order;
+
+    if (sort_indicator_section < 0 ||
+        _table->isColumnHidden(sort_indicator_section))
+    {
+        // don't sort by invisible columns
+        // default to the zero column which is always present
+
+        sort_indicator_section = AudioLibraryView::Column::ZERO;
+        sort_indicator_order = Qt::AscendingOrder;
+    }
+
+    _table->sortByColumn(sort_indicator_section, sort_indicator_order);
 
     // restore selection
 
