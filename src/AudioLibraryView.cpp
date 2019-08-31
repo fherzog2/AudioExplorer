@@ -402,9 +402,9 @@ AudioLibraryViewAllArtists::AudioLibraryViewAllArtists(QString filter)
     : _filter(filter)
 {}
 
-AudioLibraryView* AudioLibraryViewAllArtists::clone() const
+std::unique_ptr<AudioLibraryView> AudioLibraryViewAllArtists::clone() const
 {
-    return new AudioLibraryViewAllArtists(*this);
+    return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllArtists(*this));
 }
 
 QString AudioLibraryViewAllArtists::getDisplayName() const
@@ -475,9 +475,9 @@ AudioLibraryViewAllAlbums::AudioLibraryViewAllAlbums(QString filter)
     : _filter(filter)
 {}
 
-AudioLibraryView* AudioLibraryViewAllAlbums::clone() const
+std::unique_ptr<AudioLibraryView> AudioLibraryViewAllAlbums::clone() const
 {
-    return new AudioLibraryViewAllAlbums(*this);
+    return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllAlbums(*this));
 }
 
 QString AudioLibraryViewAllAlbums::getDisplayName() const
@@ -519,9 +519,9 @@ AudioLibraryViewAllTracks::AudioLibraryViewAllTracks(QString filter)
     : _filter(filter)
 {}
 
-AudioLibraryView* AudioLibraryViewAllTracks::clone() const
+std::unique_ptr<AudioLibraryView> AudioLibraryViewAllTracks::clone() const
 {
-    return new AudioLibraryViewAllTracks(*this);
+    return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllTracks(*this));
 }
 
 QString AudioLibraryViewAllTracks::getDisplayName() const
@@ -562,9 +562,9 @@ QString AudioLibraryViewAllTracks::getBaseId()
 
 //=============================================================================
 
-AudioLibraryView* AudioLibraryViewAllYears::clone() const
+std::unique_ptr<AudioLibraryView> AudioLibraryViewAllYears::clone() const
 {
-    return new AudioLibraryViewAllYears(*this);
+    return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllYears(*this));
 }
 
 QString AudioLibraryViewAllYears::getDisplayName() const
@@ -617,9 +617,9 @@ AudioLibraryViewAllGenres::AudioLibraryViewAllGenres(const QString& filter)
 {
 }
 
-AudioLibraryView* AudioLibraryViewAllGenres::clone() const
+std::unique_ptr<AudioLibraryView> AudioLibraryViewAllGenres::clone() const
 {
-    return new AudioLibraryViewAllGenres(*this);
+    return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllGenres(*this));
 }
 
 QString AudioLibraryViewAllGenres::getDisplayName() const
@@ -693,9 +693,9 @@ AudioLibraryViewArtist::AudioLibraryViewArtist(const QString& artist)
 {
 }
 
-AudioLibraryView* AudioLibraryViewArtist::clone() const
+std::unique_ptr<AudioLibraryView> AudioLibraryViewArtist::clone() const
 {
-    return new AudioLibraryViewArtist(*this);
+    return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewArtist(*this));
 }
 
 QString AudioLibraryViewArtist::getDisplayName() const
@@ -770,9 +770,9 @@ AudioLibraryViewAlbum::AudioLibraryViewAlbum(const AudioLibraryAlbumKey& key)
 {
 }
 
-AudioLibraryView* AudioLibraryViewAlbum::clone() const
+std::unique_ptr<AudioLibraryView> AudioLibraryViewAlbum::clone() const
 {
-    return new AudioLibraryViewAlbum(*this);
+    return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAlbum(*this));
 }
 
 QString AudioLibraryViewAlbum::getDisplayName() const
@@ -821,9 +821,9 @@ AudioLibraryViewYear::AudioLibraryViewYear(int year)
 {
 }
 
-AudioLibraryView* AudioLibraryViewYear::clone() const
+std::unique_ptr<AudioLibraryView> AudioLibraryViewYear::clone() const
 {
-    return new AudioLibraryViewYear(*this);
+    return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewYear(*this));
 }
 
 QString AudioLibraryViewYear::getDisplayName() const
@@ -872,9 +872,9 @@ AudioLibraryViewGenre::AudioLibraryViewGenre(const QString& genre)
 {
 }
 
-AudioLibraryView* AudioLibraryViewGenre::clone() const
+std::unique_ptr<AudioLibraryView> AudioLibraryViewGenre::clone() const
 {
-    return new AudioLibraryViewGenre(*this);
+    return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewGenre(*this));
 }
 
 QString AudioLibraryViewGenre::getDisplayName() const
@@ -918,9 +918,9 @@ QString AudioLibraryViewGenre::getId() const
 
 //=============================================================================
 
-AudioLibraryView* AudioLibraryViewDuplicateAlbums::clone() const
+std::unique_ptr<AudioLibraryView> AudioLibraryViewDuplicateAlbums::clone() const
 {
-    return new AudioLibraryViewDuplicateAlbums(*this);
+    return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewDuplicateAlbums(*this));
 }
 
 QString AudioLibraryViewDuplicateAlbums::getDisplayName() const

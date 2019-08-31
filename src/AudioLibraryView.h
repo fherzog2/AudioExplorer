@@ -62,7 +62,7 @@ public:
     static const int MULTILINE_DISPLAY_ROLE = Qt::UserRole + 2;
     static const int ID_ROLE = Qt::UserRole + 3;
 
-    virtual AudioLibraryView* clone() const = 0;
+    virtual std::unique_ptr<AudioLibraryView> clone() const = 0;
     virtual QString getDisplayName() const = 0;
     virtual std::vector<DisplayMode> getSupportedModes() const = 0;
     virtual void createItems(const AudioLibrary& library,
@@ -77,7 +77,7 @@ class AudioLibraryViewAllArtists : public AudioLibraryView
 public:
     AudioLibraryViewAllArtists(QString filter);
 
-    virtual AudioLibraryView* clone() const override;
+    virtual std::unique_ptr<AudioLibraryView> clone() const override;
     virtual QString getDisplayName() const override;
     virtual std::vector<DisplayMode> getSupportedModes() const override;
     virtual void createItems(const AudioLibrary& library,
@@ -96,7 +96,7 @@ class AudioLibraryViewAllAlbums : public AudioLibraryView
 public:
     AudioLibraryViewAllAlbums(QString filter);
 
-    virtual AudioLibraryView* clone() const override;
+    virtual std::unique_ptr<AudioLibraryView> clone() const override;
     virtual QString getDisplayName() const override;
     virtual std::vector<DisplayMode> getSupportedModes() const override;
     virtual void createItems(const AudioLibrary& library,
@@ -115,7 +115,7 @@ class AudioLibraryViewAllTracks : public AudioLibraryView
 public:
     AudioLibraryViewAllTracks(QString filter);
 
-    virtual AudioLibraryView* clone() const override;
+    virtual std::unique_ptr<AudioLibraryView> clone() const override;
     virtual QString getDisplayName() const override;
     virtual std::vector<DisplayMode> getSupportedModes() const override;
     virtual void createItems(const AudioLibrary& library,
@@ -132,7 +132,7 @@ private:
 class AudioLibraryViewAllYears : public AudioLibraryView
 {
 public:
-    virtual AudioLibraryView* clone() const override;
+    virtual std::unique_ptr<AudioLibraryView> clone() const override;
     virtual QString getDisplayName() const override;
     virtual std::vector<DisplayMode> getSupportedModes() const override;
     virtual void createItems(const AudioLibrary& library,
@@ -148,7 +148,7 @@ class AudioLibraryViewAllGenres : public AudioLibraryView
 public:
     AudioLibraryViewAllGenres(const QString& filter);
 
-    virtual AudioLibraryView* clone() const override;
+    virtual std::unique_ptr<AudioLibraryView> clone() const override;
     virtual QString getDisplayName() const override;
     virtual std::vector<DisplayMode> getSupportedModes() const override;
     virtual void createItems(const AudioLibrary& library,
@@ -167,7 +167,7 @@ class AudioLibraryViewArtist : public AudioLibraryView
 public:
     AudioLibraryViewArtist(const QString& artist);
 
-    virtual AudioLibraryView* clone() const override;
+    virtual std::unique_ptr<AudioLibraryView> clone() const override;
     virtual QString getDisplayName() const override;
     virtual std::vector<DisplayMode> getSupportedModes() const override;
     virtual void createItems(const AudioLibrary& library,
@@ -185,7 +185,7 @@ class AudioLibraryViewAlbum : public AudioLibraryView
 public:
     AudioLibraryViewAlbum(const AudioLibraryAlbumKey& key);
 
-    virtual AudioLibraryView* clone() const override;
+    virtual std::unique_ptr<AudioLibraryView> clone() const override;
     virtual QString getDisplayName() const override;
     virtual std::vector<DisplayMode> getSupportedModes() const override;
     virtual void createItems(const AudioLibrary& library,
@@ -203,7 +203,7 @@ class AudioLibraryViewYear : public AudioLibraryView
 public:
     AudioLibraryViewYear(int year);
 
-    virtual AudioLibraryView* clone() const override;
+    virtual std::unique_ptr<AudioLibraryView> clone() const override;
     virtual QString getDisplayName() const override;
     virtual std::vector<DisplayMode> getSupportedModes() const override;
     virtual void createItems(const AudioLibrary& library,
@@ -221,7 +221,7 @@ class AudioLibraryViewGenre : public AudioLibraryView
 public:
     AudioLibraryViewGenre(const QString& genre);
 
-    virtual AudioLibraryView* clone() const override;
+    virtual std::unique_ptr<AudioLibraryView> clone() const override;
     virtual QString getDisplayName() const override;
     virtual std::vector<DisplayMode> getSupportedModes() const override;
     virtual void createItems(const AudioLibrary& library,
@@ -237,7 +237,7 @@ private:
 class AudioLibraryViewDuplicateAlbums : public AudioLibraryView
 {
 public:
-    virtual AudioLibraryView* clone() const override;
+    virtual std::unique_ptr<AudioLibraryView> clone() const override;
     virtual QString getDisplayName() const override;
     virtual std::vector<DisplayMode> getSupportedModes() const override;
     virtual void createItems(const AudioLibrary& library,

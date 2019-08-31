@@ -68,7 +68,7 @@ public:
     ~MainWindow();
 
     virtual bool eventFilter(QObject* watched, QEvent* event) override;
-    void setBreadCrumb(AudioLibraryView* view);
+    void setBreadCrumb(std::unique_ptr<AudioLibraryView> view);
 
 protected:
     virtual void closeEvent(QCloseEvent* e) override;
@@ -103,7 +103,7 @@ private:
     void getFilepathsFromIndex(const QModelIndex& index, std::vector<QString>& filepaths);
     void forEachFilepathAtIndex(const QModelIndex& index, std::function<void(const QString&)> callback);
 
-    void addBreadCrumb(AudioLibraryView* view);
+    void addBreadCrumb(std::unique_ptr<AudioLibraryView> view);
     void clearBreadCrumbs();
     void restoreBreadCrumb(QObject* object);
     bool findBreadcrumbId(const QString& id) const;

@@ -315,7 +315,7 @@ MainWindow::MainWindow(Settings& settings)
     view_selector_popup_button->setIconSize(QSize(24, 24));
 
     connect(&_view_selector, &ViewSelector::selectionChanged, this, [=]() {
-        setBreadCrumb(_view_selector.getSelectedView().release());
+        setBreadCrumb(_view_selector.getSelectedView());
     });
 
     connect(view_selector_popup_button, &QToolButton::clicked, this, [=](){
@@ -672,7 +672,7 @@ void MainWindow::onCoverLoadFinished()
 
 void MainWindow::onShowDuplicateAlbums()
 {
-    setBreadCrumb(new AudioLibraryViewDuplicateAlbums());
+    setBreadCrumb(std::unique_ptr<AudioLibraryView>(new AudioLibraryViewDuplicateAlbums()));
 }
 
 void MainWindow::onBreadCrumbClicked()
@@ -1127,15 +1127,15 @@ void MainWindow::forEachFilepathAtIndex(const QModelIndex& index, std::function<
     }
 }
 
-void MainWindow::setBreadCrumb(AudioLibraryView* view)
+void MainWindow::setBreadCrumb(std::unique_ptr<AudioLibraryView> view)
 {
-    clearBreadCrumbs();
-    addBreadCrumb(view);
-
     _view_selector.setButtonCheckedFromId(view->getId());
+
+    clearBreadCrumbs();
+    addBreadCrumb(std::move(view));
 }
 
-void MainWindow::addBreadCrumb(AudioLibraryView* view)
+void MainWindow::addBreadCrumb(std::unique_ptr<AudioLibraryView> view)
 {
     if (!_breadcrumbs.empty())
     {
@@ -1151,7 +1151,7 @@ void MainWindow::addBreadCrumb(AudioLibraryView* view)
 
     Breadcrumb breadcrumb;
     breadcrumb._button.reset(button);
-    breadcrumb._view.reset(view);
+    breadcrumb._view = std::move(view);
     _breadcrumbs.push_back(std::move(breadcrumb));
 
     updateCurrentView();

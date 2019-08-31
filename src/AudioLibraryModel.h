@@ -43,7 +43,7 @@ private:
     void setAlbumColumns(int row, const AudioLibraryAlbum* album);
 
     std::unordered_map<QString, QStandardItem*> _id_to_item_map;
-    std::unordered_map<QStandardItem*, std::unique_ptr<AudioLibraryView>> _item_to_view_map;
+    std::unordered_map<const QStandardItem*, std::unique_ptr<AudioLibraryView>> _item_to_view_map;
 
     QIcon _default_icon;
     QCollator _numeric_collator;
