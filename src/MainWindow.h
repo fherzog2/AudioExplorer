@@ -59,6 +59,44 @@ private:
     QLineEdit* _filter_box = nullptr;
 };
 
+struct ViewRestoreData
+{
+    double _list_scroll_pos = 0;
+    double _table_scroll_pos = 0;
+
+    int _table_sort_indicator_section = 0;
+    Qt::SortOrder _table_sort_indicator_order = Qt::AscendingOrder;
+
+    QString _selected_item;
+};
+
+class History
+{
+public:
+    struct Item
+    {
+        Item() = default;
+        Item(Item&& other) = default;
+        Item& operator=(Item&& other) = default;
+        ~Item() = default;
+
+        std::unique_ptr<AudioLibraryView> view;
+        bool is_top_level_view = false;
+        std::unique_ptr<ViewRestoreData> restore_data; //!< maybe null
+    };
+
+    void addItem(std::unique_ptr<AudioLibraryView> view, bool is_top_level_view, ViewRestoreData* restore_data_for_previous_view);
+    std::vector<const Item*> getCurrentItems() const;
+    bool canGoBack() const;
+    bool canGoForward() const;
+    void back();
+    void forward();
+
+private:
+    std::vector<Item> _items;
+    size_t _current_item = 0;
+};
+
 class MainWindow : public QFrame
 {
     Q_OBJECT
@@ -83,7 +121,8 @@ private:
     void onCoverLoadFinished();
     void onShowDuplicateAlbums();
     void onBreadCrumbClicked();
-    void onBreadCrumpReverse();
+    void onHistoryBack();
+    void onHistoryForward();
     void onDisplayModeChanged(AudioLibraryView::DisplayMode display_mode);
     void onDisplayModeSelected(int index);
     void onViewTypeSelected(int index);
@@ -103,8 +142,8 @@ private:
     void getFilepathsFromIndex(const QModelIndex& index, std::vector<QString>& filepaths);
     void forEachFilepathAtIndex(const QModelIndex& index, std::function<void(const QString&)> callback);
 
+    void updateAfterHistoryChange();
     void addBreadCrumb(std::unique_ptr<AudioLibraryView> view);
-    void clearBreadCrumbs();
     void restoreBreadCrumb(QObject* object);
     bool findBreadcrumbId(const QString& id) const;
 
@@ -135,17 +174,6 @@ private:
 
     QPointer<QWidget> _advanced_search_dialog = nullptr;
 
-    struct ViewRestoreData
-    {
-        double _list_scroll_pos = 0;
-        double _table_scroll_pos = 0;
-
-        int _table_sort_indicator_section = 0;
-        Qt::SortOrder _table_sort_indicator_order = Qt::AscendingOrder;
-
-        QString _selected_item;
-    };
-
     std::unique_ptr<ViewRestoreData> saveViewSettings() const;
     void restoreViewSettings(ViewRestoreData* restore_data);
 
@@ -154,15 +182,12 @@ private:
 
     void restoreDetailsSizeOnStart();
 
-    struct Breadcrumb
-    {
-        std::unique_ptr<QObject, LateDeleter> _button;
-        std::unique_ptr<AudioLibraryView> _view;
-        std::unique_ptr<ViewRestoreData> _restore_data;
-    };
+    History _history;
+    QAction* _history_back_action = nullptr;
+    QAction* _history_forward_action = nullptr;
 
     QHBoxLayout* _breadcrumb_layout = nullptr;
-    std::vector<Breadcrumb> _breadcrumbs;
+    std::vector<std::unique_ptr<QObject, LateDeleter>> _breadcrumb_buttons;
 
     QTabBar* _display_mode_tabs = nullptr;
     std::vector<std::pair<int, AudioLibraryView::DisplayMode>> _display_mode_tab_indexes;

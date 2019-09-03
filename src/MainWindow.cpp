@@ -247,6 +247,94 @@ void ViewSelector::radioButtonSelected()
 
 //=============================================================================
 
+void History::addItem(std::unique_ptr<AudioLibraryView> view, bool is_top_level_view, ViewRestoreData* restore_data_for_previous_view)
+{
+    // save the restore data
+
+    if (restore_data_for_previous_view && !_items.empty())
+    {
+        _items[_current_item].restore_data.reset(new ViewRestoreData());
+        *_items[_current_item].restore_data = *restore_data_for_previous_view;
+    }
+
+    // if current item is not the last one, destroy all further items
+
+    if(_current_item < _items.size())
+        _items.erase(_items.begin() + _current_item + 1, _items.end());
+
+    // create new item
+
+    Item item;
+    item.view = std::move(view);
+    item.is_top_level_view = is_top_level_view;
+
+    _items.push_back(std::move(item));
+
+    // prune the history if it becomes too long
+
+    while (_items.size() > 1000)
+    {
+        auto second_top_level_item = std::find_if(_items.begin() + 1, _items.end(), [](const Item& i){
+            return i.is_top_level_view;
+        });
+
+        _items.erase(_items.begin(), second_top_level_item);
+    }
+
+    _current_item = _items.size() - 1;
+}
+
+std::vector<const History::Item*> History::getCurrentItems() const
+{
+    // find top level view
+
+    size_t index_of_top_level_view = 0;
+
+    for (size_t i = _current_item; i != size_t(-1); --i)
+    {
+        if (_items[i].is_top_level_view)
+        {
+            index_of_top_level_view = i;
+            break;
+        }
+    }
+
+    // create result
+
+    std::vector<const Item*> result;
+
+    for (size_t i = index_of_top_level_view; i <= _current_item; ++i)
+    {
+        result.push_back(&_items[i]);
+    }
+
+    return result;
+}
+
+bool History::canGoBack() const
+{
+    return _current_item > 0 && _current_item < _items.size();
+}
+
+bool History::canGoForward() const
+{
+    return _current_item + 1 < _items.size();
+}
+
+void History::back()
+{
+    if(canGoBack())
+        --_current_item;
+}
+
+void History::forward()
+{
+    if(canGoForward())
+        ++_current_item;
+}
+
+//=============================================================================
+
 class ContainingFolderOpener
 {
 public:
@@ -301,7 +389,8 @@ MainWindow::MainWindow(Settings& settings)
     addMenuAction(*filemenu, "Exit", this, &MainWindow::close, Qt::ALT + Qt::Key_F4);
 
     auto viewmenu = menubar->addMenu("View");
-    addMenuAction(*viewmenu, "Previous view", this, &MainWindow::onBreadCrumpReverse, Qt::Key_Backspace);
+    _history_back_action = addMenuAction(*viewmenu, "Previous view", this, &MainWindow::onHistoryBack, Qt::Key_Backspace);
+    _history_forward_action = addMenuAction(*viewmenu, "Next view", this, &MainWindow::onHistoryForward, Qt::SHIFT + Qt::Key_Backspace);
     addMenuAction(*viewmenu, "Find...", this, &MainWindow::onShowFindWidget, Qt::CTRL + Qt::Key_F);
     addMenuAction(*viewmenu, "Badly tagged albums", this, &MainWindow::onShowDuplicateAlbums);
     addMenuAction(*viewmenu, "Reload all files", this, &MainWindow::scanAudioDirs, Qt::Key_F5);
@@ -680,13 +769,23 @@ void MainWindow::onBreadCrumbClicked()
     restoreBreadCrumb(sender());
 }
 
-void MainWindow::onBreadCrumpReverse()
+void MainWindow::onHistoryBack()
 {
-    if (_breadcrumbs.size() > 1)
+    if (_history.canGoBack())
     {
-        QObject* second_last = _breadcrumbs[_breadcrumbs.size() - 2]._button.get();
+        _history.back();
 
-        restoreBreadCrumb(second_last);
+        updateAfterHistoryChange();
+    }
+}
+
+void MainWindow::onHistoryForward()
+{
+    if (_history.canGoForward())
+    {
+        _history.forward();
+
+        updateAfterHistoryChange();
     }
 }
 
@@ -905,16 +1004,18 @@ void MainWindow::scanAudioDirs()
 
 const AudioLibraryView* MainWindow::getCurrentView() const
 {
-    return _breadcrumbs.back()._view.get();
+    return _history.getCurrentItems().back()->view.get();
 }
 
 void MainWindow::updateCurrentView()
 {
+    const AudioLibraryView* current_view = getCurrentView();
+
     auto view_settings = saveViewSettings();
 
-    QString current_view_id = _breadcrumbs.back()._view->getId();
+    QString current_view_id = current_view->getId();
 
-    auto supported_modes = _breadcrumbs.back()._view->getSupportedModes();
+    auto supported_modes = current_view->getSupportedModes();
 
     AudioLibraryView::DisplayMode current_display_mode = supported_modes.front();
 
@@ -976,14 +1077,11 @@ void MainWindow::updateCurrentView()
 
     if (incremental)
     {
-        if (!_breadcrumbs.empty())
-        {
-            AudioLibraryModel::IncrementalUpdateScope update_scope(*_model);
+        AudioLibraryModel::IncrementalUpdateScope update_scope(*_model);
 
-            ThreadSafeAudioLibrary::LibraryAccessor acc(_library);
+        ThreadSafeAudioLibrary::LibraryAccessor acc(_library);
 
-            _breadcrumbs.back()._view->createItems(acc.getLibrary(), current_display_mode, _model);
-        }
+        current_view->createItems(acc.getLibrary(), current_display_mode, _model);
     }
     else
     {
@@ -996,11 +1094,10 @@ void MainWindow::updateCurrentView()
         }
         model->setHorizontalHeaderLabels(model_headers);
 
-        if (!_breadcrumbs.empty())
         {
             ThreadSafeAudioLibrary::LibraryAccessor acc(_library);
 
-            _breadcrumbs.back()._view->createItems(acc.getLibrary(), current_display_mode, model);
+            current_view->createItems(acc.getLibrary(), current_display_mode, model);
         }
 
         _model->deleteLater();
@@ -1127,76 +1224,78 @@ void MainWindow::forEachFilepathAtIndex(const QModelIndex& index, std::function<
     }
 }
 
+void MainWindow::updateAfterHistoryChange()
+{
+    _history_back_action->setEnabled(_history.canGoBack());
+    _history_forward_action->setEnabled(_history.canGoForward());
+
+    _view_selector.setButtonCheckedFromId(_history.getCurrentItems().front()->view->getId());
+
+    _breadcrumb_buttons.clear();
+
+    std::vector<const History::Item*> current_history_items = _history.getCurrentItems();
+
+    for (const History::Item* item : current_history_items)
+    {
+        QPushButton* button = new QPushButton(item->view->getDisplayName(), this);
+        connect(button, &QPushButton::clicked, this, &MainWindow::onBreadCrumbClicked);
+        _breadcrumb_buttons.push_back(std::unique_ptr<QObject, LateDeleter>(button));
+
+        _breadcrumb_layout->addWidget(button);
+    }
+
+    std::shared_ptr<ViewRestoreData> restore_data;
+    if (current_history_items.back()->restore_data)
+        restore_data.reset(new ViewRestoreData(*current_history_items.back()->restore_data));
+
+    updateCurrentView();
+
+    if (restore_data)
+    {
+        // restore uses a timer because the list view is updating asynchronously
+
+        QTimer::singleShot(1, this, [=]() {
+            restoreViewSettings(restore_data.get());
+            });
+    }
+}
+
 void MainWindow::setBreadCrumb(std::unique_ptr<AudioLibraryView> view)
 {
-    _view_selector.setButtonCheckedFromId(view->getId());
+    _history.addItem(view->clone(), true, nullptr);
 
-    clearBreadCrumbs();
-    addBreadCrumb(std::move(view));
+    updateAfterHistoryChange();
 }
 
 void MainWindow::addBreadCrumb(std::unique_ptr<AudioLibraryView> view)
 {
-    if (!_breadcrumbs.empty())
-    {
-        // if this isn't the first breadcrumb, create restore information so the view looks the same when going back
+    _history.addItem(view->clone(), false, saveViewSettings().get());
 
-        _breadcrumbs.back()._restore_data = saveViewSettings();
-    }
-
-    QPushButton* button = new QPushButton(view->getDisplayName(), this);
-    connect(button, &QPushButton::clicked, this, &MainWindow::onBreadCrumbClicked);
-
-    _breadcrumb_layout->addWidget(button);
-
-    Breadcrumb breadcrumb;
-    breadcrumb._button.reset(button);
-    breadcrumb._view = std::move(view);
-    _breadcrumbs.push_back(std::move(breadcrumb));
-
-    updateCurrentView();
-}
-
-void MainWindow::clearBreadCrumbs()
-{
-    _breadcrumbs.clear();
+    updateAfterHistoryChange();
 }
 
 void MainWindow::restoreBreadCrumb(QObject* object)
 {
+    if (_breadcrumb_buttons.back().get() == object)
+        return; // nothing to do
+
     // remove all breadcrumbs behind the given one
 
-    auto found = std::find_if(_breadcrumbs.begin(), _breadcrumbs.end(), [=](const Breadcrumb& i){
-        return i._button.get() == object;
+    auto found = std::find_if(_breadcrumb_buttons.begin(), _breadcrumb_buttons.end(), [object](const std::unique_ptr<QObject, LateDeleter>& i){
+        return i.get() == object;
     });
 
-    // the last breadcrumb is the current view, nothing to restore
+    for(auto it = found + 1, end = _breadcrumb_buttons.end(); it != end; ++it)
+        _history.back();
 
-    if (found != _breadcrumbs.end() && found == _breadcrumbs.end() - 1)
-        return;
-
-    // delete breadcrumbs
-
-    _breadcrumbs.erase(found + 1, _breadcrumbs.end());
-
-    // restore view, take away restore data from current breadcrumb
-
-    std::shared_ptr<ViewRestoreData> restore_data(_breadcrumbs.back()._restore_data.release());
-
-    updateCurrentView();
-
-    // restore uses a timer because the list view is updating asynchronously
-
-    QTimer::singleShot(1, this, [=]() {
-        restoreViewSettings(restore_data.get());
-    });
+    updateAfterHistoryChange();
 }
 
 bool MainWindow::findBreadcrumbId(const QString& id) const
 {
-    for (const Breadcrumb& breadcrumb : _breadcrumbs)
+    for (const History::Item* item : _history.getCurrentItems())
     {
-        if (breadcrumb._view->getId() == id)
+        if (item->view->getId() == id)
         {
             return true;
         }
@@ -1391,9 +1490,9 @@ void MainWindow::setCurrentSelectedIndex(const QModelIndex& index)
     }
 }
 
-std::unique_ptr<MainWindow::ViewRestoreData> MainWindow::saveViewSettings() const
+std::unique_ptr<ViewRestoreData> MainWindow::saveViewSettings() const
 {
-    std::unique_ptr<MainWindow::ViewRestoreData> restore_data(new ViewRestoreData());
+    std::unique_ptr<ViewRestoreData> restore_data(new ViewRestoreData());
 
     restore_data->_list_scroll_pos = getRelativeScrollPos(_list->verticalScrollBar());
     restore_data->_table_scroll_pos = getRelativeScrollPos(_table->verticalScrollBar());
