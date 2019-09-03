@@ -581,9 +581,9 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event)
 
                     for (const QModelIndex& selected_index : selected_indexes)
                     {
-                        if (rows.find(selected_index.row()) == rows.end())
+                        auto insert_result = rows.insert(selected_index.row());
+                        if (insert_result.second)
                         {
-                            rows.insert(selected_index.row());
                             _dragged_indexes.push_back(selected_index);
                         }
                     }
@@ -950,15 +950,12 @@ void MainWindow::onTableHeaderContextMenu(const QPoint& pos)
 
             if (column_hidden)
             {
-                if (column_hidden)
-                {
-                    int column_visual_index = _table->horizontalHeader()->visualIndex(column);
-                    int clicked_visual_index = _table->horizontalHeader()->visualIndexAt(pos.x());
+                int column_visual_index = _table->horizontalHeader()->visualIndex(column);
+                int clicked_visual_index = _table->horizontalHeader()->visualIndexAt(pos.x());
 
-                    if (column_visual_index != -1 && clicked_visual_index != -1)
-                    {
-                        _table->horizontalHeader()->moveSection(column_visual_index, clicked_visual_index);
-                    }
+                if (column_visual_index != -1 && clicked_visual_index != -1)
+                {
+                    _table->horizontalHeader()->moveSection(column_visual_index, clicked_visual_index);
                 }
 
                 _hidden_columns.erase(column);
@@ -1314,10 +1311,7 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
 
         for (const QModelIndex& selected_index : selected_indexes)
         {
-            if (rows.find(selected_index.row()) == rows.end())
-            {
-                rows.insert(selected_index.row());
-            }
+            rows.insert(selected_index.row());
         }
 
         QMenu menu;

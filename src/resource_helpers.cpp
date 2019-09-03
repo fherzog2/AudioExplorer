@@ -19,8 +19,8 @@ private:
 };
 
 SVGIconEngine::SVGIconEngine(const QByteArray& icon_buffer)
+    : _data(icon_buffer)
 {
-    _data = icon_buffer;
 }
 
 void SVGIconEngine::paint(QPainter* painter, const QRect& rect, QIcon::Mode /*mode*/, QIcon::State /*state*/)
