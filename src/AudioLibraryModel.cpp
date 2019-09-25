@@ -299,9 +299,9 @@ void AudioLibraryModel::setLengthColumn(int row, int length_milliseconds)
 {
     int length_seconds = length_milliseconds / 1000;
 
-    QString formatted_length = length_seconds < 3600 ?
-        QDateTime::fromTime_t(length_seconds).toUTC().toString("mm:ss") :
-        QDateTime::fromTime_t(length_seconds).toUTC().toString("hh:mm:ss");
+    QTime length_time = QTime(0, 0).addMSecs(length_milliseconds);
+
+    QString formatted_length = length_time.toString(length_seconds < 3600 ? "mm:ss" : "hh:mm:ss");
 
     QStandardItem* length_item = setAdditionalColumn(row, AudioLibraryView::LENGTH_SECONDS, formatted_length);
 

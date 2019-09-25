@@ -40,21 +40,18 @@ public:
         , _genre(info.genre)
         , _year(info.year)
         , _cover_checksum(qChecksum(info.cover.data(), info.cover.size()))
-    {}
-
-    std::tuple<QString, int, QString, QString, qint16> getMembersAsTuple() const
     {
-        return std::tie(_artist, _year, _album, _genre, _cover_checksum);
+        _id = toString();
     }
 
     bool operator<(const AudioLibraryAlbumKey& other) const
     {
-        return getMembersAsTuple() < other.getMembersAsTuple();
+        return _id < other._id;
     }
 
     bool operator==(const AudioLibraryAlbumKey& other) const
     {
-        return getMembersAsTuple() == other.getMembersAsTuple();
+        return _id == other._id;
     }
 
     bool operator!=(const AudioLibraryAlbumKey& other) const
@@ -67,9 +64,9 @@ public:
         QLatin1Char sep(',');
 
         return _artist + sep +
+            QString::number(_year) + sep +
             _album + sep +
             _genre + sep +
-            QString::number(_year) + sep +
             QString::number(_cover_checksum);
     }
 
@@ -78,6 +75,8 @@ public:
     QString _genre;
     int _year = 0;
     quint16 _cover_checksum = 0;
+
+    QString _id;
 };
 
 class AudioLibraryAlbum

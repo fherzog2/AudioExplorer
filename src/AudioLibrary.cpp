@@ -25,6 +25,8 @@ QDataStream& operator>>(QDataStream& s, AudioLibraryAlbumKey& key)
 
     s >> key._cover_checksum;
 
+    key._id = key.toString();
+
     return s;
 }
 
@@ -60,7 +62,7 @@ AudioLibraryAlbum::AudioLibraryAlbum(const AudioLibraryAlbumKey& key, const QByt
     : _key(key)
     , _cover(cover)
 {
-    _id = QLatin1String("album(") + _key.toString() + QLatin1Char(')');
+    _id = QLatin1String("album(") + _key._id + QLatin1Char(')');
 
     _cover_type = getCoverTypeInternal();
 }
