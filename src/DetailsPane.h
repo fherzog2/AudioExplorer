@@ -14,7 +14,7 @@ class DetailsPane : public QFrame
 public:
     DetailsPane(QWidget* parent);
 
-    void setSelection(const QStandardItemModel* model, const QAbstractItemView* view, AudioLibraryView::DisplayMode display_mode);
+    void setSelection(const QAbstractItemModel* model, const QAbstractItemView* view, AudioLibraryView::DisplayMode display_mode);
 
 protected:
     virtual void paintEvent(QPaintEvent* e) override;

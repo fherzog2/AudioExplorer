@@ -289,7 +289,7 @@ bool testThreadSafeAudioLibrary(const QString& audio_files_dir)
     return acc.getLibrary().getAlbums().size() == 1;
 }
 
-void printModel(const QStandardItemModel& model)
+void printModel(const QAbstractItemModel& model)
 {
     for (int row = 0; row < model.rowCount(); ++row)
     {
@@ -316,20 +316,20 @@ void addModelRow(QStandardItemModel& model, const std::vector<std::pair<AudioLib
 #define CHECK_MODEL(expression, model1, model2) \
     if (!(expression)) \
     { \
-        printModel((model1)); \
+        printModel(*(model1).getModel()); \
         printModel((model2)); \
         RETURN_IF_FAILED((expression)); \
     }
 
-bool compareModels(const AudioLibraryModel& model1, const AudioLibraryModel& model2)
+bool compareModels(const AudioLibraryModel& model1, const QStandardItemModel& model2)
 {
-    CHECK_MODEL(model1.rowCount() == model2.rowCount(), model1, model2);
+    CHECK_MODEL(model1.getModel()->rowCount() == model2.rowCount(), model1, model2);
 
-    for (int row = 0; row < model1.rowCount(); ++row)
+    for (int row = 0; row < model1.getModel()->rowCount(); ++row)
     {
-        for (int col = 0; col < model1.columnCount(); ++col)
+        for (int col = 0; col < model1.getModel()->columnCount(); ++col)
         {
-            QString text1 = model1.data(model1.index(row, col), Qt::DisplayRole).toString();
+            QString text1 = model1.getModel()->data(model1.getModel()->index(row, col), Qt::DisplayRole).toString();
             QString text2 = model2.data(model2.index(row, col), Qt::DisplayRole).toString();
 
             CHECK_MODEL(text1 == text2, model1, model2);
@@ -362,7 +362,7 @@ bool testAudioLibraryViewAllArtists()
 
     all_artists_view.createItems(library, AudioLibraryView::DisplayMode::ARTISTS, &model);
 
-    AudioLibraryModel expected_artists(nullptr);
+    QStandardItemModel expected_artists(nullptr);
 
     addModelRow(expected_artists, { {AudioLibraryView::ZERO, "Artist 1"}, {AudioLibraryView::NUMBER_OF_ALBUMS, "2"}, {AudioLibraryView::NUMBER_OF_TRACKS, "11"} });
     addModelRow(expected_artists, { {AudioLibraryView::ZERO, "Artist 2"}, {AudioLibraryView::NUMBER_OF_ALBUMS, "1"}, {AudioLibraryView::NUMBER_OF_TRACKS, "10"} });

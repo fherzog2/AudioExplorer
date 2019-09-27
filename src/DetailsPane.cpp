@@ -198,7 +198,7 @@ DetailsPane::DetailsPane(QWidget* parent)
     setFrameShape(QFrame::StyledPanel);
 }
 
-void DetailsPane::setSelection(const QStandardItemModel* model, const QAbstractItemView* view, AudioLibraryView::DisplayMode display_mode)
+void DetailsPane::setSelection(const QAbstractItemModel* model, const QAbstractItemView* view, AudioLibraryView::DisplayMode display_mode)
 {
     for (QWidget* w : _data_labels)
         w->deleteLater();

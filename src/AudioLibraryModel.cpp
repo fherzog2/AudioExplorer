@@ -87,7 +87,7 @@ namespace {
 } // nameless namespace
 
 AudioLibraryModel::AudioLibraryModel(QObject* parent)
-    : QStandardItemModel(parent)
+    : QObject(parent)
 {
     QPixmap default_pixmap = QPixmap(256, 256);
     default_pixmap.fill(Qt::transparent);
@@ -103,7 +103,9 @@ void AudioLibraryModel::addItemInternal(const QString& id, const QIcon& icon,
 {
     _requested_ids.insert(id);
 
-    if (QStandardItem* existing_item = getItemForId(id))
+    QModelIndex existing_index = getIndexForId(id);
+
+    if (QStandardItem* existing_item = _item_model.itemFromIndex(existing_index))
     {
         if (existing_item->icon().cacheKey() == _default_icon.cacheKey() &&
             !icon.isNull())
@@ -115,7 +117,7 @@ void AudioLibraryModel::addItemInternal(const QString& id, const QIcon& icon,
         return;
     }
 
-    int row = rowCount();
+    int row = _item_model.rowCount();
 
     QStandardItem* item = item_factory(row);
 
@@ -130,7 +132,7 @@ void AudioLibraryModel::addItem(const QString& id, const QString& name, const QI
 {
     auto item_factory = [=](int row) {
         QStandardItem* item = new CollatedItem(icon.isNull() ? _default_icon : icon, name, _numeric_collator);
-        setItem(row, item);
+        _item_model.setItem(row, item);
 
         setAdditionalColumn(row, AudioLibraryView::NUMBER_OF_ALBUMS, QString::number(number_of_albums));
         setAdditionalColumn(row, AudioLibraryView::NUMBER_OF_TRACKS, QString::number(number_of_tracks));
@@ -149,7 +151,7 @@ void AudioLibraryModel::addAlbumItem(const AudioLibraryAlbum* album)
     auto item_factory = [=](int row) {
         QStandardItem* item = new AlbumModelItem(icon, album->_key._artist + " - " + album->_key._album, album, _numeric_collator);
         item->setData(album->_key._artist + QChar(QChar::LineSeparator) + album->_key._album, AudioLibraryView::MULTILINE_DISPLAY_ROLE);
-        setItem(row, item);
+        _item_model.setItem(row, item);
 
         setAlbumColumns(row, album);
         setAdditionalColumn(row, AudioLibraryView::ARTIST, album->_key._artist);
@@ -177,7 +179,7 @@ void AudioLibraryModel::addTrackItem(const AudioLibraryTrack* track)
     auto item_factory = [=](int row) {
         QStandardItem* item = new TrackModelItem(icon, track->_artist + " - " + track->_title, track, _numeric_collator);
         item->setData(track->_artist + QChar(QChar::LineSeparator) + track->_title, AudioLibraryView::MULTILINE_DISPLAY_ROLE);
-        setItem(row, item);
+        _item_model.setItem(row, item);
 
         setAlbumColumns(row, track->_album);
         setAdditionalColumn(row, AudioLibraryView::ARTIST, track->_artist);
@@ -206,32 +208,55 @@ void AudioLibraryModel::addTrackItem(const AudioLibraryTrack* track)
     });
 }
 
-QString AudioLibraryModel::getItemId(QStandardItem* item) const
+QAbstractItemModel* AudioLibraryModel::getModel()
 {
-    return item->data(AudioLibraryView::ID_ROLE).toString();
+    return &_item_model;
 }
 
-QStandardItem* AudioLibraryModel::getItemForId(const QString& id) const
+const QAbstractItemModel* AudioLibraryModel::getModel() const
+{
+    return &_item_model;
+}
+
+void AudioLibraryModel::setHorizontalHeaderLabels(const QStringList& labels)
+{
+    _item_model.setHorizontalHeaderLabels(labels);
+}
+
+QString AudioLibraryModel::getItemId(const QModelIndex& index) const
+{
+    if (QStandardItem * item = _item_model.item(index.row(), AudioLibraryView::ZERO))
+    {
+        return item->data(AudioLibraryView::ID_ROLE).toString();
+    }
+
+    return QString();
+}
+
+QModelIndex AudioLibraryModel::getIndexForId(const QString& id) const
 {
     auto it = _id_to_item_map.find(id);
     if (it != _id_to_item_map.end())
-        return it->second;
+        return it->second->index();
 
-    return nullptr;
+    return QModelIndex();
 }
 
-const AudioLibraryView* AudioLibraryModel::getViewForItem(QStandardItem* item) const
+const AudioLibraryView* AudioLibraryModel::getViewForIndex(const QModelIndex& index) const
 {
-    auto it = _item_to_view_map.find(item);
-    if (it != _item_to_view_map.end())
-        return it->second.get();
+    if (QStandardItem * item = _item_model.item(index.row(), AudioLibraryView::ZERO))
+    {
+        auto it = _item_to_view_map.find(item);
+        if (it != _item_to_view_map.end())
+            return it->second.get();
+    }
 
     return nullptr;
 }
 
 QString AudioLibraryModel::getFilepathFromIndex(const QModelIndex& index) const
 {
-    if (QStandardItem* path_item = item(index.row(), AudioLibraryView::PATH))
+    if (QStandardItem* path_item = _item_model.item(index.row(), AudioLibraryView::PATH))
     {
         return path_item->text();
     }
@@ -246,7 +271,7 @@ void AudioLibraryModel::removeId(const QString& id)
         return;
 
     _item_to_view_map.erase(it->second);
-    removeRow(it->second->index().row());
+    _item_model.removeRow(it->second->index().row());
 
     _id_to_item_map.erase(it);
 }
@@ -284,7 +309,7 @@ void AudioLibraryModel::onUpdateFinished()
 QStandardItem* AudioLibraryModel::setAdditionalColumn(int row, AudioLibraryView::Column column, const QString& text)
 {
     QStandardItem* item = new CollatedItem(text, _numeric_collator);
-    setItem(row, static_cast<int>(column), item);
+    _item_model.setItem(row, static_cast<int>(column), item);
     return item;
 }
 

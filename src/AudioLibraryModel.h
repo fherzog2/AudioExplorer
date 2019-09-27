@@ -6,7 +6,7 @@
 
 #include "AudioLibraryView.h"
 
-class AudioLibraryModel : public QStandardItemModel
+class AudioLibraryModel : public QObject
 {
 public:
     AudioLibraryModel(QObject* parent);
@@ -25,9 +25,12 @@ public:
     void addAlbumItem(const AudioLibraryAlbum* album);
     void addTrackItem(const AudioLibraryTrack* track);
 
-    QString getItemId(QStandardItem* item) const;
-    QStandardItem* getItemForId(const QString& id) const;
-    const AudioLibraryView* getViewForItem(QStandardItem* item) const;
+    QAbstractItemModel* getModel();
+    const QAbstractItemModel* getModel() const;
+    void setHorizontalHeaderLabels(const QStringList& labels);
+    QString getItemId(const QModelIndex& index) const;
+    QModelIndex getIndexForId(const QString& id) const;
+    const AudioLibraryView* getViewForIndex(const QModelIndex& index) const;
     QString getFilepathFromIndex(const QModelIndex& index) const;
 
 private:
@@ -42,6 +45,7 @@ private:
     void setLengthColumn(int row, int length_milliseconds);
     void setAlbumColumns(int row, const AudioLibraryAlbum* album);
 
+    QStandardItemModel _item_model;
     std::unordered_map<QString, QStandardItem*> _id_to_item_map;
     std::unordered_map<const QStandardItem*, std::unique_ptr<AudioLibraryView>> _item_to_view_map;
 

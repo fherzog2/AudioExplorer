@@ -420,7 +420,7 @@ MainWindow::MainWindow(Settings& settings)
     _model = new AudioLibraryModel(this);
 
     _list = new QListView(this);
-    _list->setModel(_model);
+    _list->setModel(_model->getModel());
     _list->setViewMode(QListView::IconMode);
     _list->setResizeMode(QListView::Adjust);
     _list->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
@@ -436,7 +436,7 @@ MainWindow::MainWindow(Settings& settings)
     _table->setSortingEnabled(true);
     _table->setWordWrap(false);
     _table->sortByColumn(AudioLibraryView::ZERO, Qt::AscendingOrder);
-    _table->setModel(_model);
+    _table->setModel(_model->getModel());
     _table->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     _table->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
     _table->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -855,11 +855,7 @@ void MainWindow::onItemDoubleClicked(const QModelIndex &index)
     if (!index.isValid())
         return;
 
-    QStandardItem* item = _model->item(index.row(), AudioLibraryView::ZERO);
-    if (!item)
-        return;
-
-    if (const AudioLibraryView* view = _model->getViewForItem(item))
+    if (const AudioLibraryView* view = _model->getViewForIndex(index))
     {
         addBreadCrumb(view->clone());
         return;
@@ -980,7 +976,7 @@ void MainWindow::onModelSelectionChanged()
 {
     QAbstractItemView* current_view = static_cast<QAbstractItemView*>(_view_stack->currentWidget());
 
-    _details->setSelection(_model, current_view, *_current_display_mode);
+    _details->setSelection(_model->getModel(), current_view, *_current_display_mode);
 }
 
 void MainWindow::saveLibrary()
@@ -1099,8 +1095,8 @@ void MainWindow::updateCurrentView()
 
         _model->deleteLater();
         _model = model;
-        _list->setModel(model);
-        _table->setModel(model);
+        _list->setModel(model->getModel());
+        _table->setModel(model->getModel());
 
         connect(_list->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onModelSelectionChanged);
         connect(_table->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onModelSelectionChanged);
@@ -1165,20 +1161,17 @@ void MainWindow::getFilepathsFromIndex(const QModelIndex& index, std::vector<QSt
     if (!index.isValid())
         return;
 
-    if (QStandardItem* item = _model->itemFromIndex(index))
+    if (const AudioLibraryView* view = _model->getViewForIndex(index))
     {
-        if (const AudioLibraryView* view = _model->getViewForItem(item))
-        {
-            ThreadSafeAudioLibrary::LibraryAccessor acc(_library);
+        ThreadSafeAudioLibrary::LibraryAccessor acc(_library);
 
-            std::vector<const AudioLibraryTrack*> tracks;
-            view->resolveToTracks(acc.getLibrary(), tracks);
+        std::vector<const AudioLibraryTrack*> tracks;
+        view->resolveToTracks(acc.getLibrary(), tracks);
 
-            for (const AudioLibraryTrack* track : tracks)
-                filepaths.push_back(track->_filepath);
+        for (const AudioLibraryTrack* track : tracks)
+            filepaths.push_back(track->_filepath);
 
-            return;
-        }
+        return;
     }
 
     QString path = _model->getFilepathFromIndex(index);
@@ -1193,25 +1186,22 @@ void MainWindow::forEachFilepathAtIndex(const QModelIndex& index, std::function<
     if (!index.isValid())
         return;
 
-    if (QStandardItem* item = _model->itemFromIndex(index))
+    if (const AudioLibraryView* view = _model->getViewForIndex(index))
     {
-        if (const AudioLibraryView* view = _model->getViewForItem(item))
-        {
-            ThreadSafeAudioLibrary::LibraryAccessor acc(_library);
+        ThreadSafeAudioLibrary::LibraryAccessor acc(_library);
 
-            std::vector<const AudioLibraryTrack*> tracks;
-            view->resolveToTracks(acc.getLibrary(), tracks);
+        std::vector<const AudioLibraryTrack*> tracks;
+        view->resolveToTracks(acc.getLibrary(), tracks);
 
-            std::sort(tracks.begin(), tracks.end(), [](const AudioLibraryTrack* a, const AudioLibraryTrack* b) {
-                return std::tie(a->_album->_key._artist, a->_album->_key._year, a->_track_number, a->_title) <
-                    std::tie(b->_album->_key._artist, b->_album->_key._year, b->_track_number, b->_title);
-            });
+        std::sort(tracks.begin(), tracks.end(), [](const AudioLibraryTrack* a, const AudioLibraryTrack* b) {
+            return std::tie(a->_album->_key._artist, a->_album->_key._year, a->_track_number, a->_title) <
+                std::tie(b->_album->_key._artist, b->_album->_key._year, b->_track_number, b->_title);
+        });
 
-            for (const AudioLibraryTrack* track : tracks)
-                callback(track->_filepath);
+        for (const AudioLibraryTrack* track : tracks)
+            callback(track->_filepath);
 
-            return;
-        }
+        return;
     }
 
     QString path = _model->getFilepathFromIndex(index);
@@ -1337,21 +1327,23 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
 
         if (rows.size() == 1)
         {
-            const QStandardItem* artist_item = _model->item(mouse_index.row(), AudioLibraryView::ARTIST);
-            const QStandardItem* album_item = _model->item(mouse_index.row(), AudioLibraryView::ALBUM);
-            const QStandardItem* year_item = _model->item(mouse_index.row(), AudioLibraryView::YEAR);
-            const QStandardItem* genre_item = _model->item(mouse_index.row(), AudioLibraryView::GENRE);
-            const QStandardItem* cover_checksum_item = _model->item(mouse_index.row(), AudioLibraryView::COVER_CHECKSUM);
+            const QVariant artist_variant = _model->getModel()->data(_model->getModel()->index(mouse_index.row(), AudioLibraryView::ARTIST));
+            const QVariant album_variant = _model->getModel()->data(_model->getModel()->index(mouse_index.row(), AudioLibraryView::ALBUM));
+            const QVariant year_variant = _model->getModel()->data(_model->getModel()->index(mouse_index.row(), AudioLibraryView::YEAR));
+            const QVariant genre_variant = _model->getModel()->data(_model->getModel()->index(mouse_index.row(), AudioLibraryView::GENRE));
+            const QVariant cover_checksum_variant = _model->getModel()->data(_model->getModel()->index(mouse_index.row(), AudioLibraryView::COVER_CHECKSUM));
+
+            const QString artist = artist_variant.toString();
 
             // show artist
 
-            if (artist_item && !artist_item->text().isEmpty())
+            if (artist_variant.isValid() && !artist.isEmpty())
             {
-                std::shared_ptr<AudioLibraryView> artist_view(new AudioLibraryViewArtist(artist_item->text()));
+                std::shared_ptr<AudioLibraryView> artist_view(new AudioLibraryViewArtist(artist));
 
                 if (!findBreadcrumbId(artist_view->getId()))
                 {
-                    QAction* artist_action = menu.addAction(QString("More from artist \"%1\"...").arg(artist_item->text()));
+                    QAction* artist_action = menu.addAction(QString("More from artist \"%1\"...").arg(artist));
 
                     auto slot = [=]() {
                         addBreadCrumb(artist_view->clone());
@@ -1366,20 +1358,22 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
             QString filepath = _model->getFilepathFromIndex(mouse_index);
 
             if (!filepath.isEmpty() &&
-                artist_item && album_item && year_item && genre_item && cover_checksum_item)
+                artist_variant.isValid() && album_variant.isValid() && year_variant.isValid() && genre_variant.isValid() && cover_checksum_variant.isValid())
             {
                 AudioLibraryAlbumKey key;
-                key._artist = artist_item->text();
+                key._artist = artist_variant.toString();
 
-                key._album = album_item->text();
+                key._album = album_variant.toString();
 
                 bool year_ok = false;
-                key._year = year_item->text().toInt(&year_ok);
+                key._year = year_variant.toInt(&year_ok);
 
-                key._genre = genre_item->text();
+                key._genre = genre_variant.toString();
 
                 bool cover_checksum_ok = false;
-                key._cover_checksum = cover_checksum_item->text().toUInt(&cover_checksum_ok);
+                key._cover_checksum = cover_checksum_variant.toUInt(&cover_checksum_ok);
+
+                key._id = key.toString();
 
                 if (year_ok && cover_checksum_ok)
                 {
@@ -1387,7 +1381,7 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
 
                     if (!findBreadcrumbId(album_view->getId()))
                     {
-                        QAction* artist_action = menu.addAction(QString("Show album \"%1\"").arg(album_item->text()));
+                        QAction* artist_action = menu.addAction(QString("Show album \"%1\"").arg(key._album));
 
                         auto slot = [=](){
                             addBreadCrumb(album_view->clone());
@@ -1407,9 +1401,11 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
                 }
             }
 
-            if(const QStandardItem * zero_item = _model->item(mouse_index.row(), AudioLibraryView::ZERO))
+            const QVariant icon_variant = _model->getModel()->data(_model->getModel()->index(mouse_index.row(), AudioLibraryView::ZERO), Qt::DecorationRole);
+
+            if(icon_variant.isValid())
             {
-                QIcon icon = zero_item->icon();
+                QIcon icon = icon_variant.value<QIcon>();
 
                 if (!icon.availableSizes().empty())
                 {
@@ -1474,7 +1470,7 @@ void MainWindow::setCurrentSelectedIndex(const QModelIndex& index)
 {
     QItemSelection selection;
 
-    const QModelIndex end = index.sibling(index.row(), _model->columnCount() - 1);
+    const QModelIndex end = index.sibling(index.row(), _model->getModel()->columnCount() - 1);
     selection.push_back(QItemSelectionRange(index, end));
 
     if (QAbstractItemView* view = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget()))
@@ -1514,7 +1510,7 @@ std::unique_ptr<ViewRestoreData> MainWindow::saveViewSettings() const
 
     if (first_index.isValid() && !multiple_rows_selected)
     {
-        const QString id = _model->getItemId(_model->itemFromIndex(first_index));
+        const QString id = _model->getItemId(first_index);
         if (!id.isEmpty())
             restore_data->_selected_item = id;
     }
@@ -1546,17 +1542,14 @@ void MainWindow::restoreViewSettings(ViewRestoreData* restore_data)
 
     if (!restore_data->_selected_item.isEmpty())
     {
-        for (int i = 0, end = _model->rowCount(); i < end; ++i)
+        for (int i = 0, end = _model->getModel()->rowCount(); i < end; ++i)
         {
-            const QModelIndex index = _model->index(i, AudioLibraryView::ZERO);
-            if (QStandardItem* item = _model->itemFromIndex(index))
+            const QModelIndex index = _model->getModel()->index(i, AudioLibraryView::ZERO);
+            const QString id = _model->getItemId(index);
+            if (id == restore_data->_selected_item)
             {
-                const QString id = _model->getItemId(item);
-                if (id == restore_data->_selected_item)
-                {
-                    setCurrentSelectedIndex(index);
-                    break;
-                }
+                setCurrentSelectedIndex(index);
+                break;
             }
         }
     }
