@@ -1542,16 +1542,8 @@ void MainWindow::restoreViewSettings(ViewRestoreData* restore_data)
 
     if (!restore_data->_selected_item.isEmpty())
     {
-        for (int i = 0, end = _model->getModel()->rowCount(); i < end; ++i)
-        {
-            const QModelIndex index = _model->getModel()->index(i, AudioLibraryView::ZERO);
-            const QString id = _model->getItemId(index);
-            if (id == restore_data->_selected_item)
-            {
-                setCurrentSelectedIndex(index);
-                break;
-            }
-        }
+        const QModelIndex index = _model->getIndexForId(restore_data->_selected_item);
+        setCurrentSelectedIndex(index);
     }
 }
 

@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-only
 #pragma once
 
-#include <QtCore/qcollator.h>
-#include <QtGui/qstandarditemmodel.h>
-
 #include "AudioLibraryView.h"
+
+class AudioLibraryModelImpl;
 
 class AudioLibraryModel : public QObject
 {
@@ -35,22 +34,18 @@ public:
 
 private:
     void addItemInternal(const QString& id, const QIcon& icon,
-        std::function<QStandardItem*(int row)> item_factory,
+        std::function<void(int row)> item_factory,
         std::function<AudioLibraryView*()> view_factory);
     void removeId(const QString& id);
     void onUpdateStarted();
     void onUpdateFinished();
-    QStandardItem* setAdditionalColumn(int row, AudioLibraryView::Column column, const QString& text);
     void setDateTimeColumn(int row, AudioLibraryView::Column column, const QDateTime& date);
     void setLengthColumn(int row, int length_milliseconds);
     void setAlbumColumns(int row, const AudioLibraryAlbum* album);
 
-    QStandardItemModel _item_model;
-    std::unordered_map<QString, QStandardItem*> _id_to_item_map;
-    std::unordered_map<const QStandardItem*, std::unique_ptr<AudioLibraryView>> _item_to_view_map;
+    AudioLibraryModelImpl* _item_model;
 
     QIcon _default_icon;
-    QCollator _numeric_collator;
 
     std::unordered_set<QString> _requested_ids;
 };

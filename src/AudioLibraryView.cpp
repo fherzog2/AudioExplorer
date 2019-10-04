@@ -230,6 +230,9 @@ QString AudioLibraryView::getColumnFriendlyName(Column column, DisplayMode mode)
         return "Bit Rate";
     case SAMPLERATE_HZ:
         return "Sample Rate";
+
+    case NUMBER_OF_COLUMNS:
+        break;
     }
 
     return QString();

@@ -37,6 +37,8 @@ public:
         CHANNELS,
         BITRATE_KBS,
         SAMPLERATE_HZ,
+
+        NUMBER_OF_COLUMNS, // helper value to create fixed-size arrays
     };
 
     enum class DisplayMode
