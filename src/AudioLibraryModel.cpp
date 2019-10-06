@@ -223,13 +223,19 @@ AudioLibraryModelImpl::Row* AudioLibraryModelImpl::createRow(const QString& id)
     if (_rows.size() + 1 > INT_MAX)
         return nullptr; // QModelIndex uses int, so we can't have more than INT_MAX rows
 
-    Row* row = new Row();
+    std::unique_ptr<Row> row(new Row());
     row->id = id;
     row->index = static_cast<int>(_rows.size());
 
-    _rows.push_back(std::unique_ptr<Row>(row));
-    _id_to_row_map[id] = row;
-    return row;
+    beginInsertRows(QModelIndex(), row->index, row->index);
+
+    Row* result = row.get();
+    _id_to_row_map[id] = result;
+    _rows.push_back(std::move(row));
+
+    endInsertRows();
+
+    return result;
 }
 
 void AudioLibraryModelImpl::removeRow(const QString& id)
@@ -237,12 +243,16 @@ void AudioLibraryModelImpl::removeRow(const QString& id)
     auto found = _id_to_row_map.find(id);
     if (found != _id_to_row_map.end())
     {
+        beginRemoveRows(QModelIndex(), found->second->index, found->second->index);
+
         _rows.erase(_rows.begin() + found->second->index);
 
         updateRowIndexes();
-    }
 
-    _id_to_row_map.erase(id);
+        _id_to_row_map.erase(found);
+
+        endRemoveRows();
+    }
 }
 
 AudioLibraryModelImpl::Row* AudioLibraryModelImpl::findRowForId(const QString& id) const
@@ -317,6 +327,9 @@ void AudioLibraryModel::addItemInternal(const QString& id, const QIcon& icon,
             !icon.isNull())
         {
             existing_row->decoration_role_data = icon;
+
+            QModelIndex index = _item_model->index(existing_row->index, AudioLibraryView::ZERO);
+            _item_model->dataChanged(index, index);
         }
 
         // already exists, nothing to do
@@ -332,7 +345,7 @@ void AudioLibraryModel::addItemInternal(const QString& id, const QIcon& icon,
     if(AudioLibraryView* view = view_factory())
         row->view.reset(view);
 
-    _item_model->dataChanged(_item_model->index(row->index, 0), _item_model->index(row->index, AudioLibraryView::NUMBER_OF_COLUMNS));
+    _item_model->dataChanged(_item_model->index(row->index, 0), _item_model->index(row->index, AudioLibraryView::NUMBER_OF_COLUMNS - 1));
 }
 
 void AudioLibraryModel::addItem(const QString& id, const QString& name, const QIcon& icon, int number_of_albums, int number_of_tracks, std::function<AudioLibraryView*()> view_factory)
