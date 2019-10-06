@@ -112,7 +112,7 @@ QString AudioLibraryAlbum::getCoverTypeInternal() const
         return "unknown signature: " + QString::fromLatin1(_cover.left(32).toHex());
     }
 
-    return QString::null;
+    return QString();
 }
 
 //=============================================================================

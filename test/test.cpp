@@ -103,11 +103,11 @@ bool testLibrarySaveAndLoad()
 {
     AudioLibrary lib;
 
-    lib.addTrack("a", QDateTime(), createTrackInfo("artist 1", QString::null, "album 1", 2000, "genre 1", QByteArray(), "title 1", 1));
-    lib.addTrack("b", QDateTime(), createTrackInfo("artist 1", QString::null, "album 1", 2000, "genre 1", QByteArray(), "title 2", 2));
-    lib.addTrack("c", QDateTime(), createTrackInfo("artist 1", QString::null, "album 1", 2000, "genre 1", QByteArray(), "title 3", 3));
+    lib.addTrack("a", QDateTime(), createTrackInfo("artist 1", QString(), "album 1", 2000, "genre 1", QByteArray(), "title 1", 1));
+    lib.addTrack("b", QDateTime(), createTrackInfo("artist 1", QString(), "album 1", 2000, "genre 1", QByteArray(), "title 2", 2));
+    lib.addTrack("c", QDateTime(), createTrackInfo("artist 1", QString(), "album 1", 2000, "genre 1", QByteArray(), "title 3", 3));
 
-    lib.addTrack("d", QDateTime(), createTrackInfo("artist 2", QString::null, "album 2", 2000, "genre 1", QByteArray(), "title 1", 1));
+    lib.addTrack("d", QDateTime(), createTrackInfo("artist 2", QString(), "album 2", 2000, "genre 1", QByteArray(), "title 1", 1));
 
     QByteArray bytes;
 
@@ -275,7 +275,7 @@ bool testThreadSafeAudioLibrary(const QString& audio_files_dir)
     ThreadSafeAudioLibrary library;
     AudioFilesLoader audio_files_loader(library);
 
-    audio_files_loader.startLoading(QString::null, { audio_files_dir });
+    audio_files_loader.startLoading(QString(), { audio_files_dir });
 
     // wait until the thread is finished
 
@@ -346,7 +346,7 @@ bool testAudioLibraryViewAllArtists()
     AudioLibrary library;
 
     for (int i = 1; i <= 10; ++i)
-        library.addTrack(QString("Artist 1 - %1").arg(i), QDateTime(), createTrackInfo("Artist 1", QString::null, "Album", 2000, "Genre 1", QByteArray(), QString::number(i), i));
+        library.addTrack(QString("Artist 1 - %1").arg(i), QDateTime(), createTrackInfo("Artist 1", QString(), "Album", 2000, "Genre 1", QByteArray(), QString::number(i), i));
 
     for (int i = 1; i <= 10; ++i)
         library.addTrack(QString("Artist 2 - %1").arg(i), QDateTime(), createTrackInfo("Artist 2", "Artist 2", "Album", 2001, "Genre 2", QByteArray(), QString::number(i), i));
@@ -358,7 +358,7 @@ bool testAudioLibraryViewAllArtists()
 
     // unfiltered view
 
-    AudioLibraryViewAllArtists all_artists_view(QString::null);
+    AudioLibraryViewAllArtists all_artists_view("");
 
     all_artists_view.createItems(library, AudioLibraryView::DisplayMode::ARTISTS, &model);
 

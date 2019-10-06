@@ -199,7 +199,7 @@ std::unique_ptr<AudioLibraryView> ViewSelector::getSelectedView() const
 
     // default to artist view if nothing is selected
 
-    return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllArtists(QString::null));
+    return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllArtists(QString()));
 }
 
 void ViewSelector::triggerDefaultView()
@@ -1435,7 +1435,7 @@ QString MainWindow::getVlcPath()
     QSettings vlc_registry("HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\VideoLAN\\VLC", QSettings::NativeFormat);
     return vlc_registry.value("Default").toString();
 #else
-    return QString::null;
+    return QString();
 #endif
 }
 

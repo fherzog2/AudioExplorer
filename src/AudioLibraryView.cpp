@@ -276,7 +276,7 @@ QString AudioLibraryView::getColumnId(Column column)
 
     // should never happen as long as columnToStringMapping() is complete
 
-    return QString::null;
+    return QString();
 }
 
 std::unique_ptr<AudioLibraryView::Column> AudioLibraryView::getColumnFromId(const QString& column_id)

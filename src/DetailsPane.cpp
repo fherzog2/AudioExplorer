@@ -134,7 +134,7 @@ const QString& ElidedLabel::text() const
 
 QSize ElidedLabel::minimumSizeHint() const
 {
-    int width_em = fontMetrics().width('M');
+    int width_em = fontMetrics().horizontalAdvance('M');
 
     QSize sh = QFrame::minimumSizeHint();
     sh.setWidth(3 * width_em);
