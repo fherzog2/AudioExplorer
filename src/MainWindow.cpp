@@ -1102,7 +1102,23 @@ void MainWindow::updateCurrentView()
         connect(_table->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onModelSelectionChanged);
     }
 
+    const int old_sort_section = _table->horizontalHeader()->sortIndicatorSection();
+    const Qt::SortOrder old_sort_order = _table->horizontalHeader()->sortIndicatorOrder();
+
     restoreViewSettings(view_settings.get());
+
+    const int new_sort_section = _table->horizontalHeader()->sortIndicatorSection();
+    const Qt::SortOrder new_sort_order = _table->horizontalHeader()->sortIndicatorOrder();
+
+    if (old_sort_section == new_sort_section &&
+        old_sort_order   == new_sort_order)
+    {
+        // restoreViewSettings only sorts the model if the sort section or order has changed
+        // but at this point, the items are not ordered in any way
+        // so sorting is needed even if the sort section and order have not changed
+
+        _model->getModel()->sort(new_sort_section, new_sort_order);
+    }
 
     onModelSelectionChanged();
 
