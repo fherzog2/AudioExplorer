@@ -711,7 +711,7 @@ void MainWindow::onFindNext()
 
             QModelIndex index = view->model()->index(row, 0);
 
-            QString item_text = view->model()->data(index, Qt::DisplayRole).toString();
+            QString item_text = index.data().toString();
 
             if (item_text.contains(search_text, Qt::CaseInsensitive))
             {
@@ -1343,11 +1343,11 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
 
         if (rows.size() == 1)
         {
-            const QVariant artist_variant = _model->getModel()->data(_model->getModel()->index(mouse_index.row(), AudioLibraryView::ARTIST));
-            const QVariant album_variant = _model->getModel()->data(_model->getModel()->index(mouse_index.row(), AudioLibraryView::ALBUM));
-            const QVariant year_variant = _model->getModel()->data(_model->getModel()->index(mouse_index.row(), AudioLibraryView::YEAR));
-            const QVariant genre_variant = _model->getModel()->data(_model->getModel()->index(mouse_index.row(), AudioLibraryView::GENRE));
-            const QVariant cover_checksum_variant = _model->getModel()->data(_model->getModel()->index(mouse_index.row(), AudioLibraryView::COVER_CHECKSUM));
+            const QVariant artist_variant         = mouse_index.sibling(mouse_index.row(), AudioLibraryView::ARTIST).data();
+            const QVariant album_variant          = mouse_index.sibling(mouse_index.row(), AudioLibraryView::ALBUM).data();
+            const QVariant year_variant           = mouse_index.sibling(mouse_index.row(), AudioLibraryView::YEAR).data();
+            const QVariant genre_variant          = mouse_index.sibling(mouse_index.row(), AudioLibraryView::GENRE).data();
+            const QVariant cover_checksum_variant = mouse_index.sibling(mouse_index.row(), AudioLibraryView::COVER_CHECKSUM).data();
 
             const QString artist = artist_variant.toString();
 
@@ -1373,33 +1373,35 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
 
             QString filepath = _model->getFilepathFromIndex(mouse_index);
 
-            if (!filepath.isEmpty() &&
-                artist_variant.isValid() && album_variant.isValid() && year_variant.isValid() && genre_variant.isValid() && cover_checksum_variant.isValid())
+            if (!filepath.isEmpty())
             {
-                AudioLibraryAlbumKey key;
-                key._artist = artist_variant.toString();
-
-                key._album = album_variant.toString();
-
-                bool year_ok = false;
-                key._year = year_variant.toInt(&year_ok);
-
-                key._genre = genre_variant.toString();
-
-                bool cover_checksum_ok = false;
-                key._cover_checksum = cover_checksum_variant.toUInt(&cover_checksum_ok);
-
-                key._id = key.toString();
-
-                if (year_ok && cover_checksum_ok)
                 {
+                    AudioLibraryAlbumKey key;
+                    key._artist = artist;
+
+                    key._album = album_variant.toString();
+
+                    bool year_ok = false;
+                    key._year = year_variant.toInt(&year_ok);
+                    if (!year_ok)
+                        key._year = 0;
+
+                    key._genre = genre_variant.toString();
+
+                    bool cover_checksum_ok = false;
+                    key._cover_checksum = cover_checksum_variant.toUInt(&cover_checksum_ok);
+                    if (!cover_checksum_ok)
+                        key._cover_checksum = 0;
+
+                    key._id = key.toString();
+
                     std::shared_ptr<AudioLibraryView> album_view(new AudioLibraryViewAlbum(key));
 
                     if (!findBreadcrumbId(album_view->getId()))
                     {
                         QAction* artist_action = menu.addAction(QString("Show album \"%1\"").arg(key._album));
 
-                        auto slot = [=](){
+                        auto slot = [=]() {
                             addBreadCrumb(album_view->clone());
                         };
 
@@ -1417,13 +1419,14 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
                 }
             }
 
-            const QVariant icon_variant = _model->getModel()->data(_model->getModel()->index(mouse_index.row(), AudioLibraryView::ZERO), Qt::DecorationRole);
+            const QVariant icon_variant = mouse_index.sibling(mouse_index.row(), AudioLibraryView::ZERO).data(Qt::DecorationRole);
 
             if(icon_variant.isValid())
             {
                 QIcon icon = icon_variant.value<QIcon>();
 
-                if (!icon.availableSizes().empty())
+                if (!_model->isDefaultIcon(icon) &&
+                    !icon.availableSizes().empty())
                 {
                     QPixmap pixmap = icon.pixmap(icon.availableSizes().front());
 

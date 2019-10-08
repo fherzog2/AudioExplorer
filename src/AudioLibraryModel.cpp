@@ -478,6 +478,11 @@ QString AudioLibraryModel::getFilepathFromIndex(const QModelIndex& index) const
     return path_column.data().toString();
 }
 
+bool AudioLibraryModel::isDefaultIcon(const QIcon& icon) const
+{
+    return icon.cacheKey() == _default_icon.cacheKey();
+}
+
 void AudioLibraryModel::removeId(const QString& id)
 {
     _item_model->removeRow(id);

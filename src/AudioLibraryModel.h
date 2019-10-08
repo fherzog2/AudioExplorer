@@ -32,6 +32,8 @@ public:
     const AudioLibraryView* getViewForIndex(const QModelIndex& index) const;
     QString getFilepathFromIndex(const QModelIndex& index) const;
 
+    bool isDefaultIcon(const QIcon& icon) const;
+
 private:
     void addItemInternal(const QString& id, const QIcon& icon,
         std::function<void(int row)> item_factory,
