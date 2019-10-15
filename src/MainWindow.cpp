@@ -1210,8 +1210,16 @@ void MainWindow::forEachFilepathAtIndex(const QModelIndex& index, std::function<
         view->resolveToTracks(acc.getLibrary(), tracks);
 
         std::sort(tracks.begin(), tracks.end(), [](const AudioLibraryTrack* a, const AudioLibraryTrack* b) {
-            return std::tie(a->_album->_key._artist, a->_album->_key._year, a->_track_number, a->_title) <
-                std::tie(b->_album->_key._artist, b->_album->_key._year, b->_track_number, b->_title);
+            if (a->_album->_key.getArtist() != b->_album->_key.getArtist())
+                return a->_album->_key.getArtist() < b->_album->_key.getArtist();
+
+            if (a->_album->_key.getYear() != b->_album->_key.getYear())
+                return a->_album->_key.getYear() < b->_album->_key.getYear();
+
+            if (a->_track_number != b->_track_number)
+                return a->_track_number < b->_track_number;
+
+            return a->_title < b->_title;
         });
 
         for (const AudioLibraryTrack* track : tracks)
@@ -1376,30 +1384,23 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
             if (!filepath.isEmpty())
             {
                 {
-                    AudioLibraryAlbumKey key;
-                    key._artist = artist;
-
-                    key._album = album_variant.toString();
-
                     bool year_ok = false;
-                    key._year = year_variant.toInt(&year_ok);
+                    int year = year_variant.toInt(&year_ok);
                     if (!year_ok)
-                        key._year = 0;
-
-                    key._genre = genre_variant.toString();
+                        year = 0;
 
                     bool cover_checksum_ok = false;
-                    key._cover_checksum = cover_checksum_variant.toUInt(&cover_checksum_ok);
+                    uint cover_checksum = cover_checksum_variant.toUInt(&cover_checksum_ok);
                     if (!cover_checksum_ok)
-                        key._cover_checksum = 0;
+                        cover_checksum = 0;
 
-                    key._id = key.toString();
+                    AudioLibraryAlbumKey key(artist, album_variant.toString(), genre_variant.toString(), year, cover_checksum);
 
                     std::shared_ptr<AudioLibraryView> album_view(new AudioLibraryViewAlbum(key));
 
                     if (!findBreadcrumbId(album_view->getId()))
                     {
-                        QAction* artist_action = menu.addAction(QString("Show album \"%1\"").arg(key._album));
+                        QAction* artist_action = menu.addAction(QString("Show album \"%1\"").arg(key.getAlbum()));
 
                         auto slot = [=]() {
                             addBreadCrumb(album_view->clone());

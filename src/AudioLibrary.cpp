@@ -4,28 +4,30 @@
 
 QDataStream& operator<<(QDataStream& s, const AudioLibraryAlbumKey& key)
 {
-    s << key._artist;
-    s << key._album;
-    s << key._genre;
-    s << qint32(key._year);
-    s << key._cover_checksum;
+    s << key.getArtist();
+    s << key.getAlbum();
+    s << key.getGenre();
+    s << qint32(key.getYear());
+    s << key.getCoverChecksum();
 
     return s;
 }
 
 QDataStream& operator>>(QDataStream& s, AudioLibraryAlbumKey& key)
 {
-    s >> key._artist;
-    s >> key._album;
-    s >> key._genre;
-
+    QString artist;
+    QString album;
+    QString genre;
     qint32 year;
+    quint16 cover_checksum;
+
+    s >> artist;
+    s >> album;
+    s >> genre;
     s >> year;
-    key._year = year;
+    s >> cover_checksum;
 
-    s >> key._cover_checksum;
-
-    key._id = key.toString();
+    key = AudioLibraryAlbumKey(artist, album, genre, year, cover_checksum);
 
     return s;
 }
@@ -58,11 +60,44 @@ QDataStream& operator >> (QDataStream& s, AudioLibraryTrack& track)
 
 //=============================================================================
 
+AudioLibraryAlbumKey::AudioLibraryAlbumKey(QString artist, QString album, QString genre, int year, quint16 cover_checksum)
+    : _artist(artist)
+    , _album(album)
+    , _genre(genre)
+    , _year(year)
+    , _cover_checksum(cover_checksum)
+{
+    _id = toString();
+}
+
+AudioLibraryAlbumKey::AudioLibraryAlbumKey(const TrackInfo& info)
+    : _artist(!info.album_artist.isEmpty() ? info.album_artist : info.artist)
+    , _album(info.album)
+    , _genre(info.genre)
+    , _year(info.year)
+    , _cover_checksum(qChecksum(info.cover.data(), info.cover.size()))
+{
+    _id = toString();
+}
+
+QString AudioLibraryAlbumKey::toString() const
+{
+    QLatin1Char sep(',');
+
+    return _artist + sep +
+        QString::number(_year) + sep +
+        _album + sep +
+        _genre + sep +
+        QString::number(_cover_checksum);
+}
+
+//=============================================================================
+
 AudioLibraryAlbum::AudioLibraryAlbum(const AudioLibraryAlbumKey& key, const QByteArray& cover)
     : _key(key)
     , _cover(cover)
 {
-    _id = QLatin1String("album(") + _key._id + QLatin1Char(')');
+    _id = QLatin1String("album(") + _key.getId() + QLatin1Char(')');
 
     _cover_type = getCoverTypeInternal();
 }

@@ -34,15 +34,15 @@ class AudioLibraryAlbumKey
 {
 public:
     AudioLibraryAlbumKey() = default;
-    AudioLibraryAlbumKey(const TrackInfo& info)
-        : _artist(!info.album_artist.isEmpty() ? info.album_artist : info.artist)
-        , _album(info.album)
-        , _genre(info.genre)
-        , _year(info.year)
-        , _cover_checksum(qChecksum(info.cover.data(), info.cover.size()))
-    {
-        _id = toString();
-    }
+    AudioLibraryAlbumKey(QString _artist, QString _album, QString _genre, int _year, quint16 _cover_checksum);
+    AudioLibraryAlbumKey(const TrackInfo& info);
+
+    const QString& getArtist() const { return _artist; }
+    const QString& getAlbum() const { return _album; }
+    const QString& getGenre() const { return _genre; }
+    int getYear() const { return _year; }
+    quint16 getCoverChecksum() const { return _cover_checksum; }
+    const QString& getId() const { return _id; }
 
     bool operator<(const AudioLibraryAlbumKey& other) const
     {
@@ -59,16 +59,8 @@ public:
         return !operator==(other);
     }
 
-    QString toString() const
-    {
-        QLatin1Char sep(',');
-
-        return _artist + sep +
-            QString::number(_year) + sep +
-            _album + sep +
-            _genre + sep +
-            QString::number(_cover_checksum);
-    }
+private:
+    QString toString() const;
 
     QString _artist;
     QString _album;
