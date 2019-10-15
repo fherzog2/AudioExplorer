@@ -32,32 +32,6 @@ QDataStream& operator>>(QDataStream& s, AudioLibraryAlbumKey& key)
     return s;
 }
 
-QDataStream& operator<<(QDataStream& s, const AudioLibraryTrack& track)
-{
-    s << track._filepath;
-    s << track._last_modified;
-    s << track._title;
-    s << qint32(track._track_number);
-    s << track._comment;
-
-    return s;
-}
-
-QDataStream& operator >> (QDataStream& s, AudioLibraryTrack& track)
-{
-    s >> track._filepath;
-    s >> track._last_modified;
-    s >> track._title;
-
-    qint32 track_number;
-    s >> track_number;
-    track._track_number = track_number;
-
-    s >> track._comment;
-
-    return s;
-}
-
 //=============================================================================
 
 AudioLibraryAlbumKey::AudioLibraryAlbumKey(QString artist, QString album, QString genre, int year, quint16 cover_checksum)
