@@ -17,7 +17,7 @@ namespace {
             break;
         case AudioLibraryView::DisplayMode::TRACKS:
         {
-            for (const AudioLibraryTrack* track : album->_tracks)
+            for (const AudioLibraryTrack* track : album->getTracks())
                 model->addTrackItem(track);
         }
         break;
@@ -38,8 +38,8 @@ namespace {
         {
             QLatin1Char sep(',');
 
-            return showcase_album->_key.getAlbum() + sep +
-                QString::number(showcase_album->_key.getCoverChecksum()) + sep +
+            return showcase_album->getKey().getAlbum() + sep +
+                QString::number(showcase_album->getKey().getCoverChecksum()) + sep +
                 QString::number(albums.size()) + sep +
                 QString::number(num_tracks) + QLatin1Char(')');
         }
@@ -55,8 +55,8 @@ namespace {
         {
             QLatin1Char sep(',');
 
-            return showcase_album->_key.getAlbum() + sep +
-                QString::number(showcase_album->_key.getCoverChecksum()) + sep +
+            return showcase_album->getKey().getAlbum() + sep +
+                QString::number(showcase_album->getKey().getCoverChecksum()) + sep +
                 QString::number(num_albums) + sep +
                 QString::number(num_tracks) + QLatin1Char(')');
         }
@@ -90,7 +90,7 @@ namespace {
         }
 
         ++group_data.num_albums;
-        group_data.num_tracks += static_cast<int>(album->_tracks.size());
+        group_data.num_tracks += static_cast<int>(album->getTracks().size());
     }
 
     //=============================================================================
@@ -430,7 +430,7 @@ void AudioLibraryViewAllArtists::createItems(const AudioLibrary& library,
 
     for (const AudioLibraryAlbum* album : library.getAlbums())
     {
-        for (const AudioLibraryTrack* track : album->_tracks)
+        for (const AudioLibraryTrack* track : album->getTracks())
         {
             // always add an item for artist, even if this field is empty
 
@@ -501,7 +501,7 @@ void AudioLibraryViewAllAlbums::createItems(const AudioLibrary& library,
 
     for (const AudioLibraryAlbum* album : library.getAlbums())
     {
-        if(filter_handler.checkText(album->_key.getAlbum()))
+        if(filter_handler.checkText(album->getKey().getAlbum()))
             model->addAlbumItem(album);
     }
 }
@@ -545,7 +545,7 @@ void AudioLibraryViewAllTracks::createItems(const AudioLibrary& library,
 
     for (const AudioLibraryAlbum* album : library.getAlbums())
     {
-        for (const AudioLibraryTrack* track : album->_tracks)
+        for (const AudioLibraryTrack* track : album->getTracks())
         {
             if(filter_handler.checkText(track->_title))
                 model->addTrackItem(track);
@@ -588,7 +588,7 @@ void AudioLibraryViewAllYears::createItems(const AudioLibrary& library,
 
     for (const AudioLibraryAlbum* album : library.getAlbums())
     {
-        addAlbumToGroup(album->_key.getYear(), album, displayed_groups);
+        addAlbumToGroup(album->getKey().getYear(), album, displayed_groups);
     }
 
     for (const auto& group : displayed_groups)
@@ -650,9 +650,9 @@ void AudioLibraryViewAllGenres::createItems(const AudioLibrary& library,
 
         for (const AudioLibraryAlbum* album : library.getAlbums())
         {
-            if (filter_handler.checkText(album->_key.getGenre()))
+            if (filter_handler.checkText(album->getKey().getGenre()))
             {
-                addAlbumToGroup(album->_key.getGenre(), album, displayed_groups);
+                addAlbumToGroup(album->getKey().getGenre(), album, displayed_groups);
             }
         }
 
@@ -671,7 +671,7 @@ void AudioLibraryViewAllGenres::createItems(const AudioLibrary& library,
     {
         for (const AudioLibraryAlbum* album : library.getAlbums())
         {
-            if (filter_handler.checkText(album->_key.getGenre()))
+            if (filter_handler.checkText(album->getKey().getGenre()))
             {
                 model->addAlbumItem(album);
             }
@@ -717,7 +717,7 @@ void AudioLibraryViewArtist::createItems(const AudioLibrary& library,
 {
     for (const AudioLibraryAlbum* album : library.getAlbums())
     {
-        for (const AudioLibraryTrack* track : album->_tracks)
+        for (const AudioLibraryTrack* track : album->getTracks())
         {
             bool album_row_created = false;
 
@@ -750,7 +750,7 @@ void AudioLibraryViewArtist::resolveToTracks(const AudioLibrary& library, std::v
 {
     for (const AudioLibraryAlbum* album : library.getAlbums())
     {
-        for (const AudioLibraryTrack* track : album->_tracks)
+        for (const AudioLibraryTrack* track : album->getTracks())
         {
             if (track->_artist == _artist ||
                 (!track->_album_artist.isEmpty() && track->_album_artist == _artist))
@@ -794,7 +794,7 @@ void AudioLibraryViewAlbum::createItems(const AudioLibrary& library,
 {
     if (const AudioLibraryAlbum* album = library.getAlbum(_key))
     {
-        for (const AudioLibraryTrack* track : album->_tracks)
+        for (const AudioLibraryTrack* track : album->getTracks())
         {
             model->addTrackItem(track);
         }
@@ -805,9 +805,9 @@ void AudioLibraryViewAlbum::resolveToTracks(const AudioLibrary& library, std::ve
 {
     for (const AudioLibraryAlbum* album : library.getAlbums())
     {
-        if (album->_key == _key)
+        if (album->getKey() == _key)
         {
-            tracks.insert(tracks.end(), album->_tracks.begin(), album->_tracks.end());
+            tracks.insert(tracks.end(), album->getTracks().begin(), album->getTracks().end());
         }
     }
 }
@@ -845,7 +845,7 @@ void AudioLibraryViewYear::createItems(const AudioLibrary& library,
 {
     for (const AudioLibraryAlbum* album : library.getAlbums())
     {
-        if (album->_key.getYear() == _year)
+        if (album->getKey().getYear() == _year)
         {
             createAlbumOrTrackRow(album, display_mode, model);
         }
@@ -856,9 +856,9 @@ void AudioLibraryViewYear::resolveToTracks(const AudioLibrary& library, std::vec
 {
     for (const AudioLibraryAlbum* album : library.getAlbums())
     {
-        if (album->_key.getYear() == _year)
+        if (album->getKey().getYear() == _year)
         {
-            tracks.insert(tracks.end(), album->_tracks.begin(), album->_tracks.end());
+            tracks.insert(tracks.end(), album->getTracks().begin(), album->getTracks().end());
         }
     }
 }
@@ -896,7 +896,7 @@ void AudioLibraryViewGenre::createItems(const AudioLibrary& library,
 {
     for (const AudioLibraryAlbum* album : library.getAlbums())
     {
-        if (album->_key.getGenre() == _genre)
+        if (album->getKey().getGenre() == _genre)
         {
             createAlbumOrTrackRow(album, display_mode, model);
         }
@@ -907,9 +907,9 @@ void AudioLibraryViewGenre::resolveToTracks(const AudioLibrary& library, std::ve
 {
     for (const AudioLibraryAlbum* album : library.getAlbums())
     {
-        if (album->_key.getGenre() == _genre)
+        if (album->getKey().getGenre() == _genre)
         {
-            tracks.insert(tracks.end(), album->_tracks.begin(), album->_tracks.end());
+            tracks.insert(tracks.end(), album->getTracks().begin(), album->getTracks().end());
         }
     }
 }
@@ -940,8 +940,8 @@ namespace {
     struct DuplicateAlbumKey
     {
         DuplicateAlbumKey(const AudioLibraryAlbum* album)
-            : _artist(album->_key.getArtist())
-            , _album(album->_key.getAlbum())
+            : _artist(album->getKey().getArtist())
+            , _album(album->getKey().getAlbum())
         {}
 
         bool operator<(const DuplicateAlbumKey& other) const

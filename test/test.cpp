@@ -65,19 +65,19 @@ bool compareLibraries(const AudioLibrary& a, const AudioLibrary& b)
         const auto album_a = albums_a[i];
         const auto album_b = albums_b[i];
 
-        if (album_a->_key != album_b->_key)
+        if (album_a->getKey() != album_b->getKey())
             return false;
 
-        if (album_a->_cover != album_b->_cover)
+        if (album_a->getCover() != album_b->getCover())
             return false;
 
-        if (album_a->_tracks.size() != album_b->_tracks.size())
+        if (album_a->getTracks().size() != album_b->getTracks().size())
             return false;
 
-        auto tracks_a = album_a->_tracks;
-        auto tracks_b = album_b->_tracks;
+        auto tracks_a = album_a->getTracks();
+        auto tracks_b = album_b->getTracks();
 
-        auto compare_tracks = [](AudioLibraryTrack* a, AudioLibraryTrack* b) {
+        auto compare_tracks = [](const AudioLibraryTrack* a, const AudioLibraryTrack* b) {
             return a->_filepath < b->_filepath;
         };
 
@@ -86,7 +86,7 @@ bool compareLibraries(const AudioLibrary& a, const AudioLibrary& b)
         std::sort(tracks_a.begin(), tracks_a.end(), compare_tracks);
         std::sort(tracks_b.begin(), tracks_b.end(), compare_tracks);
 
-        for (size_t j = 0, endj = album_a->_tracks.size(); j < endj; ++j)
+        for (size_t j = 0, endj = album_a->getTracks().size(); j < endj; ++j)
         {
             const auto track_a = tracks_a[j];
             const auto track_b = tracks_b[j];

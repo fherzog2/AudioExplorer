@@ -76,6 +76,9 @@ class AudioLibraryAlbum
 public:
     AudioLibraryAlbum(const AudioLibraryAlbumKey& key, const QByteArray& cover);
 
+    const AudioLibraryAlbumKey& getKey() const { return _key; }
+    const QByteArray& getCover() const { return _cover; }
+
     const QString& getId() const { return _id; }
 
     const QString& getCoverType() const { return _cover_type; }
@@ -84,13 +87,17 @@ public:
     void setCoverPixmap(const QPixmap& pixmap);
     bool isCoverPixmapSet() const;
 
-    AudioLibraryAlbumKey _key;
-    QByteArray _cover;
-
-    std::vector<AudioLibraryTrack*> _tracks;
+    void addTrack(const AudioLibraryTrack* track);
+    void removeTrack(const AudioLibraryTrack* track);
+    const std::vector<const AudioLibraryTrack*>& getTracks() const { return _tracks; }
 
 private:
     QString getCoverTypeInternal() const;
+
+    AudioLibraryAlbumKey _key;
+    QByteArray _cover;
+
+    std::vector<const AudioLibraryTrack*> _tracks;
 
     QString _id;
 
@@ -152,8 +159,8 @@ public:
 
     std::tuple<AudioLibraryAlbumKey, QByteArray, QString, QString, QString, QDateTime, QString, int, int, QString, QString, int, int, int, int> getMembersAsTuple() const
     {
-        return std::tie(_album->_key,
-            _album->_cover,
+        return std::tie(_album->getKey(),
+            _album->getCover(),
             _artist,
             _album_artist,
             _filepath,
@@ -209,7 +216,6 @@ public:
     void removeTracksWithInvalidPaths();
 
     std::vector<AudioLibraryAlbum*> getAlbums() const;
-    void forEachAlbum(const std::function<void(AudioLibraryAlbum* album)>& func) const;
     AudioLibraryAlbum* getAlbum(const AudioLibraryAlbumKey& key) const;
     size_t getNumberOfTracks() const;
 

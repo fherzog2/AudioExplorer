@@ -285,9 +285,9 @@ void AudioFilesLoader::threadDecodeCovers()
                 if (_thread_abort_flag)
                     return;
 
-                if (!album->_cover.isEmpty() && !album->isCoverPixmapSet())
+                if (!album->getCover().isEmpty() && !album->isCoverPixmapSet())
                 {
-                    covers_to_load[album->_key].first = album->_cover;
+                    covers_to_load[album->getKey()].first = album->getCover();
                 }
 
                 if (covers_to_load.size() >= 100)

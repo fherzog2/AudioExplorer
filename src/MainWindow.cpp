@@ -1210,11 +1210,11 @@ void MainWindow::forEachFilepathAtIndex(const QModelIndex& index, std::function<
         view->resolveToTracks(acc.getLibrary(), tracks);
 
         std::sort(tracks.begin(), tracks.end(), [](const AudioLibraryTrack* a, const AudioLibraryTrack* b) {
-            if (a->_album->_key.getArtist() != b->_album->_key.getArtist())
-                return a->_album->_key.getArtist() < b->_album->_key.getArtist();
+            if (a->_album->getKey().getArtist() != b->_album->getKey().getArtist())
+                return a->_album->getKey().getArtist() < b->_album->getKey().getArtist();
 
-            if (a->_album->_key.getYear() != b->_album->_key.getYear())
-                return a->_album->_key.getYear() < b->_album->_key.getYear();
+            if (a->_album->getKey().getYear() != b->_album->getKey().getYear())
+                return a->_album->getKey().getYear() < b->_album->getKey().getYear();
 
             if (a->_track_number != b->_track_number)
                 return a->_track_number < b->_track_number;

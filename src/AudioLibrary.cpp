@@ -92,6 +92,17 @@ bool AudioLibraryAlbum::isCoverPixmapSet() const
     return _is_cover_pixmap_set;
 }
 
+void AudioLibraryAlbum::addTrack(const AudioLibraryTrack* track)
+{
+    _tracks.push_back(track);
+}
+
+void AudioLibraryAlbum::removeTrack(const AudioLibraryTrack* track)
+{
+    auto new_end = std::remove(_tracks.begin(), _tracks.end(), track);
+    _tracks.erase(new_end, _tracks.end());
+}
+
 template<class ARRAY>
 bool compareSignature(const ARRAY& signature, const QByteArray& bytes)
 {
@@ -164,14 +175,11 @@ void AudioLibrary::addTrack(const QString& filepath, const QDateTime& last_modif
 void AudioLibrary::removeTrack(AudioLibraryTrack* track)
 {
     {
-        auto& tracks = track->_album->_tracks;
+        track->_album->removeTrack(track);
 
-        auto new_end = std::remove(tracks.begin(), tracks.end(), track);
-        tracks.erase(new_end, tracks.end());
-
-        if(tracks.empty())
+        if(track->_album->getTracks().empty())
         {
-            _album_map.erase(track->_album->_key);
+            _album_map.erase(track->_album->getKey());
             track->_album = nullptr;
         }
 
@@ -199,34 +207,14 @@ void AudioLibrary::removeTracksWithInvalidPaths()
     }
 }
 
-template<class CONDITION>
-std::vector<AudioLibraryAlbum*> getAlbumsIf(const std::map<AudioLibraryAlbumKey, std::unique_ptr<AudioLibraryAlbum>>& album_map,
-                                            CONDITION condition)
+std::vector<AudioLibraryAlbum*> AudioLibrary::getAlbums() const
 {
     std::vector<AudioLibraryAlbum*> result;
 
-    for(const auto& album : album_map)
-    {
-        if(condition(album.second.get()))
-        {
-            result.push_back(album.second.get());
-        }
-    }
+    for (const auto& album : _album_map)
+        result.push_back(album.second.get());
 
     return result;
-}
-
-std::vector<AudioLibraryAlbum*> AudioLibrary::getAlbums() const
-{
-    return getAlbumsIf(_album_map, [](AudioLibraryAlbum* /*album*/){
-        return true;
-    });
-}
-
-void AudioLibrary::forEachAlbum(const std::function<void(AudioLibraryAlbum* album)>& func) const
-{
-    for (const auto& album : _album_map)
-        func(album.second.get());
 }
 
 AudioLibraryAlbum* AudioLibrary::getAlbum(const AudioLibraryAlbumKey& key) const
@@ -275,12 +263,12 @@ void AudioLibrary::save(QDataStream& s) const
 
     for (const auto& i : _album_map)
     {
-        s << i.second->_key;
-        s << i.second->_cover;
+        s << i.second->getKey();
+        s << i.second->getCover();
 
-        s << quint64(i.second->_tracks.size());
+        s << quint64(i.second->getTracks().size());
 
-        for(const AudioLibraryTrack* track : i.second->_tracks)
+        for(const AudioLibraryTrack* track : i.second->getTracks())
         {
             s << track->_filepath;
             s << track->_last_modified;
@@ -415,7 +403,7 @@ AudioLibraryTrack* AudioLibrary::addTrack(AudioLibraryAlbum* album,
 
     it = _filepath_to_track_map.insert(make_pair(filepath, std::unique_ptr<AudioLibraryTrack>(new AudioLibraryTrack(album,
         filepath, last_modified, artist, album_artist, title, track_number, disc_number, comment, tag_types, length_milliseconds, channels, bitrate_kbs, samplerate_hz)))).first;
-    album->_tracks.push_back(it->second.get());
+    album->addTrack(it->second.get());
 
     return it->second.get();
 }
