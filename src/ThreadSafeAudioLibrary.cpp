@@ -142,11 +142,11 @@ void AudioFilesLoader::startLoading(const QString& cache_location, const QString
     _thread_abort_flag = false;
     _is_loading = true;
 
-    _audio_file_loading_thread = std::thread([=](){
+    _audio_file_loading_thread = std::thread([this, cache_location, audio_dir_paths](){
         threadLoadAudioFiles(cache_location, audio_dir_paths);
     });
 
-    _cover_decoding_thread = std::thread([=](){
+    _cover_decoding_thread = std::thread([this](){
         threadDecodeCovers();
     });
 }
@@ -219,7 +219,7 @@ void AudioFilesLoader::threadLoadAudioFiles(const QString& cache_location, const
 
     for (const QString& dirpath : audio_dir_paths)
     {
-        forEachFileInDirectory(dirpath, [=, &files_loaded, &files_in_cache, &visited_audio_files](const QFileInfo& file) {
+        forEachFileInDirectory(dirpath, [this, &files_loaded, &files_in_cache, &visited_audio_files](const QFileInfo& file) {
             if (_thread_abort_flag)
                 return false; // stop iteration
 

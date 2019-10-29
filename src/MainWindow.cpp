@@ -403,11 +403,11 @@ MainWindow::MainWindow(Settings& settings)
     view_selector_popup_button->setIcon(iconFromResource(res::VIEW_MENU_SVG()));
     view_selector_popup_button->setIconSize(QSize(24, 24));
 
-    connect(&_view_selector, &ViewSelector::selectionChanged, this, [=]() {
+    connect(&_view_selector, &ViewSelector::selectionChanged, this, [this]() {
         setBreadCrumb(_view_selector.getSelectedView());
     });
 
-    connect(view_selector_popup_button, &QToolButton::clicked, this, [=](){
+    connect(view_selector_popup_button, &QToolButton::clicked, this, [this, view_selector_popup_button](){
         QPoint pos = view_selector_popup_button->mapToGlobal(view_selector_popup_button->rect().bottomLeft());
 
         _view_selector.move(pos);
@@ -906,7 +906,7 @@ void MainWindow::onTableHeaderContextMenu(const QPoint& pos)
     if (clicked_index != -1 && clicked_index != AudioLibraryView::ZERO)
     {
         QAction* action = menu.addAction("Hide");
-        connect(action, &QAction::triggered, [=](){
+        connect(action, &QAction::triggered, [this, clicked_index](){
             _table->setColumnHidden(clicked_index, true);
 
             _hidden_columns.insert(static_cast<AudioLibraryView::Column>(clicked_index));
@@ -941,7 +941,7 @@ void MainWindow::onTableHeaderContextMenu(const QPoint& pos)
         QAction* action = menu.addAction(name);
         action->setCheckable(true);
         action->setChecked(!column_hidden);
-        connect(action, &QAction::triggered, [=]() {
+        connect(action, &QAction::triggered, [this, column, column_hidden, pos]() {
             _table->setColumnHidden(column, !column_hidden);
 
             if (column_hidden)
@@ -1016,7 +1016,7 @@ void MainWindow::updateCurrentView()
 
     if (supported_modes.size() > 1)
     {
-        auto found_selected_display_mode = std::find_if(_selected_display_modes.begin(), _selected_display_modes.end(), [=](const std::pair<std::vector<AudioLibraryView::DisplayMode>, AudioLibraryView::DisplayMode>& i) {
+        auto found_selected_display_mode = std::find_if(_selected_display_modes.begin(), _selected_display_modes.end(), [supported_modes](const std::pair<std::vector<AudioLibraryView::DisplayMode>, AudioLibraryView::DisplayMode>& i) {
             return i.first == supported_modes;
         });
 
@@ -1265,7 +1265,7 @@ void MainWindow::updateAfterHistoryChange()
     {
         // restore uses a timer because the list view is updating asynchronously
 
-        QTimer::singleShot(1, this, [=]() {
+        QTimer::singleShot(1, this, [this, restore_data]() {
             restoreViewSettings(restore_data.get());
             });
     }
@@ -1338,13 +1338,13 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
 
             QAction* add_to_vlc_action = menu.addAction("Add to VLC Playlist");
 
-            connect(add_to_vlc_action, &QAction::triggered, this, [=]() {
+            connect(add_to_vlc_action, &QAction::triggered, this, [this, selected_row_indexes]() {
                 startVlc(selected_row_indexes, true);
             });
 
             QAction* play_with_vlc_action = menu.addAction("Play with VLC");
 
-            connect(play_with_vlc_action, &QAction::triggered, this, [=]() {
+            connect(play_with_vlc_action, &QAction::triggered, this, [this, selected_row_indexes]() {
                 startVlc(selected_row_indexes, false);
             });
         }
@@ -1369,7 +1369,7 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
                 {
                     QAction* artist_action = menu.addAction(QString("More from artist \"%1\"...").arg(artist));
 
-                    auto slot = [=]() {
+                    auto slot = [this, artist_view]() {
                         addBreadCrumb(artist_view->clone());
                     };
 
@@ -1402,7 +1402,7 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
                     {
                         QAction* artist_action = menu.addAction(QString("Show album \"%1\"").arg(key.getAlbum()));
 
-                        auto slot = [=]() {
+                        auto slot = [this, album_view]() {
                             addBreadCrumb(album_view->clone());
                         };
 
@@ -1433,7 +1433,7 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
 
                     QAction* action = menu.addAction("View coverart");
 
-                    auto slot = [=]() {
+                    auto slot = [this, pixmap]() {
                         ImageViewWindow* image_view = new ImageViewWindow(_settings);
                         image_view->setPixmap(pixmap);
                         image_view->show();

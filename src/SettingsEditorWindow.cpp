@@ -65,7 +65,7 @@ SettingsWidgetDirPaths::SettingsWidgetDirPaths(QWidget* parent, SettingsItem<QSt
 
         QMenu menu;
         QAction* delete_action = menu.addAction("Delete");
-        QObject::connect(delete_action, &QAction::triggered, [=](){
+        QObject::connect(delete_action, &QAction::triggered, [this](){
             deleteSelectedRows();
         });
         menu.exec(_list->mapToGlobal(pos));
@@ -73,7 +73,7 @@ SettingsWidgetDirPaths::SettingsWidgetDirPaths(QWidget* parent, SettingsItem<QSt
 
     auto delete_shortcut = new QShortcut(Qt::Key_Delete, _list);
     delete_shortcut->setContext(Qt::WidgetShortcut);
-    QObject::connect(delete_shortcut, &QShortcut::activated, [=](){
+    QObject::connect(delete_shortcut, &QShortcut::activated, [this](){
         deleteSelectedRows();
     });
 

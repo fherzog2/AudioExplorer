@@ -350,7 +350,7 @@ void AudioLibraryModel::addItemInternal(const QString& id, const QIcon& icon,
 
 void AudioLibraryModel::addItem(const QString& id, const QString& name, const QIcon& icon, int number_of_albums, int number_of_tracks, std::function<AudioLibraryView*()> view_factory)
 {
-    auto item_factory = [=](int row) {
+    auto item_factory = [this, name, icon, number_of_albums, number_of_tracks](int row) {
 
         _item_model->setData(row, AudioLibraryView::ZERO, name);
         _item_model->setData(row, AudioLibraryView::ZERO, icon.isNull() ? _default_icon : icon, Qt::DecorationRole);
@@ -367,7 +367,7 @@ void AudioLibraryModel::addAlbumItem(const AudioLibraryAlbum* album)
     QString id = album->getId();
     QIcon icon = album->getCoverPixmap().isNull() ? _default_icon : album->getCoverPixmap();
 
-    auto item_factory = [=](int row) {
+    auto item_factory = [this, album, icon](int row) {
 
         QLatin1Char sep(' ');
 
@@ -391,7 +391,7 @@ void AudioLibraryModel::addAlbumItem(const AudioLibraryAlbum* album)
         setLengthColumn(row, length_milliseconds);
     };
 
-    addItemInternal(id, icon, item_factory, [=](){
+    addItemInternal(id, icon, item_factory, [this, album](){
         return new AudioLibraryViewAlbum(album->getKey());
     });
 }
@@ -401,7 +401,7 @@ void AudioLibraryModel::addTrackItem(const AudioLibraryTrack* track)
     QString id = track->getId();
     QIcon icon = track->_album->getCoverPixmap().isNull() ? _default_icon : track->_album->getCoverPixmap();
 
-    auto item_factory = [=](int row) {
+    auto item_factory = [this, track, icon](int row) {
 
         QLatin1Char sep(' ');
 
