@@ -51,11 +51,6 @@ void ImageView::paintEvent(QPaintEvent* /*event*/)
     p.drawPixmap(target_rect, _pixmap, source_rect);
 }
 
-void ImageView::resizeEvent(QResizeEvent* /*event*/)
-{
-    tryEnableSnapToBordersMode();
-}
-
 void ImageView::mouseMoveEvent(QMouseEvent* event)
 {
     if (_mouse_press_pos_valid)
@@ -89,34 +84,40 @@ void ImageView::wheelEvent(QWheelEvent* event)
     image_mouse_pos.rx() = qBound(0.0, image_mouse_pos.rx(), double(_pixmap.width()));
     image_mouse_pos.ry() = qBound(0.0, image_mouse_pos.ry(), double(_pixmap.height()));
 
-    if (_snap_to_borders)
-    {
-        // init scale factor
-
-        double tx;
-        double ty;
-        getImageToViewportTransformation(_scale_factor, tx, ty);
-        _offset = QPointF(-tx, -ty);
-        _snap_to_borders = false;
-    }
-
     // adjust scale factor
 
     if (event->angleDelta().y() > 0)
     {
+        if (_snap_to_borders)
+        {
+            // enter scaled mode
+            // init _scale_factor and _offset
+
+            double tx;
+            double ty;
+            getImageToViewportTransformation(_scale_factor, tx, ty);
+            _offset = QPointF(-tx, -ty);
+            _snap_to_borders = false;
+        }
+
         if (_scale_factor * ZOOM_IN_STEP > MAX_ZOOM)
             return;
         
         _scale_factor *= ZOOM_IN_STEP;
     }
-    else if (event->angleDelta().y() < 0)
+    else if (event->angleDelta().y() < 0 && !_snap_to_borders)
     {
         _scale_factor *= ZOOM_OUT_STEP;
+
+        double min_scale_factor = getMinScaleFactor();
+        if (_scale_factor < min_scale_factor)
+        {
+            // enter snap mode
+
+            _scale_factor = min_scale_factor;
+            _snap_to_borders = true;
+        }
     }
-
-    // reset to snap to borders mode if necessary
-
-    tryEnableSnapToBordersMode();
 
     // move the scrollbars so the same image point is under the mouse again
 
@@ -157,24 +158,6 @@ QPointF ImageView::viewportPointToImagePoint(const QPoint& viewport_point) const
     return (viewport_point - QPointF(tx, ty)) / scaling;
 }
 
-void ImageView::tryEnableSnapToBordersMode()
-{
-    if (_snap_to_borders)
-        return;
-
-    const QSizeF image_size = _pixmap.size();
-    const QSizeF viewport_size = size();
-
-    const double width_ratio = image_size.width() / viewport_size.width();
-    const double height_ratio = image_size.height() / viewport_size.height();
-
-    double snap_to_border_threshold = 1.0 / qMax(width_ratio, height_ratio);
-    if (_scale_factor < snap_to_border_threshold)
-    {
-        _snap_to_borders = true;
-    }
-}
-
 void ImageView::getImageToViewportTransformation(double& scaling, double& tx, double& ty) const
 {
     const QSizeF image_size = _pixmap.size();
@@ -182,10 +165,7 @@ void ImageView::getImageToViewportTransformation(double& scaling, double& tx, do
 
     if (_snap_to_borders)
     {
-        const double width_ratio = image_size.width() / viewport_size.width();
-        const double height_ratio = image_size.height() / viewport_size.height();
-
-        scaling = 1.0 / qMax(width_ratio, height_ratio);
+        scaling = getMinScaleFactor();
     }
     else
     {
@@ -210,6 +190,29 @@ void ImageView::getImageToViewportTransformation(double& scaling, double& tx, do
     else
     {
         ty = viewport_size.height() / 2.0 - scaled_image_size.height() / 2.0;
+    }
+}
+
+double ImageView::getMinScaleFactor() const
+{
+    const QSizeF image_size = _pixmap.size();
+    const QSizeF viewport_size = size();
+
+    if (image_size.width() > viewport_size.width() ||
+        image_size.height() > viewport_size.height())
+    {
+        // fit image into the viewport
+
+        const double width_ratio = image_size.width() / viewport_size.width();
+        const double height_ratio = image_size.height() / viewport_size.height();
+
+        return 1.0 / qMax(width_ratio, height_ratio);
+    }
+    else
+    {
+        // original size
+
+        return 1;
     }
 }
 

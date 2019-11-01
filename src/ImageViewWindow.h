@@ -15,7 +15,6 @@ public:
 
 protected:
     virtual void paintEvent(QPaintEvent* event) override;
-    virtual void resizeEvent(QResizeEvent* event) override;
     virtual void mouseMoveEvent(QMouseEvent* event) override;
     virtual void mousePressEvent(QMouseEvent* event) override;
     virtual void mouseReleaseEvent(QMouseEvent* event) override;
@@ -25,10 +24,15 @@ private:
     void setOffset(const QPointF& offset);
     QPointF imagePointToViewportPoint(const QPointF& image_point) const;
     QPointF viewportPointToImagePoint(const QPoint& viewport_point) const;
-    void tryEnableSnapToBordersMode();
     void getImageToViewportTransformation(double& scaling, double& tx, double& ty) const;
+    double getMinScaleFactor() const;
 
     QPixmap _pixmap;
+
+    /**
+    * if true, the image will be shown in the original size, if possible, or shrinked to fit into the viewport.
+    * otherwise, the image will be scaled by the user defined _scale_factor and moved by _offset
+    */
     bool _snap_to_borders = true;
     double _scale_factor = 1;
     QPointF _offset;
