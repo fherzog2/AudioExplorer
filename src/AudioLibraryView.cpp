@@ -184,6 +184,7 @@ QString AudioLibraryView::getColumnFriendlyName(Column column, DisplayMode mode)
         case DisplayMode::TRACKS:
             return "Name";
         }
+        break;
     case NUMBER_OF_ALBUMS:
         return "Number of albums";
     case ARTIST:

@@ -160,7 +160,6 @@ QPointF ImageView::viewportPointToImagePoint(const QPoint& viewport_point) const
 
 void ImageView::getImageToViewportTransformation(double& scaling, double& tx, double& ty) const
 {
-    const QSizeF image_size = _pixmap.size();
     const QSizeF viewport_size = size();
 
     if (_snap_to_borders)
