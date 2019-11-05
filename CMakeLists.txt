@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.0)
 project(AudioExplorer)
 
 option(ENABLE_STATIC_RUNTIME "Use static runtime library" OFF)
+option(SANITIZE_ADDRESS "Add address sanitizer flags" OFF)
 
 find_path(TAGLIB_INCLUDE_DIR
   NAMES taglib/tag.h
@@ -88,6 +89,11 @@ target_compile_definitions(AudioExplorer PRIVATE TAGLIB_STATIC)
 set_property(TARGET AudioExplorer PROPERTY CXX_STANDARD 11)
 set_property(TARGET AudioExplorer PROPERTY AUTOMOC ON)
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND SANITIZE_ADDRESS)
+    target_compile_options(AudioExplorer PRIVATE -fno-omit-frame-pointer -fsanitize=address)
+    target_link_options(AudioExplorer PRIVATE -fno-omit-frame-pointer -fsanitize=address)
+endif()
+
 if(MSVC)
   target_compile_options(AudioExplorer PRIVATE /W4 /WX)
 else(MSVC)
@@ -121,6 +127,11 @@ target_compile_definitions(test1 PRIVATE TAGLIB_STATIC)
 set_property(TARGET test1 PROPERTY CXX_STANDARD 11)
 set_property(TARGET test1 PROPERTY AUTOMOC ON)
 target_include_directories(test1 PRIVATE "src")
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND SANITIZE_ADDRESS)
+    target_compile_options(test1 PRIVATE -fno-omit-frame-pointer -fsanitize=address)
+    target_link_options(test1 PRIVATE -fno-omit-frame-pointer -fsanitize=address)
+endif()
 
 if(MSVC)
   target_compile_options(test1 PRIVATE /W4 /WX)
