@@ -361,13 +361,14 @@ bool testAudioLibraryViewAllArtists()
     AudioLibraryViewAllArtists all_artists_view("");
 
     all_artists_view.createItems(library, AudioLibraryView::DisplayMode::ARTISTS, &model);
+    model.getModel()->sort(AudioLibraryView::ZERO);
 
     QStandardItemModel expected_artists(nullptr);
 
     addModelRow(expected_artists, { {AudioLibraryView::ZERO, "Artist 1"}, {AudioLibraryView::NUMBER_OF_ALBUMS, "2"}, {AudioLibraryView::NUMBER_OF_TRACKS, "11"} });
     addModelRow(expected_artists, { {AudioLibraryView::ZERO, "Artist 2"}, {AudioLibraryView::NUMBER_OF_ALBUMS, "1"}, {AudioLibraryView::NUMBER_OF_TRACKS, "10"} });
-    addModelRow(expected_artists, { {AudioLibraryView::ZERO, "Various Artists"}, {AudioLibraryView::NUMBER_OF_ALBUMS, "1"}, {AudioLibraryView::NUMBER_OF_TRACKS, "2"} });
     addModelRow(expected_artists, { {AudioLibraryView::ZERO, "Artist 3"}, {AudioLibraryView::NUMBER_OF_ALBUMS, "1"}, {AudioLibraryView::NUMBER_OF_TRACKS, "1"} });
+    addModelRow(expected_artists, { {AudioLibraryView::ZERO, "Various Artists"}, {AudioLibraryView::NUMBER_OF_ALBUMS, "1"}, {AudioLibraryView::NUMBER_OF_TRACKS, "2"} });
 
     RETURN_IF_FAILED(compareModels(model, expected_artists));
 
