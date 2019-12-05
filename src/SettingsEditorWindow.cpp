@@ -113,7 +113,6 @@ void SettingsWidgetDirPaths::deleteSelectedRows() const
 
 FirstStartDialog::FirstStartDialog(QWidget* parent, Settings& settings)
     : QDialog(parent)
-    , _settings(settings)
 {
     auto layout = new QVBoxLayout(this);
 

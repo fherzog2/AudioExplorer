@@ -12,7 +12,7 @@ public:
 
     virtual int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     virtual int columnCount(const QModelIndex& parent = QModelIndex()) const override;
-    void setData(int row, AudioLibraryView::Column column, const QVariant& data, int role = Qt::DisplayRole);
+    void setDataInternal(int row, AudioLibraryView::Column column, const QVariant& data, int role = Qt::DisplayRole);
     virtual QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
     virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
     virtual void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
@@ -65,7 +65,7 @@ int AudioLibraryModelImpl::columnCount(const QModelIndex& /*parent*/) const
     return AudioLibraryView::NUMBER_OF_COLUMNS;
 }
 
-void AudioLibraryModelImpl::setData(int row, AudioLibraryView::Column column, const QVariant& data, int role)
+void AudioLibraryModelImpl::setDataInternal(int row, AudioLibraryView::Column column, const QVariant& data, int role)
 {
     if (row >= 0 &&
         row < static_cast<int>(_rows.size()))
@@ -352,11 +352,11 @@ void AudioLibraryModel::addItem(const QString& id, const QString& name, const QI
 {
     auto item_factory = [this, name, icon, number_of_albums, number_of_tracks](int row) {
 
-        _item_model->setData(row, AudioLibraryView::ZERO, name);
-        _item_model->setData(row, AudioLibraryView::ZERO, icon.isNull() ? _default_icon : icon, Qt::DecorationRole);
+        _item_model->setDataInternal(row, AudioLibraryView::ZERO, name);
+        _item_model->setDataInternal(row, AudioLibraryView::ZERO, icon.isNull() ? _default_icon : icon, Qt::DecorationRole);
 
-        _item_model->setData(row, AudioLibraryView::NUMBER_OF_ALBUMS, QString::number(number_of_albums));
-        _item_model->setData(row, AudioLibraryView::NUMBER_OF_TRACKS, QString::number(number_of_tracks));
+        _item_model->setDataInternal(row, AudioLibraryView::NUMBER_OF_ALBUMS, QString::number(number_of_albums));
+        _item_model->setDataInternal(row, AudioLibraryView::NUMBER_OF_TRACKS, QString::number(number_of_tracks));
     };
 
     addItemInternal(id, icon, item_factory, view_factory);
@@ -375,14 +375,14 @@ void AudioLibraryModel::addAlbumItem(const AudioLibraryAlbum* album)
             QString::number(album->getKey().getYear()) + sep +
             album->getKey().getAlbum();
 
-        _item_model->setData(row, AudioLibraryView::ZERO, album->getKey().getArtist() + " - " + album->getKey().getAlbum());
-        _item_model->setData(row, AudioLibraryView::ZERO, icon, Qt::DecorationRole);
-        _item_model->setData(row, AudioLibraryView::ZERO, album->getKey().getArtist() + QChar(QChar::LineSeparator) + album->getKey().getAlbum(), AudioLibraryView::MULTILINE_DISPLAY_ROLE);
-        _item_model->setData(row, AudioLibraryView::ZERO, sort_key, AudioLibraryView::SORT_ROLE);
+        _item_model->setDataInternal(row, AudioLibraryView::ZERO, album->getKey().getArtist() + " - " + album->getKey().getAlbum());
+        _item_model->setDataInternal(row, AudioLibraryView::ZERO, icon, Qt::DecorationRole);
+        _item_model->setDataInternal(row, AudioLibraryView::ZERO, album->getKey().getArtist() + QChar(QChar::LineSeparator) + album->getKey().getAlbum(), AudioLibraryView::MULTILINE_DISPLAY_ROLE);
+        _item_model->setDataInternal(row, AudioLibraryView::ZERO, sort_key, AudioLibraryView::SORT_ROLE);
 
         setAlbumColumns(row, album);
-        _item_model->setData(row, AudioLibraryView::ARTIST, album->getKey().getArtist());
-        _item_model->setData(row, AudioLibraryView::NUMBER_OF_TRACKS, QString::number(album->getTracks().size()));
+        _item_model->setDataInternal(row, AudioLibraryView::ARTIST, album->getKey().getArtist());
+        _item_model->setDataInternal(row, AudioLibraryView::NUMBER_OF_TRACKS, QString::number(album->getTracks().size()));
 
         int length_milliseconds = 0;
         for (const AudioLibraryTrack* track : album->getTracks())
@@ -391,7 +391,7 @@ void AudioLibraryModel::addAlbumItem(const AudioLibraryAlbum* album)
         setLengthColumn(row, length_milliseconds);
     };
 
-    addItemInternal(id, icon, item_factory, [this, album](){
+    addItemInternal(id, icon, item_factory, [album](){
         return new AudioLibraryViewAlbum(album->getKey());
     });
 }
@@ -411,27 +411,27 @@ void AudioLibraryModel::addTrackItem(const AudioLibraryTrack* track)
             QString::number(track->_disc_number) + sep +
             QString::number(track->_track_number);
 
-        _item_model->setData(row, AudioLibraryView::ZERO, track->_artist + " - " + track->_title);
-        _item_model->setData(row, AudioLibraryView::ZERO, icon, Qt::DecorationRole);
-        _item_model->setData(row, AudioLibraryView::ZERO, track->_artist + QChar(QChar::LineSeparator) + track->_title, AudioLibraryView::MULTILINE_DISPLAY_ROLE);
-        _item_model->setData(row, AudioLibraryView::ZERO, sort_key, AudioLibraryView::SORT_ROLE);
+        _item_model->setDataInternal(row, AudioLibraryView::ZERO, track->_artist + " - " + track->_title);
+        _item_model->setDataInternal(row, AudioLibraryView::ZERO, icon, Qt::DecorationRole);
+        _item_model->setDataInternal(row, AudioLibraryView::ZERO, track->_artist + QChar(QChar::LineSeparator) + track->_title, AudioLibraryView::MULTILINE_DISPLAY_ROLE);
+        _item_model->setDataInternal(row, AudioLibraryView::ZERO, sort_key, AudioLibraryView::SORT_ROLE);
 
         setAlbumColumns(row, track->_album);
-        _item_model->setData(row, AudioLibraryView::ARTIST, track->_artist);
-        _item_model->setData(row, AudioLibraryView::TITLE, track->_title);
+        _item_model->setDataInternal(row, AudioLibraryView::ARTIST, track->_artist);
+        _item_model->setDataInternal(row, AudioLibraryView::TITLE, track->_title);
         if(track->_track_number != 0)
-            _item_model->setData(row, AudioLibraryView::TRACK_NUMBER, QString::number(track->_track_number));
+            _item_model->setDataInternal(row, AudioLibraryView::TRACK_NUMBER, QString::number(track->_track_number));
         if(track->_disc_number != 0)
-            _item_model->setData(row, AudioLibraryView::DISC_NUMBER, QString::number(track->_disc_number));
-        _item_model->setData(row, AudioLibraryView::ALBUM_ARTIST, track->_album_artist);
-        _item_model->setData(row, AudioLibraryView::COMMENT, track->_comment);
-        _item_model->setData(row, AudioLibraryView::PATH, track->_filepath);
+            _item_model->setDataInternal(row, AudioLibraryView::DISC_NUMBER, QString::number(track->_disc_number));
+        _item_model->setDataInternal(row, AudioLibraryView::ALBUM_ARTIST, track->_album_artist);
+        _item_model->setDataInternal(row, AudioLibraryView::COMMENT, track->_comment);
+        _item_model->setDataInternal(row, AudioLibraryView::PATH, track->_filepath);
         setDateTimeColumn(row, AudioLibraryView::DATE_MODIFIED, track->_last_modified);
-        _item_model->setData(row, AudioLibraryView::TAG_TYPES, track->_tag_types);
+        _item_model->setDataInternal(row, AudioLibraryView::TAG_TYPES, track->_tag_types);
         setLengthColumn(row, track->_length_milliseconds);
-        _item_model->setData(row, AudioLibraryView::CHANNELS, QString::number(track->_channels));
-        _item_model->setData(row, AudioLibraryView::BITRATE_KBS, QString::number(track->_bitrate_kbs) + QLatin1String(" kbit/s"));
-        _item_model->setData(row, AudioLibraryView::SAMPLERATE_HZ, QString::number(track->_samplerate_hz) + QLatin1String(" Hz"));
+        _item_model->setDataInternal(row, AudioLibraryView::CHANNELS, QString::number(track->_channels));
+        _item_model->setDataInternal(row, AudioLibraryView::BITRATE_KBS, QString::number(track->_bitrate_kbs) + QLatin1String(" kbit/s"));
+        _item_model->setDataInternal(row, AudioLibraryView::SAMPLERATE_HZ, QString::number(track->_samplerate_hz) + QLatin1String(" Hz"));
     };
 
     // no view for track items
@@ -520,8 +520,8 @@ void AudioLibraryModel::onUpdateFinished()
 
 void AudioLibraryModel::setDateTimeColumn(int row, AudioLibraryView::Column column, const QDateTime& date)
 {
-    _item_model->setData(row, column, date.toString(Qt::DefaultLocaleShortDate));
-    _item_model->setData(row, column, date.toString(Qt::ISODate), AudioLibraryView::SORT_ROLE);
+    _item_model->setDataInternal(row, column, date.toString(Qt::DefaultLocaleShortDate));
+    _item_model->setDataInternal(row, column, date.toString(Qt::ISODate), AudioLibraryView::SORT_ROLE);
 }
 
 void AudioLibraryModel::setLengthColumn(int row, int length_milliseconds)
@@ -532,34 +532,34 @@ void AudioLibraryModel::setLengthColumn(int row, int length_milliseconds)
 
     QString formatted_length = length_time.toString(length_seconds < 3600 ? "mm:ss" : "hh:mm:ss");
 
-    _item_model->setData(row, AudioLibraryView::LENGTH_SECONDS, formatted_length);
-    _item_model->setData(row, AudioLibraryView::LENGTH_SECONDS, QString::number(length_seconds), AudioLibraryView::SORT_ROLE);
+    _item_model->setDataInternal(row, AudioLibraryView::LENGTH_SECONDS, formatted_length);
+    _item_model->setDataInternal(row, AudioLibraryView::LENGTH_SECONDS, QString::number(length_seconds), AudioLibraryView::SORT_ROLE);
 }
 
 void AudioLibraryModel::setAlbumColumns(int row, const AudioLibraryAlbum* album)
 {
-    _item_model->setData(row, AudioLibraryView::ALBUM, album->getKey().getAlbum());
+    _item_model->setDataInternal(row, AudioLibraryView::ALBUM, album->getKey().getAlbum());
 
     if (album->getKey().getYear() != 0)
-        _item_model->setData(row, AudioLibraryView::YEAR, QString::number(album->getKey().getYear()));
+        _item_model->setDataInternal(row, AudioLibraryView::YEAR, QString::number(album->getKey().getYear()));
 
-    _item_model->setData(row, AudioLibraryView::GENRE, album->getKey().getGenre());
+    _item_model->setDataInternal(row, AudioLibraryView::GENRE, album->getKey().getGenre());
 
     if (!album->getCover().isEmpty())
     {
-        _item_model->setData(row, AudioLibraryView::COVER_CHECKSUM, QString::number(album->getKey().getCoverChecksum()));
+        _item_model->setDataInternal(row, AudioLibraryView::COVER_CHECKSUM, QString::number(album->getKey().getCoverChecksum()));
 
         QString data_size = QLocale().formattedDataSize(album->getCover().size());
 
-        _item_model->setData(row, AudioLibraryView::COVER_DATASIZE, data_size);
-        _item_model->setData(row, AudioLibraryView::COVER_DATASIZE, QString::number(album->getCover().size()), AudioLibraryView::SORT_ROLE);
+        _item_model->setDataInternal(row, AudioLibraryView::COVER_DATASIZE, data_size);
+        _item_model->setDataInternal(row, AudioLibraryView::COVER_DATASIZE, QString::number(album->getCover().size()), AudioLibraryView::SORT_ROLE);
     }
 
-    _item_model->setData(row, AudioLibraryView::COVER_TYPE, album->getCoverType());
+    _item_model->setDataInternal(row, AudioLibraryView::COVER_TYPE, album->getCoverType());
 
     if (!album->getCoverPixmap().isNull())
     {
-        _item_model->setData(row, AudioLibraryView::COVER_WIDTH, QString::number(album->getCoverPixmap().width()));
-        _item_model->setData(row, AudioLibraryView::COVER_HEIGHT, QString::number(album->getCoverPixmap().height()));
+        _item_model->setDataInternal(row, AudioLibraryView::COVER_WIDTH, QString::number(album->getCoverPixmap().width()));
+        _item_model->setDataInternal(row, AudioLibraryView::COVER_HEIGHT, QString::number(album->getCoverPixmap().height()));
     }
 }

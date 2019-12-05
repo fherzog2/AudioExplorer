@@ -26,7 +26,6 @@ public:
     virtual void accept() override;
 
 private:
-    Settings& _settings;
     std::unique_ptr<AbstractSettingsWidget> _audio_dir_paths_widget;
 };
 
