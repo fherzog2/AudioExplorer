@@ -20,7 +20,7 @@ public:
         AudioLibraryModel& _model;
     };
 
-    void addItem(const QString& id, const QString& name, const QIcon& icon, int number_of_albums, int number_of_tracks, std::function<AudioLibraryView*()> view_factory);
+    void addItem(const QString& id, const QString& name, const QIcon& icon, int number_of_albums, int number_of_tracks, const std::function<AudioLibraryView*()>& view_factory);
     void addAlbumItem(const AudioLibraryAlbum* album);
     void addTrackItem(const AudioLibraryTrack* track);
 
@@ -36,8 +36,8 @@ public:
 
 private:
     void addItemInternal(const QString& id, const QIcon& icon,
-        std::function<void(int row)> item_factory,
-        std::function<AudioLibraryView*()> view_factory);
+        const std::function<void(int row)>& item_factory,
+        const std::function<AudioLibraryView*()>& view_factory);
     void removeId(const QString& id);
     void onUpdateStarted();
     void onUpdateFinished();

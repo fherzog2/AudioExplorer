@@ -62,7 +62,7 @@ namespace {
         }
     };
 
-    void addTrackToArtistGroup(QString artist, const AudioLibraryTrack* track,
+    void addTrackToArtistGroup(const QString& artist, const AudioLibraryTrack* track,
         std::unordered_map<QString, AudioLibraryArtistGroupData>& displayed_groups)
     {
         AudioLibraryArtistGroupData& group_data = displayed_groups[artist];
