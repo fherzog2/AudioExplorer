@@ -238,30 +238,30 @@ QString AudioLibraryView::getColumnFriendlyName(Column column, DisplayMode mode)
 std::vector<std::pair<AudioLibraryView::Column, QString>> AudioLibraryView::columnToStringMapping()
 {
     std::vector<std::pair<Column, QString>> result;
-    result.push_back(std::make_pair(ZERO, "zero_column"));
-    result.push_back(std::make_pair(NUMBER_OF_ALBUMS, "number_of_albums"));
-    result.push_back(std::make_pair(ARTIST, "artist"));
-    result.push_back(std::make_pair(ALBUM, "album"));
-    result.push_back(std::make_pair(YEAR, "year"));
-    result.push_back(std::make_pair(GENRE, "genre"));
-    result.push_back(std::make_pair(COVER_CHECKSUM, "cover_checksum"));
-    result.push_back(std::make_pair(COVER_TYPE, "cover_type"));
-    result.push_back(std::make_pair(COVER_WIDTH, "cover_width"));
-    result.push_back(std::make_pair(COVER_HEIGHT, "cover_height"));
-    result.push_back(std::make_pair(COVER_DATASIZE, "cover_datasize"));
-    result.push_back(std::make_pair(NUMBER_OF_TRACKS, "number_of_tracks"));
-    result.push_back(std::make_pair(TITLE, "title"));
-    result.push_back(std::make_pair(TRACK_NUMBER, "track_number"));
-    result.push_back(std::make_pair(DISC_NUMBER, "disc_number"));
-    result.push_back(std::make_pair(ALBUM_ARTIST, "album_artist"));
-    result.push_back(std::make_pair(COMMENT, "comment"));
-    result.push_back(std::make_pair(PATH, "path"));
-    result.push_back(std::make_pair(DATE_MODIFIED, "date_modified"));
-    result.push_back(std::make_pair(TAG_TYPES, "tag_types"));
-    result.push_back(std::make_pair(LENGTH_SECONDS, "length"));
-    result.push_back(std::make_pair(CHANNELS, "channels"));
-    result.push_back(std::make_pair(BITRATE_KBS, "bit_rate"));
-    result.push_back(std::make_pair(SAMPLERATE_HZ, "sample_rate"));
+    result.emplace_back(ZERO, "zero_column");
+    result.emplace_back(NUMBER_OF_ALBUMS, "number_of_albums");
+    result.emplace_back(ARTIST, "artist");
+    result.emplace_back(ALBUM, "album");
+    result.emplace_back(YEAR, "year");
+    result.emplace_back(GENRE, "genre");
+    result.emplace_back(COVER_CHECKSUM, "cover_checksum");
+    result.emplace_back(COVER_TYPE, "cover_type");
+    result.emplace_back(COVER_WIDTH, "cover_width");
+    result.emplace_back(COVER_HEIGHT, "cover_height");
+    result.emplace_back(COVER_DATASIZE, "cover_datasize");
+    result.emplace_back(NUMBER_OF_TRACKS, "number_of_tracks");
+    result.emplace_back(TITLE, "title");
+    result.emplace_back(TRACK_NUMBER, "track_number");
+    result.emplace_back(DISC_NUMBER, "disc_number");
+    result.emplace_back(ALBUM_ARTIST, "album_artist");
+    result.emplace_back(COMMENT, "comment");
+    result.emplace_back(PATH, "path");
+    result.emplace_back(DATE_MODIFIED, "date_modified");
+    result.emplace_back(TAG_TYPES, "tag_types");
+    result.emplace_back(LENGTH_SECONDS, "length");
+    result.emplace_back(CHANNELS, "channels");
+    result.emplace_back(BITRATE_KBS, "bit_rate");
+    result.emplace_back(SAMPLERATE_HZ, "sample_rate");
     return result;
 }
 
@@ -307,11 +307,11 @@ QString AudioLibraryView::getDisplayModeFriendlyName(DisplayMode mode)
 std::vector<std::pair<AudioLibraryView::DisplayMode, QString>> AudioLibraryView::displayModeToStringMapping()
 {
     std::vector<std::pair<DisplayMode, QString>> result;
-    result.push_back(std::make_pair(DisplayMode::ARTISTS, "artists"));
-    result.push_back(std::make_pair(DisplayMode::ALBUMS, "albums"));
-    result.push_back(std::make_pair(DisplayMode::TRACKS, "tracks"));
-    result.push_back(std::make_pair(DisplayMode::YEARS, "years"));
-    result.push_back(std::make_pair(DisplayMode::GENRES, "genres"));
+    result.emplace_back(DisplayMode::ARTISTS, "artists");
+    result.emplace_back(DisplayMode::ALBUMS, "albums");
+    result.emplace_back(DisplayMode::TRACKS, "tracks");
+    result.emplace_back(DisplayMode::YEARS, "years");
+    result.emplace_back(DisplayMode::GENRES, "genres");
     return result;
 }
 

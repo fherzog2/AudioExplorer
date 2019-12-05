@@ -803,7 +803,7 @@ void MainWindow::onDisplayModeChanged(AudioLibraryView::DisplayMode display_mode
         }
         else
         {
-            _selected_display_modes.push_back(std::make_pair(modes, display_mode));
+            _selected_display_modes.emplace_back(modes, display_mode);
         }
     }
 
@@ -918,7 +918,7 @@ void MainWindow::onTableHeaderContextMenu(const QPoint& pos)
     for (AudioLibraryView::Column column : AudioLibraryView::getColumnsForDisplayMode(*_current_display_mode))
     {
         QString name = AudioLibraryView::getColumnFriendlyName(column, *_current_display_mode);
-        columns_and_names.push_back(std::make_pair(column, name));
+        columns_and_names.emplace_back(column, name);
     }
 
     std::sort(columns_and_names.begin(), columns_and_names.end(), [](const std::pair<AudioLibraryView::Column, QString>& a, const std::pair<AudioLibraryView::Column, QString>& b){
@@ -1039,7 +1039,7 @@ void MainWindow::updateCurrentView()
     for (AudioLibraryView::DisplayMode display_mode : supported_modes)
     {
         int index = _display_mode_tabs->addTab(AudioLibraryView::getDisplayModeFriendlyName(display_mode));
-        _display_mode_tab_indexes.push_back(std::make_pair(index, display_mode));
+        _display_mode_tab_indexes.emplace_back(index, display_mode);
 
         if (current_display_mode == display_mode)
         {
@@ -1165,7 +1165,7 @@ void MainWindow::addViewTypeTab(QWidget* view, const QString& friendly_name, con
 {
     int index = _view_type_tabs->addTab(friendly_name);
     _view_type_tabs->setTabData(index, internal_name);
-    _view_type_map.push_back(std::make_pair(internal_name, view));
+    _view_type_map.emplace_back(internal_name, view);
 }
 
 void MainWindow::getFilepathsFromIndex(const QModelIndex& index, std::vector<QString>& filepaths)
@@ -1595,7 +1595,7 @@ void MainWindow::restoreSettingsOnStart()
             int visual_index = found.value().toInt(&int_ok);
             if (int_ok && visual_index >= 0 && visual_index < _table->horizontalHeader()->count())
             {
-                logical_and_visual_indexes.push_back(std::make_pair(column.first, visual_index));
+                logical_and_visual_indexes.emplace_back(column.first, visual_index);
             }
         }
     }
