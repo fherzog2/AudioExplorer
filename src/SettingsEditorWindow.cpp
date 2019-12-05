@@ -11,12 +11,6 @@
 #include <QtWidgets/qpushbutton.h>
 #include <QtWidgets/qshortcut.h>
 
-AbstractSettingsWidget::~AbstractSettingsWidget()
-{
-}
-
-//=============================================================================
-
 class SettingsWidgetDirPaths : public AbstractSettingsWidget
 {
 public:

@@ -163,10 +163,6 @@ namespace {
 
 //=============================================================================
 
-AudioLibraryView::~AudioLibraryView()
-{
-}
-
 QString AudioLibraryView::getColumnFriendlyName(Column column, DisplayMode mode)
 {
     switch (column)

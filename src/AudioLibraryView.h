@@ -9,7 +9,7 @@ class AudioLibraryModel;
 class AudioLibraryView
 {
 public:
-    virtual ~AudioLibraryView();
+    virtual ~AudioLibraryView() = default;
 
     enum Column
     {

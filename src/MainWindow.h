@@ -103,7 +103,6 @@ class MainWindow : public QFrame
 
 public:
     MainWindow(Settings& settings);
-    ~MainWindow();
 
     virtual bool eventFilter(QObject* watched, QEvent* event) override;
     void setBreadCrumb(std::unique_ptr<AudioLibraryView> view);

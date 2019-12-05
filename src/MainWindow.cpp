@@ -521,10 +521,6 @@ MainWindow::MainWindow(Settings& settings)
     scanAudioDirs();
 }
 
-MainWindow::~MainWindow()
-{
-}
-
 void MainWindow::closeEvent(QCloseEvent* e)
 {
     hide();

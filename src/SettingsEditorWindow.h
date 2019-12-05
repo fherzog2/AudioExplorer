@@ -9,7 +9,7 @@
 class AbstractSettingsWidget
 {
 public:
-    virtual ~AbstractSettingsWidget();
+    virtual ~AbstractSettingsWidget() = default;
 
     virtual QWidget* getWidget() const = 0;
     virtual void applyChanges() const = 0;
