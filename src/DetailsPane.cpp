@@ -19,13 +19,13 @@ public:
     void setIcon(const QIcon& icon);
     const QIcon& icon() const;
 
-    virtual QSize minimumSizeHint() const override;
-    virtual QSize sizeHint() const override;
-    virtual bool hasHeightForWidth() const override;
-    virtual int heightForWidth(int width) const override;
+    QSize minimumSizeHint() const override;
+    QSize sizeHint() const override;
+    bool hasHeightForWidth() const override;
+    int heightForWidth(int width) const override;
 
 protected:
-    virtual void paintEvent(QPaintEvent* e) override;
+    void paintEvent(QPaintEvent* e) override;
 
 private:
     QIcon _icon;
@@ -103,11 +103,11 @@ public:
     void setText(const QString& text);
     const QString& text() const;
 
-    virtual QSize minimumSizeHint() const override;
+    QSize minimumSizeHint() const override;
 
 protected:
-    virtual bool event(QEvent* e) override;
-    virtual void paintEvent(QPaintEvent* e) override;
+    bool event(QEvent* e) override;
+    void paintEvent(QPaintEvent* e) override;
 
 private:
     QString _text;

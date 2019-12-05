@@ -22,8 +22,8 @@ class SettingsWidgetDirPaths : public AbstractSettingsWidget
 public:
     SettingsWidgetDirPaths(QWidget* parent, SettingsItem<QStringList>& item, const QString& button_text);
 
-    virtual QWidget* getWidget() const override;
-    virtual void applyChanges() const override;
+    QWidget* getWidget() const override;
+    void applyChanges() const override;
 
 private:
     void deleteSelectedRows() const;

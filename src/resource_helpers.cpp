@@ -10,9 +10,9 @@ class SVGIconEngine : public QIconEngine
 public:
     SVGIconEngine(const QByteArray& icon_buffer);
 
-    virtual void paint(QPainter* painter, const QRect& rect, QIcon::Mode mode, QIcon::State state) override;
-    virtual QIconEngine* clone() const override;
-    virtual QPixmap pixmap(const QSize& size, QIcon::Mode mode, QIcon::State state) override;
+    void paint(QPainter* painter, const QRect& rect, QIcon::Mode mode, QIcon::State state) override;
+    QIconEngine* clone() const override;
+    QPixmap pixmap(const QSize& size, QIcon::Mode mode, QIcon::State state) override;
 
 private:
     QByteArray _data;

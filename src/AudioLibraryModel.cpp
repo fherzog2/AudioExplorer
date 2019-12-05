@@ -10,12 +10,12 @@ class AudioLibraryModelImpl : public QAbstractTableModel
 public:
     AudioLibraryModelImpl(QObject* parent = nullptr);
 
-    virtual int rowCount(const QModelIndex& parent = QModelIndex()) const override;
-    virtual int columnCount(const QModelIndex& parent = QModelIndex()) const override;
+    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
+    int columnCount(const QModelIndex& parent = QModelIndex()) const override;
     void setDataInternal(int row, AudioLibraryView::Column column, const QVariant& data, int role = Qt::DisplayRole);
-    virtual QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
-    virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
-    virtual void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
+    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
+    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+    void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 
     struct Row
     {

@@ -64,11 +64,11 @@ namespace
     public:
         MultiLinesElidedItemDelegate(QObject* parent);
 
-        virtual bool helpEvent(QHelpEvent* event, QAbstractItemView* view,
+        bool helpEvent(QHelpEvent* event, QAbstractItemView* view,
             const QStyleOptionViewItem& option, const QModelIndex& index) override;
 
     protected:
-        virtual void initStyleOption(QStyleOptionViewItem* option, const QModelIndex& index) const override;
+        void initStyleOption(QStyleOptionViewItem* option, const QModelIndex& index) const override;
 
     private:
         static QString getElidedLines(const QString& text, const QFontMetrics& font_metrics, int width);
