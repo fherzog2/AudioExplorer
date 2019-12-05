@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 #include "AudioLibrary.h"
-#include <assert.h>
+#include <cassert>
 
 QDataStream& operator<<(QDataStream& s, const AudioLibraryAlbumKey& key)
 {
