@@ -632,7 +632,7 @@ std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewAllGenres::getSupport
     if(_filter.isEmpty())
         return { DisplayMode::GENRES };
     else
-        return { DisplayMode::GENRES, DisplayMode::ALBUMS };
+        return { DisplayMode::GENRES, DisplayMode::ARTISTS, DisplayMode::ALBUMS };
 }
 
 void AudioLibraryViewAllGenres::createItems(const AudioLibrary& library,
@@ -672,6 +672,31 @@ void AudioLibraryViewAllGenres::createItems(const AudioLibrary& library,
             {
                 model->addAlbumItem(album);
             }
+        }
+    }
+    else if (display_mode == DisplayMode::ARTISTS)
+    {
+        // collect all artists that have released at least one album of the genre
+
+        std::unordered_map<QString, AudioLibraryGroupData> displayed_groups;
+
+        for (const AudioLibraryAlbum* album : library.getAlbums())
+        {
+            if (filter_handler.checkText(album->getKey().getGenre()))
+            {
+                addAlbumToGroup(album->getKey().getArtist(), album, displayed_groups);
+            }
+        }
+
+        for (const auto& group : displayed_groups)
+        {
+            QString id = QLatin1String("artist(") +
+                group.first + QLatin1Char(',') +
+                group.second.getId() + QLatin1Char(')');
+
+            model->addItem(id, group.first, group.second.showcase_album->getCoverPixmap(), group.second.num_albums, group.second.num_tracks, [group]() {
+                return new AudioLibraryViewArtist(group.first);
+            });
         }
     }
 }
