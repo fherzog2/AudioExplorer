@@ -679,6 +679,7 @@ void MainWindow::onShowFindWidget()
     }
 
     _find_widget_line_edit->selectAll();
+    _find_widget_line_edit->setFocus();
     _find_widget->show();
     _find_widget->activateWindow();
 }
