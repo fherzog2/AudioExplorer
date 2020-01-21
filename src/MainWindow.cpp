@@ -732,21 +732,37 @@ void MainWindow::onLibraryCacheLoading()
         num_tracks += acc.getLibrary().getNumberOfTracks();
     }
 
-    _status_bar->showMessage(QString("Loading cache: %1 files").arg(num_tracks));
+    QString message = num_tracks == 1 ?
+        "Loading cache: %1 file" :
+        "Loading cache: %1 files";
+
+    _status_bar->showMessage(message.arg(num_tracks));
 
     updateCurrentViewIfOlderThan(1000);
 }
 
 void MainWindow::onLibraryLoadProgressed(int files_loaded, int files_in_cache)
 {
-    _status_bar->showMessage(QString("%1 files in cache, %2 new files loaded").arg(files_in_cache).arg(files_loaded));
+    int num_tracks = files_in_cache + files_loaded;
+
+    QString message = num_tracks == 1 ?
+        "%1 file loaded" :
+        "%1 files loaded";
+
+    _status_bar->showMessage(message.arg(num_tracks));
 
     updateCurrentViewIfOlderThan(1000);
 }
 
 void MainWindow::onLibraryLoadFinished(int files_loaded, int files_in_cache, float duration_sec)
 {
-    _status_bar->showMessage(QString("%1 files in cache, %2 new files loaded, needed %3 seconds").arg(files_in_cache).arg(files_loaded).arg(duration_sec, 0, 'f', 1));
+    int num_tracks = files_in_cache + files_loaded;
+
+    QString message = num_tracks == 1 ?
+        "%1 file loaded in %2s" :
+        "%1 files loaded in %2s";
+
+    _status_bar->showMessage(message.arg(num_tracks).arg(duration_sec, 0, 'f', 1));
 
     updateCurrentView();
 }
