@@ -1159,21 +1159,29 @@ void MainWindow::advanceIconSize(int direction)
 {
     int current_size = _list->iconSize().width();
 
+    QModelIndex scroll_to_index = _list->currentIndex();
+    if (!scroll_to_index.isValid())
+        scroll_to_index = _list->model()->index(0, 0);
+
     auto found = std::find(_icon_size_steps.begin(), _icon_size_steps.end(), current_size);
 
     if (found != _icon_size_steps.end())
     {
+        auto new_size_it = _icon_size_steps.end();
+
         if (direction > 0 && found + 1 != _icon_size_steps.end())
         {
-            int new_size = *(found + 1);
-
-            _list->setIconSize(QSize(new_size, new_size));
+            new_size_it = found + 1;
         }
         else if (direction < 0 && found != _icon_size_steps.begin())
         {
-            int new_size = *(found - 1);
+            new_size_it = found - 1;
+        }
 
-            _list->setIconSize(QSize(new_size, new_size));
+        if (new_size_it != _icon_size_steps.end())
+        {
+            _list->setIconSize(QSize(*new_size_it, *new_size_it));
+            _list->scrollTo(scroll_to_index);
         }
     }
 }
