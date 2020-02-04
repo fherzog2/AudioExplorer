@@ -1298,12 +1298,24 @@ void MainWindow::setBreadCrumb(std::unique_ptr<AudioLibraryView> view)
 {
     _history.addItem(view->clone(), true, nullptr);
 
+    // Reset scroll position.
+    // This prevents the scroll position from being all over the place when going from e.g. artists to genres.
+
+    _list->verticalScrollBar()->setValue(0);
+    _table->verticalScrollBar()->setValue(0);
+
     updateAfterHistoryChange();
 }
 
 void MainWindow::addBreadCrumb(std::unique_ptr<AudioLibraryView> view)
 {
     _history.addItem(view->clone(), false, saveViewSettings().get());
+
+    // Reset scroll position.
+    // This prevents the scroll position from being all over the place when going from e.g. artists to genres.
+
+    _list->verticalScrollBar()->setValue(0);
+    _table->verticalScrollBar()->setValue(0);
 
     updateAfterHistoryChange();
 }
