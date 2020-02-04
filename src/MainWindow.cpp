@@ -182,24 +182,24 @@ std::unique_ptr<AudioLibraryView> ViewSelector::getSelectedView() const
     // no filter box for years
 
     if (_year_button->isChecked())
-        return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllYears());
+        return std::make_unique<AudioLibraryViewAllYears>();
 
     // either use a full view or a search
 
     QString filter_text = _filter_box->text();
 
     if (_artist_button->isChecked())
-        return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllArtists(filter_text));
+        return std::make_unique<AudioLibraryViewAllArtists>(filter_text);
     if (_album_button->isChecked())
-        return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllAlbums(filter_text));
+        return std::make_unique<AudioLibraryViewAllAlbums>(filter_text);
     if (_track_button->isChecked())
-        return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllTracks(filter_text));
+        return std::make_unique<AudioLibraryViewAllTracks>(filter_text);
     if (_genre_button->isChecked())
-        return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllGenres(filter_text));
+        return std::make_unique<AudioLibraryViewAllGenres>(filter_text);
 
     // default to artist view if nothing is selected
 
-    return std::unique_ptr<AudioLibraryView>(new AudioLibraryViewAllArtists(QString()));
+    return std::make_unique<AudioLibraryViewAllArtists>(QString());
 }
 
 void ViewSelector::triggerDefaultView()
@@ -773,7 +773,7 @@ void MainWindow::onCoverLoadFinished()
 
 void MainWindow::onShowDuplicateAlbums()
 {
-    setBreadCrumb(std::unique_ptr<AudioLibraryView>(new AudioLibraryViewDuplicateAlbums()));
+    setBreadCrumb(std::make_unique<AudioLibraryViewDuplicateAlbums>());
 }
 
 void MainWindow::onBreadCrumbClicked()
