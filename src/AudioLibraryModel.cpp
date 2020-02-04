@@ -317,7 +317,7 @@ AudioLibraryModel::AudioLibraryModel(QObject* parent)
 
 void AudioLibraryModel::addItemInternal(const QString& id, const QIcon& icon,
     const std::function<void(int row)>& item_factory,
-    const std::function<AudioLibraryView*()>& view_factory)
+    const std::function<std::unique_ptr<AudioLibraryView>()>& view_factory)
 {
     _requested_ids.insert(id);
 
@@ -342,13 +342,12 @@ void AudioLibraryModel::addItemInternal(const QString& id, const QIcon& icon,
 
     item_factory(row->index);
 
-    if(AudioLibraryView* view = view_factory())
-        row->view.reset(view);
+    row->view = view_factory();
 
     _item_model->dataChanged(_item_model->index(row->index, 0), _item_model->index(row->index, AudioLibraryView::NUMBER_OF_COLUMNS - 1));
 }
 
-void AudioLibraryModel::addItem(const QString& id, const QString& name, const QIcon& icon, int number_of_albums, int number_of_tracks, const std::function<AudioLibraryView*()>& view_factory)
+void AudioLibraryModel::addItem(const QString& id, const QString& name, const QIcon& icon, int number_of_albums, int number_of_tracks, const std::function<std::unique_ptr<AudioLibraryView>()>& view_factory)
 {
     auto item_factory = [this, name, icon, number_of_albums, number_of_tracks](int row) {
 
@@ -392,7 +391,7 @@ void AudioLibraryModel::addAlbumItem(const AudioLibraryAlbum* album)
     };
 
     addItemInternal(id, icon, item_factory, [album](){
-        return new AudioLibraryViewAlbum(album->getKey());
+        return std::make_unique<AudioLibraryViewAlbum>(album->getKey());
     });
 }
 

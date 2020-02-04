@@ -454,7 +454,7 @@ void AudioLibraryViewAllArtists::createItems(const AudioLibrary& library,
             group.second.getId() + QLatin1Char(')');
 
         model->addItem(id, group.first, group.second.showcase_album->getCoverPixmap(), static_cast<int>(group.second.albums.size()), group.second.num_tracks, [group](){
-            return new AudioLibraryViewArtist(group.first);
+            return std::make_unique<AudioLibraryViewArtist>(group.first);
         });
     }
 }
@@ -595,7 +595,7 @@ void AudioLibraryViewAllYears::createItems(const AudioLibrary& library,
             group.second.getId() + QLatin1Char(')');
 
         model->addItem(id, QString::number(group.first), group.second.showcase_album->getCoverPixmap(), group.second.num_albums, group.second.num_tracks, [group]() {
-            return new AudioLibraryViewYear(group.first);
+            return std::make_unique<AudioLibraryViewYear>(group.first);
         });
     }
 }
@@ -660,7 +660,7 @@ void AudioLibraryViewAllGenres::createItems(const AudioLibrary& library,
                 group.second.getId() + QLatin1Char(')');
 
             model->addItem(id, group.first, group.second.showcase_album->getCoverPixmap(), group.second.num_albums, group.second.num_tracks, [group]() {
-                return new AudioLibraryViewGenre(group.first);
+                return std::make_unique<AudioLibraryViewGenre>(group.first);
             });
         }
     }
@@ -695,7 +695,7 @@ void AudioLibraryViewAllGenres::createItems(const AudioLibrary& library,
                 group.second.getId() + QLatin1Char(')');
 
             model->addItem(id, group.first, group.second.showcase_album->getCoverPixmap(), group.second.num_albums, group.second.num_tracks, [group]() {
-                return new AudioLibraryViewArtist(group.first);
+                return std::make_unique<AudioLibraryViewArtist>(group.first);
             });
         }
     }
