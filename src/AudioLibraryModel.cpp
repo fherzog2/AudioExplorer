@@ -223,7 +223,7 @@ AudioLibraryModelImpl::Row* AudioLibraryModelImpl::createRow(const QString& id)
     if (_rows.size() + 1 > INT_MAX)
         return nullptr; // QModelIndex uses int, so we can't have more than INT_MAX rows
 
-    std::unique_ptr<Row> row(new Row());
+    auto row = std::make_unique<Row>();
     row->id = id;
     row->index = static_cast<int>(_rows.size());
 

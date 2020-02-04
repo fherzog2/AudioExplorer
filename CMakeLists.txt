@@ -86,7 +86,7 @@ target_link_libraries(AudioExplorer ${CMAKE_THREAD_LIBS_INIT} Qt5::Widgets Qt5::
 
 target_include_directories(AudioExplorer PRIVATE ${TAGLIB_INCLUDE_DIR})
 target_compile_definitions(AudioExplorer PRIVATE TAGLIB_STATIC)
-set_property(TARGET AudioExplorer PROPERTY CXX_STANDARD 11)
+set_property(TARGET AudioExplorer PROPERTY CXX_STANDARD 14)
 set_property(TARGET AudioExplorer PROPERTY AUTOMOC ON)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND SANITIZE_ADDRESS)
@@ -124,7 +124,7 @@ target_link_libraries(test1 ${CMAKE_THREAD_LIBS_INIT} Qt5::Widgets ${TAGLIB_LIBR
 
 target_include_directories(test1 PRIVATE ${TAGLIB_INCLUDE_DIR})
 target_compile_definitions(test1 PRIVATE TAGLIB_STATIC)
-set_property(TARGET test1 PROPERTY CXX_STANDARD 11)
+set_property(TARGET test1 PROPERTY CXX_STANDARD 14)
 set_property(TARGET test1 PROPERTY AUTOMOC ON)
 target_include_directories(test1 PRIVATE "src")
 

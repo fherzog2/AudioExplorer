@@ -373,7 +373,7 @@ AudioLibraryAlbum* AudioLibrary::addAlbum(const AudioLibraryAlbumKey& album_key,
     auto it = _album_map.find(album_key);
     if (it == _album_map.end())
     {
-        it = _album_map.insert(make_pair(album_key, std::unique_ptr<AudioLibraryAlbum>(new AudioLibraryAlbum(album_key, cover)))).first;
+        it = _album_map.insert(make_pair(album_key, std::make_unique<AudioLibraryAlbum>(album_key, cover))).first;
     }
 
     return it->second.get();
@@ -401,8 +401,21 @@ AudioLibraryTrack* AudioLibrary::addTrack(AudioLibraryAlbum* album,
         assert(false);
     }
 
-    it = _filepath_to_track_map.insert(make_pair(filepath, std::unique_ptr<AudioLibraryTrack>(new AudioLibraryTrack(album,
-        filepath, last_modified, artist, album_artist, title, track_number, disc_number, comment, tag_types, length_milliseconds, channels, bitrate_kbs, samplerate_hz)))).first;
+    it = _filepath_to_track_map.insert(make_pair(filepath, std::make_unique<AudioLibraryTrack>(
+        album,
+        filepath,
+        last_modified,
+        artist,
+        album_artist,
+        title,
+        track_number,
+        disc_number,
+        comment,
+        tag_types,
+        length_milliseconds,
+        channels,
+        bitrate_kbs,
+        samplerate_hz))).first;
     album->addTrack(it->second.get());
 
     return it->second.get();

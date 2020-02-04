@@ -280,7 +280,7 @@ std::unique_ptr<AudioLibraryView::Column> AudioLibraryView::getColumnFromId(cons
 {
     for (const auto& i : columnToStringMapping())
         if (i.second == column_id)
-            return std::unique_ptr<Column>(new Column(i.first));
+            return std::make_unique<Column>(i.first);
 
     return std::unique_ptr<Column>();
 }

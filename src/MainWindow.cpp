@@ -253,8 +253,7 @@ void History::addItem(std::unique_ptr<AudioLibraryView> view, bool is_top_level_
 
     if (restore_data_for_previous_view && !_items.empty())
     {
-        _items[_current_item].restore_data.reset(new ViewRestoreData());
-        *_items[_current_item].restore_data = *restore_data_for_previous_view;
+        _items[_current_item].restore_data = std::make_unique<ViewRestoreData>(*restore_data_for_previous_view);
     }
 
     // if current item is not the last one, destroy all further items
@@ -1045,7 +1044,10 @@ void MainWindow::updateCurrentView()
     const bool incremental = same_view && same_display_mode;
 
     _current_view_id = current_view_id;
-    _current_display_mode.reset(new AudioLibraryView::DisplayMode(current_display_mode));
+    if (!_current_display_mode)
+        _current_display_mode = std::make_unique<AudioLibraryView::DisplayMode>(current_display_mode);
+    else
+        *_current_display_mode = current_display_mode;
 
     // create tabs for supported display modes
 
@@ -1384,7 +1386,7 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
 
             if (artist_variant.isValid() && !artist.isEmpty())
             {
-                std::shared_ptr<AudioLibraryView> artist_view(new AudioLibraryViewArtist(artist));
+                auto artist_view = std::make_shared<AudioLibraryViewArtist>(artist);
 
                 if (!findBreadcrumbId(artist_view->getId()))
                 {
@@ -1417,7 +1419,7 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
 
                     AudioLibraryAlbumKey key(artist, album_variant.toString(), genre_variant.toString(), year, cover_checksum);
 
-                    std::shared_ptr<AudioLibraryView> album_view(new AudioLibraryViewAlbum(key));
+                    auto album_view = std::make_shared<AudioLibraryViewAlbum>(key);
 
                     if (!findBreadcrumbId(album_view->getId()))
                     {
@@ -1523,7 +1525,7 @@ void MainWindow::setCurrentSelectedIndex(const QModelIndex& index)
 
 std::unique_ptr<ViewRestoreData> MainWindow::saveViewSettings() const
 {
-    std::unique_ptr<ViewRestoreData> restore_data(new ViewRestoreData());
+    auto restore_data = std::make_unique<ViewRestoreData>();
 
     restore_data->_list_scroll_pos = getRelativeScrollPos(_list->verticalScrollBar());
     restore_data->_table_scroll_pos = getRelativeScrollPos(_table->verticalScrollBar());
