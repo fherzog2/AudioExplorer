@@ -614,7 +614,7 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event)
 
                     if (!urls.empty())
                     {
-                        drag.exec();
+                        drag.exec(Qt::CopyAction);
                         _is_dragging = false;
                         _drag_start_pos = QPoint();
                         _dragged_indexes.clear();
