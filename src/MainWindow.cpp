@@ -1487,7 +1487,7 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
 QString MainWindow::getVlcPath()
 {
 #if WIN32
-    QSettings vlc_registry("HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\VideoLAN\\VLC", QSettings::NativeFormat);
+    QSettings vlc_registry("HKEY_LOCAL_MACHINE\\SOFTWARE\\VideoLAN\\VLC", QSettings::NativeFormat);
     return vlc_registry.value("Default").toString();
 #else
     return QString();
