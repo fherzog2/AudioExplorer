@@ -31,11 +31,15 @@ if(MSVC AND ENABLE_STATIC_RUNTIME)
 
     find_library(QWindowsVistaStyle_DEBUG NAMES qwindowsvistastyled PATH_SUFFIXES plugins/styles)
     find_library(QJpegPlugin_DEBUG NAMES qjpegd PATH_SUFFIXES plugins/imageformats)
+    find_library(Qt5VulkanSupport NAMES Qt5VulkanSupport.lib)
+    find_library(Qt5VulkanSupport_DEBUG NAMES Qt5VulkanSupportd.lib)
 
     set(STATIC_LINK_DEPENDENCIES debug ${QWindowsVistaStyle_DEBUG}
                                  optimized Qt5::QWindowsVistaStylePlugin # without it, the program looks dated
                                  debug ${QJpegPlugin_DEBUG}
                                  optimized Qt5::QJpegPlugin
+                                 debug ${Qt5VulkanSupport_DEBUG}
+                                 optimized ${Qt5VulkanSupport}
                                  Uxtheme.lib # prerequisite for Qt5::QWindowsVistaStylePlugin
                                  Userenv.lib # replacement for Mincore.lib
                                  version.lib # replacement for Mincore.lib
