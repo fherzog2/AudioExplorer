@@ -3,6 +3,7 @@
 #include "AudioLibraryModel.h"
 
 #include <unordered_set>
+#include <stdexcept>
 
 namespace {
 

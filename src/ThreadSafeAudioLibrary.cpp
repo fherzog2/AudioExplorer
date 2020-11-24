@@ -324,7 +324,13 @@ void AudioFilesLoader::threadDecodeCovers()
                 if (_thread_abort_flag)
                     return;
 
-                acc.getLibraryForUpdate().getAlbum(cover.first)->setCoverPixmap(cover.second.second);
+                // album pointer may be invalid
+                // because the audio file loading thread may have detected that a cached file no longer exists
+
+                if (AudioLibraryAlbum* album = acc.getLibraryForUpdate().getAlbum(cover.first))
+                {
+                    album->setCoverPixmap(cover.second.second);
+                }
             }
         }
     }
