@@ -99,7 +99,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND SANITIZE_ADDRESS)
 endif()
 
 if(MSVC)
-  target_compile_options(AudioExplorer PRIVATE /W4 /WX)
+  target_compile_options(AudioExplorer PRIVATE /W4 /WX /wd4996)
 else(MSVC)
   target_compile_options(AudioExplorer PRIVATE -Wall -Wextra -pedantic -Werror)
 endif(MSVC)
