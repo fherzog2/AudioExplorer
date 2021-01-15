@@ -382,22 +382,22 @@ MainWindow::MainWindow(Settings& settings)
     setWindowTitle(APPLICATION_NAME);
 
     auto menubar = new QMenuBar(this);
-    auto filemenu = menubar->addMenu("&File");
-    addMenuAction(*filemenu, "Preferences...", this, &MainWindow::onEditPreferences);
+    auto filemenu = menubar->addMenu(tr("&File"));
+    addMenuAction(*filemenu, tr("Preferences..."), this, &MainWindow::onEditPreferences, QKeySequence::Preferences);
     filemenu->addSeparator();
-    addMenuAction(*filemenu, "Exit", this, &MainWindow::close, Qt::ALT + Qt::Key_F4);
+    addMenuAction(*filemenu, tr("Exit"), this, &MainWindow::close, QKeySequence::Quit);
 
-    auto viewmenu = menubar->addMenu("View");
-    _history_back_action = addMenuAction(*viewmenu, "Previous view", this, &MainWindow::onHistoryBack, Qt::Key_Backspace);
-    _history_forward_action = addMenuAction(*viewmenu, "Next view", this, &MainWindow::onHistoryForward, Qt::SHIFT + Qt::Key_Backspace);
-    addMenuAction(*viewmenu, "Find...", this, &MainWindow::onShowFindWidget, Qt::CTRL + Qt::Key_F);
-    addMenuAction(*viewmenu, "Badly tagged albums", this, &MainWindow::onShowDuplicateAlbums);
-    addMenuAction(*viewmenu, "Reload all files", this, &MainWindow::scanAudioDirs, Qt::Key_F5);
+    auto viewmenu = menubar->addMenu(tr("&View"));
+    _history_back_action = addMenuAction(*viewmenu, tr("Previous view"), this, &MainWindow::onHistoryBack, QKeySequence::Back);
+    _history_forward_action = addMenuAction(*viewmenu, tr("Next view"), this, &MainWindow::onHistoryForward, QKeySequence::Forward);
+    addMenuAction(*viewmenu, tr("Find..."), this, &MainWindow::onShowFindWidget, QKeySequence::Find);
+    addMenuAction(*viewmenu, tr("Badly tagged albums"), this, &MainWindow::onShowDuplicateAlbums);
+    addMenuAction(*viewmenu, tr("Reload all files"), this, &MainWindow::scanAudioDirs, QKeySequence::Refresh);
 
     auto toolarea = new QWidget(this);
 
     QToolButton* view_selector_popup_button = new QToolButton(toolarea);
-    view_selector_popup_button->setToolTip("Select view");
+    view_selector_popup_button->setToolTip(tr("Select view"));
 
     view_selector_popup_button->setIcon(iconFromResource(res::VIEW_MENU_SVG()));
     view_selector_popup_button->setIconSize(QSize(24, 24));
@@ -458,12 +458,12 @@ MainWindow::MainWindow(Settings& settings)
     _details_splitter->setChildrenCollapsible(false);
 
     _view_type_tabs = new QTabBar(toolarea);
-    addViewTypeTab(_list, "Icons", "icons");
-    addViewTypeTab(_table, "Table", "table");
+    addViewTypeTab(_list, tr("Icons"), "icons");
+    addViewTypeTab(_table, tr("Table"), "table");
 
     QToolButton* details_toggle_button = new QToolButton(toolarea);
-    details_toggle_button->setText("Details");
-    details_toggle_button->setToolTip("Show details pane");
+    details_toggle_button->setText(tr("Details"));
+    details_toggle_button->setToolTip(tr("Show details pane"));
 
     _status_bar = new QStatusBar(this);
     _status_bar->setSizeGripEnabled(false);

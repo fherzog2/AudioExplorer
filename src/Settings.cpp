@@ -72,5 +72,6 @@ Settings::Settings()
     , main_window_view_type(_settings, "main_window_view_type", QString())
     , main_window_icon_size(_settings, "main_window_icon_size", 0)
     , details_width(_settings, "details_width", 0)
+    , language(_settings, "language", "")
 {
 }

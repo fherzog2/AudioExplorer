@@ -10,6 +10,8 @@
 #include <QtWidgets/qlistview.h>
 #include <QtWidgets/qpushbutton.h>
 #include <QtWidgets/qshortcut.h>
+#include <QtWidgets/qcombobox.h>
+#include <QtWidgets/qgroupbox.h>
 
 class SettingsWidgetDirPaths : public AbstractSettingsWidget
 {
@@ -105,6 +107,55 @@ void SettingsWidgetDirPaths::deleteSelectedRows() const
 
 //=============================================================================
 
+class LanguageSelect : public AbstractSettingsWidget
+{
+public:
+    LanguageSelect(QWidget* parent, SettingsItem<QString>& item);
+
+    QWidget* getWidget() const override;
+    void applyChanges() const override;
+
+private:
+    SettingsItem<QString>& _item;
+    QComboBox* _combobox = nullptr;
+    QGroupBox* _container = nullptr;
+};
+
+LanguageSelect::LanguageSelect(QWidget* parent, SettingsItem<QString>& item)
+    : _item(item)
+{
+    _container = new QGroupBox("Language", parent);
+
+    _combobox = new QComboBox();
+    _combobox->addItem("From operating system", "");
+    _combobox->addItem("English", "en");
+    _combobox->addItem("Deutsch", "de");
+
+    auto layout = new QVBoxLayout(_container);
+    layout->addWidget(_combobox);
+
+    for (int i = 0, n = _combobox->count(); i < n; ++i)
+    {
+        if (_combobox->itemData(i).toString() == item.getValue())
+        {
+            _combobox->setCurrentIndex(i);
+            break;
+        }
+    }
+}
+
+QWidget* LanguageSelect::getWidget() const
+{
+    return _container;
+}
+
+void LanguageSelect::applyChanges() const
+{
+    _item.setValue(_combobox->currentData().toString());
+}
+
+//=============================================================================
+
 FirstStartDialog::FirstStartDialog(QWidget* parent, Settings& settings)
     : QDialog(parent)
 {
@@ -139,8 +190,11 @@ SettingsEditorDialog::SettingsEditorDialog(QWidget* parent, Settings& settings)
 
     setWindowTitle("Preferences");
 
+    _widgets.push_back(std::make_unique<LanguageSelect>(this, settings.language));
     _widgets.push_back(std::unique_ptr<AbstractSettingsWidget>(new SettingsWidgetDirPaths(this, settings.audio_dir_paths, "Add audio directory...")));
-    layout->addWidget(_widgets.back()->getWidget());
+
+    for(const auto& w : _widgets)
+        layout->addWidget(w->getWidget());
 
     auto buttonbox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     connect(buttonbox, &QDialogButtonBox::accepted, this, &QDialog::accept);

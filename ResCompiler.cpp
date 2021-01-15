@@ -56,7 +56,7 @@ bool compile_file_to_c(const std::string& filepath, OutputBuffer& output)
 
     output.names.push_back(name);
 
-    output.blobs += "const char DATA_" + name + "[] = {\n";
+    output.blobs += "const unsigned char DATA_" + name + "[] = {\n";
 
     size_t i = 0;
     for (char c : content)
@@ -115,9 +115,9 @@ void build_file_content(const OutputBuffer& content, std::string& header, std::s
     cpp += content.blobs;
     cpp +=
         "namespace res {\n"
-        "    inline data make_data(const char* ptr, size_t size) {\n"
+        "    inline data make_data(const unsigned char* ptr, size_t size) {\n"
         "        data d;\n"
-        "        d.ptr = ptr;\n"
+        "        d.ptr = reinterpret_cast<const char*>(ptr);\n"
         "        d.size = size;\n"
         "        return d;\n"
         "    }\n"

@@ -103,4 +103,5 @@ public:
     SettingsItem<QString> main_window_view_type;
     SettingsItem<int> main_window_icon_size;
     SettingsItem<int> details_width;
+    SettingsItem<QString> language;
 };

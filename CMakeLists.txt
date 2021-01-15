@@ -15,6 +15,7 @@ find_library(TAGLIB_LIBRARY
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 find_package(Qt5Widgets CONFIG REQUIRED)
 find_package(Qt5Svg CONFIG REQUIRED)
+find_package(Qt5LinguistTools CONFIG REQUIRED)
 find_package(Threads REQUIRED)
 
 if(MSVC AND ENABLE_STATIC_RUNTIME)
@@ -53,6 +54,36 @@ if(WIN32)
                           src/project_version.rc)
 endif()
 
+# add our own translations
+
+set(RECREATE_TRANSLATIONS ON)
+
+set(TS_FILES ${CMAKE_SOURCE_DIR}/translations/AudioExplorer_de.ts)
+if(RECREATE_TRANSLATIONS)
+    qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR}/src ${TS_FILES} OPTIONS -no-obsolete -locations none)
+else()
+    qt5_add_translation(QM_FILES ${TS_FILES})
+endif()
+
+# add Qt translations
+
+get_target_property (QT_QMAKE_EXECUTABLE Qt5::qmake IMPORTED_LOCATION)
+execute_process(COMMAND ${QT_QMAKE_EXECUTABLE} -query QT_INSTALL_TRANSLATIONS
+                OUTPUT_VARIABLE QT_INSTALL_TRANSLATIONS
+                RESULT_VARIABLE QT_INSTALL_TRANSLATIONS_RESULT)
+
+if (NOT QT_INSTALL_TRANSLATIONS_RESULT EQUAL 0)
+    message(FATAL_ERROR "Cannot find Qt translations")
+endif()
+
+# remove trailing newline
+string(REGEX REPLACE "\n$" "" QT_INSTALL_TRANSLATIONS "${QT_INSTALL_TRANSLATIONS}")
+
+list(APPEND QM_FILES ${QT_INSTALL_TRANSLATIONS}/qt_en.qm
+                     ${QT_INSTALL_TRANSLATIONS}/qt_de.qm
+                     ${QT_INSTALL_TRANSLATIONS}/qtbase_en.qm
+                     ${QT_INSTALL_TRANSLATIONS}/qtbase_de.qm)
+
 set_source_files_properties(${CMAKE_BINARY_DIR}/compiled_resources.cpp
                             ${CMAKE_BINARY_DIR}/compiled_resources.h
                             PROPERTIES GENERATED TRUE
@@ -82,6 +113,7 @@ add_executable(AudioExplorer WIN32 src/main.cpp
                                    src/ThreadSafeAudioLibrary.h
                                    src/TrackInfoReader.cpp
                                    src/TrackInfoReader.h
+                                   ${TS_FILES}
                                    ${CMAKE_BINARY_DIR}/compiled_resources.cpp
                                    ${CMAKE_BINARY_DIR}/compiled_resources.h
                                    ${WIN_RESOURCE_FILE}
@@ -107,8 +139,8 @@ endif(MSVC)
 add_executable(ResCompiler ResCompiler.cpp)
 set_property(TARGET ResCompiler PROPERTY CXX_STANDARD 14)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/compiled_resources.cpp ${CMAKE_BINARY_DIR}/compiled_resources.h
-                   COMMAND ResCompiler -i ${CMAKE_CURRENT_LIST_DIR}/res/view_menu.svg -o ${CMAKE_BINARY_DIR}/compiled_resources.cpp
-                   DEPENDS ${CMAKE_CURRENT_LIST_DIR}/res/view_menu.svg)
+                   COMMAND ResCompiler -i ${CMAKE_CURRENT_LIST_DIR}/res/view_menu.svg ${QM_FILES} -o ${CMAKE_BINARY_DIR}/compiled_resources.cpp
+                   DEPENDS ${CMAKE_CURRENT_LIST_DIR}/res/view_menu.svg ${QM_FILES})
 
 # test
 
@@ -138,7 +170,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND SANITIZE_ADDRESS)
 endif()
 
 if(MSVC)
-  target_compile_options(test1 PRIVATE /W4 /WX)
+  target_compile_options(test1 PRIVATE /W4 /WX /wd4996)
 else(MSVC)
   target_compile_options(test1 PRIVATE -Wall -Wextra -pedantic -Werror)
 endif(MSVC)
