@@ -155,7 +155,7 @@ namespace {
             result.push_back('\"' + word + '\"');
 
         for (const QString& word : _forbidden_words)
-            result.push_back("not \"" + word + '\"');
+            result.push_back(QObject::tr("not \"%1\"").arg(word));
 
         return QString("%1 (%2)").arg(view_name, result.join(", "));
     }
@@ -179,55 +179,55 @@ QString AudioLibraryView::getColumnFriendlyName(Column column, DisplayMode mode)
             return getColumnFriendlyName(GENRE, mode);
         case DisplayMode::ALBUMS:
         case DisplayMode::TRACKS:
-            return "Name";
+            return QObject::tr("Name");
         }
         break;
     case NUMBER_OF_ALBUMS:
-        return "Number of albums";
+        return QObject::tr("Number of albums");
     case ARTIST:
-        return "Artist";
+        return QObject::tr("Artist");
     case ALBUM:
-        return "Album";
+        return QObject::tr("Album");
     case YEAR:
-        return "Year";
+        return QObject::tr("Year");
     case GENRE:
-        return "Genre";
+        return QObject::tr("Genre");
     case COVER_CHECKSUM:
-        return "Cover checksum";
+        return QObject::tr("Cover checksum");
     case COVER_TYPE:
-        return "Cover type";
+        return QObject::tr("Cover type");
     case COVER_WIDTH:
-        return "Cover width";
+        return QObject::tr("Cover width");
     case COVER_HEIGHT:
-        return "Cover height";
+        return QObject::tr("Cover height");
     case COVER_DATASIZE:
-        return "Cover size";
+        return QObject::tr("Cover size");
     case NUMBER_OF_TRACKS:
-        return "Number of tracks";
+        return QObject::tr("Number of tracks");
     case TITLE:
-        return "Title";
+        return QObject::tr("Title");
     case TRACK_NUMBER:
-        return "Track number";
+        return QObject::tr("Track number");
     case DISC_NUMBER:
-        return "Disc number";
+        return QObject::tr("Disc number");
     case ALBUM_ARTIST:
-        return "Album Artist";
+        return QObject::tr("Album Artist");
     case COMMENT:
-        return "Comment";
+        return QObject::tr("Comment");
     case PATH:
-        return "Path";
+        return QObject::tr("Path");
     case DATE_MODIFIED:
-        return "Date modified";
+        return QObject::tr("Date modified");
     case TAG_TYPES:
-        return "Tag types";
+        return QObject::tr("Tag types");
     case LENGTH_SECONDS:
-        return "Length";
+        return QObject::tr("Length");
     case CHANNELS:
-        return "Channels";
+        return QObject::tr("Channels");
     case BITRATE_KBS:
-        return "Bit Rate";
+        return QObject::tr("Bit Rate");
     case SAMPLERATE_HZ:
-        return "Sample Rate";
+        return QObject::tr("Sample Rate");
 
     case NUMBER_OF_COLUMNS:
         break;
@@ -291,15 +291,15 @@ QString AudioLibraryView::getDisplayModeFriendlyName(DisplayMode mode)
     switch (mode)
     {
     case DisplayMode::ARTISTS:
-        return "Artists";
+        return QObject::tr("Artists");
     case DisplayMode::ALBUMS:
-        return "Albums";
+        return QObject::tr("Albums");
     case DisplayMode::TRACKS:
-        return "Tracks";
+        return QObject::tr("Tracks");
     case DisplayMode::YEARS:
-        return "Years";
+        return QObject::tr("Years");
     case DisplayMode::GENRES:
-        return "Genres";
+        return QObject::tr("Genres");
     }
 
     return QString();
@@ -410,7 +410,7 @@ std::unique_ptr<AudioLibraryView> AudioLibraryViewAllArtists::clone() const
 
 QString AudioLibraryViewAllArtists::getDisplayName() const
 {
-    return FilterHandler(_filter).formatFilterString("Artists");
+    return FilterHandler(_filter).formatFilterString(QObject::tr("Artists"));
 }
 
 std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewAllArtists::getSupportedModes() const
@@ -483,7 +483,7 @@ std::unique_ptr<AudioLibraryView> AudioLibraryViewAllAlbums::clone() const
 
 QString AudioLibraryViewAllAlbums::getDisplayName() const
 {
-    return FilterHandler(_filter).formatFilterString("Albums");
+    return FilterHandler(_filter).formatFilterString(QObject::tr("Albums"));
 }
 
 std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewAllAlbums::getSupportedModes() const
@@ -527,7 +527,7 @@ std::unique_ptr<AudioLibraryView> AudioLibraryViewAllTracks::clone() const
 
 QString AudioLibraryViewAllTracks::getDisplayName() const
 {
-    return FilterHandler(_filter).formatFilterString("Tracks");
+    return FilterHandler(_filter).formatFilterString(QObject::tr("Tracks"));
 }
 
 std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewAllTracks::getSupportedModes() const
@@ -570,7 +570,7 @@ std::unique_ptr<AudioLibraryView> AudioLibraryViewAllYears::clone() const
 
 QString AudioLibraryViewAllYears::getDisplayName() const
 {
-    return "Years";
+    return QObject::tr("Years");
 }
 
 std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewAllYears::getSupportedModes() const
@@ -625,7 +625,7 @@ std::unique_ptr<AudioLibraryView> AudioLibraryViewAllGenres::clone() const
 
 QString AudioLibraryViewAllGenres::getDisplayName() const
 {
-    return FilterHandler(_filter).formatFilterString("Genres");
+    return FilterHandler(_filter).formatFilterString(QObject::tr("Genres"));
 }
 
 std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewAllGenres::getSupportedModes() const
@@ -951,7 +951,7 @@ std::unique_ptr<AudioLibraryView> AudioLibraryViewDuplicateAlbums::clone() const
 
 QString AudioLibraryViewDuplicateAlbums::getDisplayName() const
 {
-    return "Badly tagged albums";
+    return QObject::tr("Badly tagged albums");
 }
 
 std::vector<AudioLibraryView::DisplayMode> AudioLibraryViewDuplicateAlbums::getSupportedModes() const

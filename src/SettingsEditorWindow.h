@@ -20,6 +20,7 @@ public:
 */
 class FirstStartDialog : public QDialog
 {
+    Q_OBJECT
 public:
     FirstStartDialog(QWidget* parent, Settings& settings);
 
@@ -34,6 +35,7 @@ private:
 */
 class SettingsEditorDialog : public QDialog
 {
+    Q_OBJECT
 public:
     SettingsEditorDialog(QWidget* parent, Settings& settings);
 

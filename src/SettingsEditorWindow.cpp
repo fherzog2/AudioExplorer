@@ -16,7 +16,7 @@
 class SettingsWidgetDirPaths : public AbstractSettingsWidget
 {
 public:
-    SettingsWidgetDirPaths(QWidget* parent, SettingsItem<QStringList>& item, const QString& button_text);
+    SettingsWidgetDirPaths(QWidget* parent, SettingsItem<QStringList>& item);
 
     QWidget* getWidget() const override;
     void applyChanges() const override;
@@ -30,12 +30,12 @@ private:
     QStandardItemModel* _model = nullptr;
 };
 
-SettingsWidgetDirPaths::SettingsWidgetDirPaths(QWidget* parent, SettingsItem<QStringList>& item, const QString& button_text)
+SettingsWidgetDirPaths::SettingsWidgetDirPaths(QWidget* parent, SettingsItem<QStringList>& item)
     : _item(item)
 {
     _container = new QFrame(parent);
 
-    QPushButton* add_button = new QPushButton(button_text, _container);
+    QPushButton* add_button = new QPushButton(QObject::tr("Add audio directory..."), _container);
     QObject::connect(add_button, &QPushButton::clicked, [this](){
         QString path = QFileDialog::getExistingDirectory();
         if(!path.isEmpty())
@@ -60,7 +60,7 @@ SettingsWidgetDirPaths::SettingsWidgetDirPaths(QWidget* parent, SettingsItem<QSt
             return;
 
         QMenu menu;
-        QAction* delete_action = menu.addAction("Delete");
+        QAction* delete_action = menu.addAction(QObject::tr("Delete"));
         QObject::connect(delete_action, &QAction::triggered, [this](){
             deleteSelectedRows();
         });
@@ -124,7 +124,7 @@ private:
 LanguageSelect::LanguageSelect(QWidget* parent, SettingsItem<QString>& item)
     : _item(item)
 {
-    _container = new QGroupBox("Language", parent);
+    _container = new QGroupBox(QObject::tr("Language"), parent);
 
     _combobox = new QComboBox();
     _combobox->addItem("From operating system", "");
@@ -161,9 +161,9 @@ FirstStartDialog::FirstStartDialog(QWidget* parent, Settings& settings)
 {
     auto layout = new QVBoxLayout(this);
 
-    setWindowTitle("Initialization");
+    setWindowTitle(tr("Initialization"));
 
-    _audio_dir_paths_widget.reset(new SettingsWidgetDirPaths(this, settings.audio_dir_paths, "Add audio directory..."));
+    _audio_dir_paths_widget.reset(new SettingsWidgetDirPaths(this, settings.audio_dir_paths));
     layout->addWidget(_audio_dir_paths_widget->getWidget());
 
     auto buttonbox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
@@ -188,10 +188,10 @@ SettingsEditorDialog::SettingsEditorDialog(QWidget* parent, Settings& settings)
 {
     auto layout = new QVBoxLayout(this);
 
-    setWindowTitle("Preferences");
+    setWindowTitle(tr("Preferences"));
 
     _widgets.push_back(std::make_unique<LanguageSelect>(this, settings.language));
-    _widgets.push_back(std::unique_ptr<AbstractSettingsWidget>(new SettingsWidgetDirPaths(this, settings.audio_dir_paths, "Add audio directory...")));
+    _widgets.push_back(std::unique_ptr<AbstractSettingsWidget>(new SettingsWidgetDirPaths(this, settings.audio_dir_paths)));
 
     for(const auto& w : _widgets)
         layout->addWidget(w->getWidget());

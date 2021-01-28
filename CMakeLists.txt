@@ -56,7 +56,7 @@ endif()
 
 # add our own translations
 
-set(RECREATE_TRANSLATIONS ON)
+#set(RECREATE_TRANSLATIONS ON)
 
 set(TS_FILES ${CMAKE_SOURCE_DIR}/translations/AudioExplorer_de.ts)
 if(RECREATE_TRANSLATIONS)

@@ -148,14 +148,14 @@ ViewSelector::ViewSelector()
 
     setFrameShape(QFrame::Box);
 
-    _artist_button = new QRadioButton("Artists", this);
-    _album_button = new QRadioButton("Albums", this);
-    _track_button = new QRadioButton("Tracks", this);
-    _year_button = new QRadioButton("Years", this);
-    _genre_button = new QRadioButton("Genres", this);
+    _artist_button = new QRadioButton(AudioLibraryView::getDisplayModeFriendlyName(AudioLibraryView::DisplayMode::ARTISTS), this);
+    _album_button = new QRadioButton(AudioLibraryView::getDisplayModeFriendlyName(AudioLibraryView::DisplayMode::ALBUMS), this);
+    _track_button = new QRadioButton(AudioLibraryView::getDisplayModeFriendlyName(AudioLibraryView::DisplayMode::TRACKS), this);
+    _year_button = new QRadioButton(AudioLibraryView::getDisplayModeFriendlyName(AudioLibraryView::DisplayMode::YEARS), this);
+    _genre_button = new QRadioButton(AudioLibraryView::getDisplayModeFriendlyName(AudioLibraryView::DisplayMode::GENRES), this);
 
     _filter_box = new QLineEdit(this);
-    _filter_box->setPlaceholderText("Filter...");
+    _filter_box->setPlaceholderText(tr("Filter..."));
     _filter_box->setClearButtonEnabled(true);
 
     auto layout = new QVBoxLayout(this);
@@ -631,7 +631,7 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event)
             if (view->model()->rowCount() == 0)
             {
                 QPainter p(view->viewport());
-                p.drawText(QRect(QPoint(0, 0), view->viewport()->size()), Qt::AlignCenter, "This view is empty");
+                p.drawText(QRect(QPoint(0, 0), view->viewport()->size()), Qt::AlignCenter, tr("This view is empty"));
             }
             break;
         default:
@@ -661,12 +661,12 @@ void MainWindow::onShowFindWidget()
         _find_widget = new QWidget(this, Qt::Window);
 
         _find_widget_line_edit = new QLineEdit(_find_widget);
-        _find_widget_line_edit->setPlaceholderText("Find...");
+        _find_widget_line_edit->setPlaceholderText(tr("Find..."));
         _find_widget_line_edit->setClearButtonEnabled(true);
         connect(_find_widget_line_edit, &QLineEdit::returnPressed, this, &MainWindow::onFindNext);
 
         QPushButton* search_button = new QPushButton(_find_widget);
-        search_button->setText("Find Next");
+        search_button->setText(tr("Find Next"));
         connect(search_button, &QPushButton::clicked, this, &MainWindow::onFindNext);
 
         QShortcut* shortcut_escape = new QShortcut(Qt::Key_Escape, _find_widget);
@@ -731,9 +731,7 @@ void MainWindow::onLibraryCacheLoading()
         num_tracks += acc.getLibrary().getNumberOfTracks();
     }
 
-    QString message = num_tracks == 1 ?
-        "Loading cache: %1 file" :
-        "Loading cache: %1 files";
+    const QString message = tr("Loading cache: %1 files", nullptr, int(num_tracks));
 
     _status_bar->showMessage(message.arg(num_tracks));
 
@@ -744,9 +742,7 @@ void MainWindow::onLibraryLoadProgressed(int files_loaded, int files_in_cache)
 {
     int num_tracks = files_in_cache + files_loaded;
 
-    QString message = num_tracks == 1 ?
-        "%1 file loaded" :
-        "%1 files loaded";
+    const QString message = tr("%1 files loaded", nullptr, num_tracks);
 
     _status_bar->showMessage(message.arg(num_tracks));
 
@@ -757,9 +753,7 @@ void MainWindow::onLibraryLoadFinished(int files_loaded, int files_in_cache, flo
 {
     int num_tracks = files_in_cache + files_loaded;
 
-    QString message = num_tracks == 1 ?
-        "%1 file loaded in %2s" :
-        "%1 files loaded in %2s";
+    const QString message = tr("%1 files loaded in %2s", nullptr, num_tracks);
 
     _status_bar->showMessage(message.arg(num_tracks).arg(duration_sec, 0, 'f', 1));
 
@@ -917,7 +911,7 @@ void MainWindow::onTableHeaderContextMenu(const QPoint& pos)
     int clicked_index = _table->horizontalHeader()->logicalIndexAt(pos.x());
     if (clicked_index != -1 && clicked_index != AudioLibraryView::ZERO)
     {
-        QAction* action = menu.addAction("Hide");
+        QAction* action = menu.addAction(tr("Hide"));
         connect(action, &QAction::triggered, [this, clicked_index](){
             _table->setColumnHidden(clicked_index, true);
 
@@ -1371,13 +1365,13 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
             for (int row : rows)
                 selected_row_indexes.push_back(view->model()->index(row, AudioLibraryView::ZERO));
 
-            QAction* add_to_vlc_action = menu.addAction("Add to VLC Playlist");
+            QAction* add_to_vlc_action = menu.addAction(tr("Add to VLC Playlist"));
 
             connect(add_to_vlc_action, &QAction::triggered, this, [this, selected_row_indexes]() {
                 startVlc(selected_row_indexes, true);
             });
 
-            QAction* play_with_vlc_action = menu.addAction("Play with VLC");
+            QAction* play_with_vlc_action = menu.addAction(tr("Play with VLC"));
 
             connect(play_with_vlc_action, &QAction::triggered, this, [this, selected_row_indexes]() {
                 startVlc(selected_row_indexes, false);
@@ -1402,7 +1396,7 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
 
                 if (!findBreadcrumbId(artist_view->getId()))
                 {
-                    QAction* artist_action = menu.addAction(QString("More from artist \"%1\"...").arg(artist));
+                    QAction* artist_action = menu.addAction(tr("More from artist \"%1\"...").arg(artist));
 
                     auto slot = [this, artist_view]() {
                         addBreadCrumb(artist_view->clone());
@@ -1435,7 +1429,7 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
 
                     if (!findBreadcrumbId(album_view->getId()))
                     {
-                        QAction* artist_action = menu.addAction(QString("Show album \"%1\"").arg(key.getAlbum()));
+                        QAction* artist_action = menu.addAction(tr("Show album \"%1\"").arg(key.getAlbum()));
 
                         auto slot = [this, album_view]() {
                             addBreadCrumb(album_view->clone());
@@ -1449,7 +1443,7 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
 
                 if (containing_folder_opener.isSupported())
                 {
-                    QAction* action = menu.addAction("Open containing folder");
+                    QAction* action = menu.addAction(tr("Open containing folder"));
 
                     connect(action, &QAction::triggered, this, containing_folder_opener);
                 }
@@ -1466,7 +1460,7 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
                 {
                     QPixmap pixmap = icon.pixmap(icon.availableSizes().front());
 
-                    QAction* action = menu.addAction("View coverart");
+                    QAction* action = menu.addAction(tr("View coverart"));
 
                     auto slot = [this, pixmap]() {
                         ImageViewWindow* image_view = new ImageViewWindow(_settings);

@@ -242,7 +242,7 @@ void DetailsPane::setSelection(const QAbstractItemModel* model, const QAbstractI
     _picture_box->setIcon(picture);
 
     if (!current.isValid())
-        _empty_text = "Nothing selected";
+        _empty_text = tr("Nothing selected");
     else
         _empty_text.clear();
 
