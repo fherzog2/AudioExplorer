@@ -481,7 +481,7 @@ MainWindow::MainWindow(Settings& settings)
     tool_vbox->addLayout(breadcrumb_layout_wrapper);
 
     QVBoxLayout* vbox = new QVBoxLayout(this);
-    vbox->setMargin(0);
+    vbox->setContentsMargins(0, 0, 0, 0);
     vbox->setSpacing(0);
     vbox->setMenuBar(menubar);
     vbox->addWidget(toolarea);

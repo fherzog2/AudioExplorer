@@ -191,7 +191,7 @@ DetailsPane::DetailsPane(QWidget* parent)
     data_grid_padding_layout->addStretch(1);
 
     QVBoxLayout* vbox = new QVBoxLayout(this);
-    vbox->setMargin(0);
+    vbox->setContentsMargins(0, 0, 0, 0);
     vbox->addWidget(_picture_box);
     vbox->addWidget(data_grid_scroll_area, 1);
 

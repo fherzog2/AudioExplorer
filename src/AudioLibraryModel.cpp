@@ -519,7 +519,7 @@ void AudioLibraryModel::onUpdateFinished()
 
 void AudioLibraryModel::setDateTimeColumn(int row, AudioLibraryView::Column column, const QDateTime& date)
 {
-    _item_model->setDataInternal(row, column, date.toString(Qt::DefaultLocaleShortDate));
+    _item_model->setDataInternal(row, column, QLocale::system().toString(date, QLocale::ShortFormat));
     _item_model->setDataInternal(row, column, date.toString(Qt::ISODate), AudioLibraryView::SORT_ROLE);
 }
 

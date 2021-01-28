@@ -223,7 +223,7 @@ ImageViewWindow::ImageViewWindow(Settings& settings)
     _scroll_area = new ImageView(this);
 
     QVBoxLayout* layout = new QVBoxLayout(this);
-    layout->setMargin(0);
+    layout->setContentsMargins(0, 0, 0, 0);
     layout->addWidget(_scroll_area);
 
     setAttribute(Qt::WA_DeleteOnClose);
