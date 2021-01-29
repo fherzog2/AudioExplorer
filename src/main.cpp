@@ -3,6 +3,7 @@
 
 #include <QtCore/qtranslator.h>
 #include <QtWidgets/qapplication.h>
+#include <QtWidgets/qmessagebox.h>
 #include "project_version.h"
 #include "compiled_resources.h"
 
@@ -11,7 +12,10 @@ class TranslationManager
 public:
     TranslationManager(QApplication* app);
 
+    QString getLanguage() const;
     void setLanguage(const QString& lang);
+
+    QString getSupportedSystemLanguage() const;
 
 private:
     void setLanguageInternal(const QString& lang);
@@ -38,35 +42,38 @@ TranslationManager::TranslationManager(QApplication* app)
     };
 }
 
+QString TranslationManager::getLanguage() const
+{
+    return _current_lang;
+}
+
 void TranslationManager::setLanguage(const QString& lang)
 {
-    if (lang.isEmpty())
-    {
-        // use OS language
+    setLanguageInternal(lang.isEmpty() ? getSupportedSystemLanguage() : lang);
+}
 
-        const QStringList ui_languages = QLocale().uiLanguages();
-        if (!ui_languages.isEmpty())
+QString TranslationManager::getSupportedSystemLanguage() const
+{
+    // try each UI language
+
+    for (const QString& ui_lang : QLocale().uiLanguages())
+    {
+        if (ui_lang.size() >= 2)
         {
-            const QString ui_lang = ui_languages.front();
-            if (ui_lang.size() >= 2)
-            {
-                setLanguageInternal(ui_lang.left(2));
-                return;
-            }
+            const QString candidate = ui_lang.left(2);
+
+            if (_translation_files.find(candidate) != _translation_files.end())
+                return candidate;
         }
     }
 
-    setLanguageInternal(lang);
+    // fallback to english if the system languages are not supported
+    return "en";
 }
 
 void TranslationManager::setLanguageInternal(const QString& lang)
 {
     auto it = _translation_files.find(lang);
-    if (it == _translation_files.end())
-    {
-        // fallback to english if the language is not supported
-        it = _translation_files.find("en");
-    }
 
     if (_current_lang == it->first)
         return;
@@ -89,6 +96,60 @@ void TranslationManager::setLanguageInternal(const QString& lang)
     }
 }
 
+class MainWindowCreator : public QObject
+{
+public:
+    MainWindowCreator(Settings& settings, TranslationManager& translation_manager);
+
+    void create();
+
+private:
+    void checkLanguageChangedSlot();
+
+    Settings& _settings;
+    TranslationManager& _translation_manager;
+    std::unique_ptr<MainWindow> _main;
+};
+
+MainWindowCreator::MainWindowCreator(Settings& settings, TranslationManager& translation_manager)
+    : _settings(settings)
+    , _translation_manager(translation_manager)
+{}
+
+void MainWindowCreator::create()
+{
+    _main = std::make_unique<MainWindow>(_settings);
+    connect(_main.get(), &MainWindow::checkLanguageChanged, this, &MainWindowCreator::checkLanguageChangedSlot);
+}
+
+void MainWindowCreator::checkLanguageChangedSlot()
+{
+    const QString new_language = _settings.language.getValue();
+    const QString new_language_resolved = new_language.isEmpty() ? _translation_manager.getSupportedSystemLanguage() : new_language;
+
+    if (new_language_resolved == _translation_manager.getLanguage())
+        return; // nothing to do
+
+    if (QMessageBox::question(_main.get(),
+                              QObject::tr("Restart software?"),
+                              QObject::tr("Do you want to restart the software now to change the language?")) == QMessageBox::StandardButton::No)
+        return;
+
+    _translation_manager.setLanguage(new_language);
+
+    // Recreate the main window.
+    // The old window is safely destroyed with deleteLater,
+    // and as soon as it is destroyed, a new main window takes its place.
+    // The old main window has to be destroyed before the new one can be created,
+    // because it is writing back its settings and cache-data during destruction.
+
+    connect(_main.get(), &QObject::destroyed, this, [this]() {
+        create();
+    });
+
+    _main.release()->deleteLater();
+}
+
 int main(int argc, char** argv)
 {
     QApplication app(argc, argv);
@@ -99,7 +160,8 @@ int main(int argc, char** argv)
     TranslationManager translation_manager(&app);
     translation_manager.setLanguage(settings.language.getValue());
 
-    MainWindow main(settings);
+    MainWindowCreator main_creator(settings, translation_manager);
+    main_creator.create();
 
     return app.exec();
 }

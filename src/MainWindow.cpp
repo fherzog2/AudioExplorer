@@ -652,6 +652,8 @@ void MainWindow::onEditPreferences()
     {
         scanAudioDirs();
     }
+
+    checkLanguageChanged();
 }
 
 void MainWindow::onShowFindWidget()
