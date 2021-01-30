@@ -23,7 +23,7 @@ protected:
 private:
     void setOffset(const QPointF& offset);
     QPointF imagePointToViewportPoint(const QPointF& image_point) const;
-    QPointF viewportPointToImagePoint(const QPoint& viewport_point) const;
+    QPointF viewportPointToImagePoint(const QPointF& viewport_point) const;
     void getImageToViewportTransformation(double& scaling, double& tx, double& ty) const;
     double getMinScaleFactor() const;
 

@@ -369,7 +369,10 @@ void ContainingFolderOpener::operator()() const
     QString filepath = _filepath;
     filepath.replace('/', '\\');
 
-    QProcess::startDetached("explorer /select," + filepath);
+    QProcess process;
+    process.setProgram("explorer");
+    process.setNativeArguments(QString("/select,%1").arg(filepath));
+    process.startDetached();
 #endif
 }
 

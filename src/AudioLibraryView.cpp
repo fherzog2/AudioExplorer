@@ -115,7 +115,13 @@ namespace {
 
     FilterHandler::FilterHandler(const QString& filter)
     {
-        for (const QString& word : filter.split(' ', QString::SkipEmptyParts))
+        for (const QString& word : filter.split(' ',
+#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
+            Qt::SkipEmptyParts
+#else
+            QString::SkipEmptyParts
+#endif
+            ))
         {
             if (word.startsWith('!'))
             {
