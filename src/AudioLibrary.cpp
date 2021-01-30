@@ -288,9 +288,9 @@ void AudioLibrary::removeTracksWithInvalidPaths()
     }
 }
 
-std::vector<AudioLibraryAlbum*> AudioLibrary::getAlbums() const
+std::vector<const AudioLibraryAlbum*> AudioLibrary::getAlbums() const
 {
-    std::vector<AudioLibraryAlbum*> result;
+    std::vector<const AudioLibraryAlbum*> result;
 
     for (const auto& album : _album_map)
         result.push_back(album.second.get());
@@ -298,7 +298,16 @@ std::vector<AudioLibraryAlbum*> AudioLibrary::getAlbums() const
     return result;
 }
 
-AudioLibraryAlbum* AudioLibrary::getAlbum(const AudioLibraryAlbumKey& key) const
+const AudioLibraryAlbum* AudioLibrary::getAlbum(const AudioLibraryAlbumKey& key) const
+{
+    auto it = _album_map.find(key);
+    if (it != _album_map.end())
+        return it->second.get();
+
+    return nullptr;
+}
+
+AudioLibraryAlbum* AudioLibrary::getAlbum(const AudioLibraryAlbumKey& key)
 {
     auto it = _album_map.find(key);
     if (it != _album_map.end())

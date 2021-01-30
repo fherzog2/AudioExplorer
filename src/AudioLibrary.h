@@ -178,8 +178,9 @@ public:
     void removeTrack(AudioLibraryTrack* track);
     void removeTracksWithInvalidPaths();
 
-    std::vector<AudioLibraryAlbum*> getAlbums() const;
-    AudioLibraryAlbum* getAlbum(const AudioLibraryAlbumKey& key) const;
+    std::vector<const AudioLibraryAlbum*> getAlbums() const;
+    const AudioLibraryAlbum* getAlbum(const AudioLibraryAlbumKey& key) const;
+    AudioLibraryAlbum* getAlbum(const AudioLibraryAlbumKey& key);
     size_t getNumberOfTracks() const;
 
     bool isModified() const;
