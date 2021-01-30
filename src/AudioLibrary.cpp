@@ -137,7 +137,85 @@ QString AudioLibraryAlbum::getCoverTypeInternal() const
 
 //=============================================================================
 
-AudioLibraryTrack* AudioLibrary::findTrack(const QString& filepath) const
+AudioLibraryTrack::AudioLibraryTrack(AudioLibraryAlbum* album,
+    const QString& filepath,
+    const QDateTime& last_modified,
+    const QString& artist,
+    const QString& album_artist,
+    const QString& title,
+    int track_number,
+    int disc_number,
+    const QString& comment,
+    const QString& tag_types,
+    int length_milliseconds,
+    int channels,
+    int bitrate_kbs,
+    int samplerate_hz)
+    : _album(album)
+    , _artist(artist)
+    , _album_artist(album_artist)
+    , _filepath(filepath)
+    , _last_modified(last_modified)
+    , _title(title)
+    , _track_number(track_number)
+    , _disc_number(disc_number)
+    , _comment(comment)
+    , _tag_types(tag_types)
+    , _length_milliseconds(length_milliseconds)
+    , _channels(channels)
+    , _bitrate_kbs(bitrate_kbs)
+    , _samplerate_hz(samplerate_hz)
+{
+    QLatin1Char sep(',');
+
+    _id = _album->getId() +
+        QLatin1String(".track(") +
+        _artist + sep +
+        _album_artist + sep +
+        _filepath + sep +
+        _title + sep +
+        QString::number(_track_number) + sep +
+        QString::number(_disc_number) + sep +
+        _comment + sep +
+        _tag_types + sep +
+        QString::number(_length_milliseconds) + sep +
+        QString::number(_channels) + sep +
+        QString::number(_bitrate_kbs) + sep +
+        QString::number(_samplerate_hz) + QLatin1Char(')');
+}
+
+bool AudioLibraryTrack::operator==(const AudioLibraryTrack& other) const
+{
+    auto tie = [](const AudioLibraryTrack& t) {
+        return std::tie(
+            t._album->getKey(),
+            t._album->getCover(),
+            t._artist,
+            t._album_artist,
+            t._filepath,
+            t._last_modified,
+            t._title,
+            t._track_number,
+            t._disc_number,
+            t._comment,
+            t._tag_types,
+            t._length_milliseconds,
+            t._channels,
+            t._bitrate_kbs,
+            t._samplerate_hz);
+    };
+
+    return tie(*this) == tie(other);
+}
+
+bool AudioLibraryTrack::operator!=(const AudioLibraryTrack& other) const
+{
+    return !operator==(other);
+}
+
+//=============================================================================
+
+const AudioLibraryTrack* AudioLibrary::findTrack(const QString& filepath) const
 {
     auto it = _filepath_to_track_map.find(filepath);
     if(it != _filepath_to_track_map.end())
@@ -148,8 +226,11 @@ AudioLibraryTrack* AudioLibrary::findTrack(const QString& filepath) const
 
 void AudioLibrary::addTrack(const QString& filepath, const QDateTime& last_modified, const TrackInfo& track_info)
 {
-    if(AudioLibraryTrack* track = findTrack(filepath))
-        removeTrack(track); // clean up old stuff
+    {
+        auto it = _filepath_to_track_map.find(filepath);
+        if (it != _filepath_to_track_map.end())
+            removeTrack(it->second.get()); // clean up old stuff
+    }
 
     AudioLibraryAlbum* album = addAlbum(AudioLibraryAlbumKey(track_info),
                                         track_info.cover);
@@ -175,15 +256,15 @@ void AudioLibrary::addTrack(const QString& filepath, const QDateTime& last_modif
 void AudioLibrary::removeTrack(AudioLibraryTrack* track)
 {
     {
-        track->_album->removeTrack(track);
+        track->getAlbum()->removeTrack(track);
 
-        if(track->_album->getTracks().empty())
+        if(track->getAlbum()->getTracks().empty())
         {
-            _album_map.erase(track->_album->getKey());
-            track->_album = nullptr;
+            _album_map.erase(track->getAlbum()->getKey());
+            track->setAlbumPtr(nullptr);
         }
 
-        _filepath_to_track_map.erase(track->_filepath);
+        _filepath_to_track_map.erase(track->getFilepath());
 
         _is_modified = true;
     }
@@ -270,19 +351,19 @@ void AudioLibrary::save(QDataStream& s) const
 
         for(const AudioLibraryTrack* track : i.second->getTracks())
         {
-            s << track->_filepath;
-            s << track->_last_modified;
-            s << track->_artist;
-            s << track->_album_artist;
-            s << track->_title;
-            s << qint32(track->_track_number);
-            s << qint32(track->_disc_number);
-            s << track->_comment;
-            s << track->_tag_types;
-            s << qint32(track->_length_milliseconds);
-            s << qint32(track->_channels);
-            s << qint32(track->_bitrate_kbs);
-            s << qint32(track->_samplerate_hz);
+            s << track->getFilepath();
+            s << track->getLastModified();
+            s << track->getArtist();
+            s << track->getAlbumArtist();
+            s << track->getTitle();
+            s << qint32(track->getTrackNumber());
+            s << qint32(track->getDiscNumber());
+            s << track->getComment();
+            s << track->getTagTypes();
+            s << qint32(track->getLengthMs());
+            s << qint32(track->getChannels());
+            s << qint32(track->getBitrateKbs());
+            s << qint32(track->getSampleRateHz());
         }
     }
 }

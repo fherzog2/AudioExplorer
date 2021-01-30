@@ -229,8 +229,8 @@ void AudioFilesLoader::threadLoadAudioFiles(const QString& cache_location, const
             {
                 ThreadSafeAudioLibrary::LibraryAccessor acc(_library);
 
-                if (AudioLibraryTrack * track = acc.getLibrary().findTrack(filepath))
-                    if (track->_last_modified == last_modified)
+                if (const AudioLibraryTrack * track = acc.getLibrary().findTrack(filepath))
+                    if (track->getLastModified() == last_modified)
                     {
                         ++files_in_cache;
                         visited_audio_files.insert(filepath);

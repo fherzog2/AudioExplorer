@@ -71,10 +71,10 @@ namespace {
         if (!group_data.showcase_album ||
             group_data.showcase_album->getCoverPixmap().isNull())
         {
-            group_data.showcase_album = track->_album;
+            group_data.showcase_album = track->getAlbum();
         }
 
-        group_data.albums.insert(track->_album);
+        group_data.albums.insert(track->getAlbum());
         ++group_data.num_tracks;
     }
 
@@ -438,18 +438,18 @@ void AudioLibraryViewAllArtists::createItems(const AudioLibrary& library,
         {
             // always add an item for artist, even if this field is empty
 
-            if (filter_handler.checkText(track->_artist))
+            if (filter_handler.checkText(track->getArtist()))
             {
-                addTrackToArtistGroup(track->_artist, track, displayed_groups);
+                addTrackToArtistGroup(track->getArtist(), track, displayed_groups);
             }
 
             // if the album has an album artist, add an extra item for this field
 
-            if (!track->_album_artist.isEmpty() &&
-                track->_artist != track->_album_artist &&
-                filter_handler.checkText(track->_album_artist))
+            if (!track->getAlbumArtist().isEmpty() &&
+                track->getArtist() != track->getAlbumArtist() &&
+                filter_handler.checkText(track->getAlbumArtist()))
             {
-                addTrackToArtistGroup(track->_album_artist, track, displayed_groups);
+                addTrackToArtistGroup(track->getAlbumArtist(), track, displayed_groups);
             }
         }
     }
@@ -551,7 +551,7 @@ void AudioLibraryViewAllTracks::createItems(const AudioLibrary& library,
     {
         for (const AudioLibraryTrack* track : album->getTracks())
         {
-            if(filter_handler.checkText(track->_title))
+            if(filter_handler.checkText(track->getTitle()))
                 model->addTrackItem(track);
         }
     }
@@ -750,8 +750,8 @@ void AudioLibraryViewArtist::createItems(const AudioLibrary& library,
         {
             bool album_row_created = false;
 
-            if (track->_artist == _artist ||
-                (!track->_album_artist.isEmpty() && track->_album_artist == _artist))
+            if (track->getArtist() == _artist ||
+                (!track->getAlbumArtist().isEmpty() && track->getAlbumArtist() == _artist))
             {
                 switch (display_mode)
                 {
@@ -781,8 +781,8 @@ void AudioLibraryViewArtist::resolveToTracks(const AudioLibrary& library, std::v
     {
         for (const AudioLibraryTrack* track : album->getTracks())
         {
-            if (track->_artist == _artist ||
-                (!track->_album_artist.isEmpty() && track->_album_artist == _artist))
+            if (track->getArtist() == _artist ||
+                (!track->getAlbumArtist().isEmpty() && track->getAlbumArtist() == _artist))
             {
                 tracks.push_back(track);
             }

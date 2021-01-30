@@ -125,71 +125,32 @@ public:
         int length_milliseconds,
         int channels,
         int bitrate_kbs,
-        int samplerate_hz)
-        : _album(album)
-        , _artist(artist)
-        , _album_artist(album_artist)
-        , _filepath(filepath)
-        , _last_modified(last_modified)
-        , _title(title)
-        , _track_number(track_number)
-        , _disc_number(disc_number)
-        , _comment(comment)
-        , _tag_types(tag_types)
-        , _length_milliseconds(length_milliseconds)
-        , _channels(channels)
-        , _bitrate_kbs(bitrate_kbs)
-        , _samplerate_hz(samplerate_hz)
-    {
-        QLatin1Char sep(',');
+        int samplerate_hz);
 
-        _id = _album->getId() +
-            QLatin1String(".track(") +
-            _artist + sep +
-            _album_artist + sep +
-            _filepath + sep +
-            _title + sep +
-            QString::number(_track_number) + sep +
-            QString::number(_disc_number) + sep +
-            _comment + sep +
-            _tag_types + sep +
-            QString::number(_length_milliseconds) + sep +
-            QString::number(_channels) + sep +
-            QString::number(_bitrate_kbs) + sep +
-            QString::number(_samplerate_hz) + QLatin1Char(')');
-    }
+    bool operator==(const AudioLibraryTrack& other) const;
+    bool operator!=(const AudioLibraryTrack& other) const;
 
-    std::tuple<AudioLibraryAlbumKey, QByteArray, QString, QString, QString, QDateTime, QString, int, int, QString, QString, int, int, int, int> getMembersAsTuple() const
-    {
-        return std::tie(_album->getKey(),
-            _album->getCover(),
-            _artist,
-            _album_artist,
-            _filepath,
-            _last_modified,
-            _title,
-            _track_number,
-            _disc_number,
-            _comment,
-            _tag_types,
-            _length_milliseconds,
-            _channels,
-            _bitrate_kbs,
-            _samplerate_hz);
-    }
-
-    bool operator==(const AudioLibraryTrack& other) const
-    {
-        return getMembersAsTuple() == other.getMembersAsTuple();
-    }
-
-    bool operator!=(const AudioLibraryTrack& other) const
-    {
-        return !operator==(other);
-    }
+    const AudioLibraryAlbum* getAlbum() const { return _album; }
+    const QString& getArtist() const { return _artist; }
+    const QString& getAlbumArtist() const { return _album_artist; }
+    const QString& getFilepath() const { return _filepath; }
+    const QDateTime& getLastModified() const { return _last_modified; }
+    const QString& getTitle() const { return _title; }
+    int getTrackNumber() const { return _track_number; }
+    int getDiscNumber() const { return _disc_number; }
+    const QString& getComment() const { return _comment; }
+    const QString& getTagTypes() const { return _tag_types; }
+    int getLengthMs() const { return _length_milliseconds; }
+    int getChannels() const { return _channels; }
+    int getBitrateKbs() const { return _bitrate_kbs; }
+    int getSampleRateHz() const { return _samplerate_hz; }
 
     const QString& getId() const { return _id;  }
 
+    AudioLibraryAlbum* getAlbum() { return _album; }
+    void setAlbumPtr(AudioLibraryAlbum* album) { _album = album; }
+
+private:
     AudioLibraryAlbum* _album = nullptr;
     QString _artist;
     QString _album_artist;
@@ -211,7 +172,7 @@ public:
 class AudioLibrary
 {
 public:
-    AudioLibraryTrack* findTrack(const QString& filepath) const;
+    const AudioLibraryTrack* findTrack(const QString& filepath) const;
     void addTrack(const QString& filepath, const QDateTime& last_modified, const TrackInfo& track_info);
 
     void removeTrack(AudioLibraryTrack* track);

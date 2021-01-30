@@ -52,6 +52,23 @@ TrackInfo createTrackInfo(QString artist,
     return info;
 }
 
+void debugPrint(const AudioLibrary& lib)
+{
+    QString str;
+
+    for (auto a : lib.getAlbums())
+    {
+        str += a->getKey().getId() + "\n";
+
+        for (auto t : a->getTracks())
+        {
+            str += t->getId() + "\n";
+        }
+    }
+
+    fprintf(stderr, "%s", qPrintable(str));
+}
+
 bool compareLibraries(const AudioLibrary& a, const AudioLibrary& b)
 {
     const auto albums_a = a.getAlbums();
@@ -78,7 +95,7 @@ bool compareLibraries(const AudioLibrary& a, const AudioLibrary& b)
         auto tracks_b = album_b->getTracks();
 
         auto compare_tracks = [](const AudioLibraryTrack* a, const AudioLibraryTrack* b) {
-            return a->_filepath < b->_filepath;
+            return a->getFilepath() < b->getFilepath();
         };
 
         // the library itself does not sort the tracks

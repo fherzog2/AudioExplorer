@@ -1207,7 +1207,7 @@ void MainWindow::getFilepathsFromIndex(const QModelIndex& index, std::vector<QSt
         view->resolveToTracks(acc.getLibrary(), tracks);
 
         for (const AudioLibraryTrack* track : tracks)
-            filepaths.push_back(track->_filepath);
+            filepaths.push_back(track->getFilepath());
 
         return;
     }
@@ -1232,20 +1232,20 @@ void MainWindow::forEachFilepathAtIndex(const QModelIndex& index, std::function<
         view->resolveToTracks(acc.getLibrary(), tracks);
 
         std::sort(tracks.begin(), tracks.end(), [](const AudioLibraryTrack* a, const AudioLibraryTrack* b) {
-            if (a->_album->getKey().getArtist() != b->_album->getKey().getArtist())
-                return a->_album->getKey().getArtist() < b->_album->getKey().getArtist();
 
-            if (a->_album->getKey().getYear() != b->_album->getKey().getYear())
-                return a->_album->getKey().getYear() < b->_album->getKey().getYear();
+            auto tie = [](const AudioLibraryTrack* t) {
+                return std::make_tuple<const QString&, int, int, const QString&>(
+                    t->getAlbum()->getKey().getArtist(),
+                    t->getAlbum()->getKey().getYear(),
+                    t->getTrackNumber(),
+                    t->getTitle());
+            };
 
-            if (a->_track_number != b->_track_number)
-                return a->_track_number < b->_track_number;
-
-            return a->_title < b->_title;
+            return tie(a) < tie(b);
         });
 
         for (const AudioLibraryTrack* track : tracks)
-            callback(track->_filepath);
+            callback(track->getFilepath());
 
         return;
     }
