@@ -131,8 +131,8 @@ void MainWindowCreator::checkLanguageChangedSlot()
         return; // nothing to do
 
     if (QMessageBox::question(_main.get(),
-                              QObject::tr("Restart software?"),
-                              QObject::tr("Do you want to restart the software now to change the language?")) == QMessageBox::StandardButton::No)
+                              QObject::tr("Restart program?"),
+                              QObject::tr("Do you want to restart the program now to change the language?")) == QMessageBox::StandardButton::No)
         return;
 
     _translation_manager.setLanguage(new_language);

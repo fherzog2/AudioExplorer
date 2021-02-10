@@ -269,6 +269,18 @@
         <source>Add audio directory...</source>
         <translation>Audioverzeichnis hinzufügen...</translation>
     </message>
+    <message>
+        <source>From operating system</source>
+        <translation>Vom Betriebssystem</translation>
+    </message>
+    <message>
+        <source>Restart program?</source>
+        <translation>Programm neustarten?</translation>
+    </message>
+    <message>
+        <source>Do you want to restart the program now to change the language?</source>
+        <translation>Wollen Sie das Programm neustarten, um die geänderte Sprache zu übernehmen?</translation>
+    </message>
 </context>
 <context>
     <name>SettingsEditorDialog</name>

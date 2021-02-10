@@ -127,9 +127,9 @@ LanguageSelect::LanguageSelect(QWidget* parent, SettingsItem<QString>& item)
     _container = new QGroupBox(QObject::tr("Language"), parent);
 
     _combobox = new QComboBox();
-    _combobox->addItem("From operating system", "");
-    _combobox->addItem("English", "en");
-    _combobox->addItem("Deutsch", "de");
+    _combobox->addItem(QObject::tr("From operating system"), "");
+    _combobox->addItem("English (en)", "en");
+    _combobox->addItem("Deutsch (de)", "de");
 
     auto layout = new QVBoxLayout(_container);
     layout->addWidget(_combobox);
