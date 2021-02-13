@@ -140,6 +140,7 @@ QString AudioLibraryAlbum::getCoverTypeInternal() const
 AudioLibraryTrack::AudioLibraryTrack(AudioLibraryAlbum* album,
     const QString& filepath,
     const QDateTime& last_modified,
+    qint64 file_size,
     const QString& artist,
     const QString& album_artist,
     const QString& title,
@@ -156,6 +157,7 @@ AudioLibraryTrack::AudioLibraryTrack(AudioLibraryAlbum* album,
     , _album_artist(album_artist)
     , _filepath(filepath)
     , _last_modified(last_modified)
+    , _file_size(file_size)
     , _title(title)
     , _track_number(track_number)
     , _disc_number(disc_number)
@@ -194,6 +196,7 @@ bool AudioLibraryTrack::operator==(const AudioLibraryTrack& other) const
             t._album_artist,
             t._filepath,
             t._last_modified,
+            t._file_size,
             t._title,
             t._track_number,
             t._disc_number,
@@ -224,7 +227,7 @@ const AudioLibraryTrack* AudioLibrary::findTrack(const QString& filepath) const
     return nullptr;
 }
 
-void AudioLibrary::addTrack(const QString& filepath, const QDateTime& last_modified, const TrackInfo& track_info)
+void AudioLibrary::addTrack(const QString& filepath, const QDateTime& last_modified, qint64 file_size, const TrackInfo& track_info)
 {
     {
         auto it = _filepath_to_track_map.find(filepath);
@@ -238,6 +241,7 @@ void AudioLibrary::addTrack(const QString& filepath, const QDateTime& last_modif
     addTrack(album,
         filepath,
         last_modified,
+        file_size,
         track_info.artist,
         track_info.album_artist,
         track_info.title,
@@ -347,7 +351,7 @@ void AudioLibrary::removeTracksExcept(const std::unordered_set<QString>& loaded_
 
 void AudioLibrary::save(QDataStream& s) const
 {
-    s << qint32(5); // version
+    s << qint32(6); // version
 
     s << quint64(_album_map.size());
 
@@ -362,6 +366,7 @@ void AudioLibrary::save(QDataStream& s) const
         {
             s << track->getFilepath();
             s << track->getLastModified();
+            s << track->getFileSize();
             s << track->getArtist();
             s << track->getAlbumArtist();
             s << track->getTitle();
@@ -398,7 +403,7 @@ void AudioLibrary::Loader::init(AudioLibrary& library, QDataStream& s)
 
     qint32 version;
     s >> version;
-    if (version != 5)
+    if (version != 6)
         return;
 
     s >> _num_albums;
@@ -426,6 +431,7 @@ void AudioLibrary::Loader::loadNextAlbum(AudioLibrary& library)
     {
         QString filepath;
         QDateTime last_modified;
+        qint64 file_size;
         QString artist;
         QString album_artist;
         QString title;
@@ -440,6 +446,7 @@ void AudioLibrary::Loader::loadNextAlbum(AudioLibrary& library)
 
         *_s >> filepath;
         *_s >> last_modified;
+        *_s >> file_size;
         *_s >> artist;
         *_s >> album_artist;
         *_s >> title;
@@ -452,7 +459,7 @@ void AudioLibrary::Loader::loadNextAlbum(AudioLibrary& library)
         *_s >> bitrate_kbs;
         *_s >> samplerate_hz;
 
-        library.addTrack(album, filepath, last_modified, artist, album_artist, title, track_number, disc_number, comment, tag_types, length_milliseconds, channels, bitrate_kbs, samplerate_hz);
+        library.addTrack(album, filepath, last_modified, file_size, artist, album_artist, title, track_number, disc_number, comment, tag_types, length_milliseconds, channels, bitrate_kbs, samplerate_hz);
     }
 
     ++_albums_loaded;
@@ -472,6 +479,7 @@ AudioLibraryAlbum* AudioLibrary::addAlbum(const AudioLibraryAlbumKey& album_key,
 AudioLibraryTrack* AudioLibrary::addTrack(AudioLibraryAlbum* album,
     const QString& filepath,
     const QDateTime& last_modified,
+    qint64 file_size,
     const QString& artist,
     const QString& album_artist,
     const QString& title,
@@ -495,6 +503,7 @@ AudioLibraryTrack* AudioLibrary::addTrack(AudioLibraryAlbum* album,
         album,
         filepath,
         last_modified,
+        file_size,
         artist,
         album_artist,
         title,

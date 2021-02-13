@@ -120,11 +120,11 @@ bool testLibrarySaveAndLoad()
 {
     AudioLibrary lib;
 
-    lib.addTrack("a", QDateTime(), createTrackInfo("artist 1", QString(), "album 1", 2000, "genre 1", QByteArray(), "title 1", 1));
-    lib.addTrack("b", QDateTime(), createTrackInfo("artist 1", QString(), "album 1", 2000, "genre 1", QByteArray(), "title 2", 2));
-    lib.addTrack("c", QDateTime(), createTrackInfo("artist 1", QString(), "album 1", 2000, "genre 1", QByteArray(), "title 3", 3));
+    lib.addTrack("a", QDateTime(), 0, createTrackInfo("artist 1", QString(), "album 1", 2000, "genre 1", QByteArray(), "title 1", 1));
+    lib.addTrack("b", QDateTime(), 0, createTrackInfo("artist 1", QString(), "album 1", 2000, "genre 1", QByteArray(), "title 2", 2));
+    lib.addTrack("c", QDateTime(), 0, createTrackInfo("artist 1", QString(), "album 1", 2000, "genre 1", QByteArray(), "title 3", 3));
 
-    lib.addTrack("d", QDateTime(), createTrackInfo("artist 2", QString(), "album 2", 2000, "genre 1", QByteArray(), "title 1", 1));
+    lib.addTrack("d", QDateTime(), 0, createTrackInfo("artist 2", QString(), "album 2", 2000, "genre 1", QByteArray(), "title 1", 1));
 
     QByteArray bytes;
 
@@ -209,15 +209,15 @@ bool testLibraryTrackCleanup(const QString binary_dir)
     RETURN_IF_FAILED(createEmptyFile(filepath3));
 
     AudioLibrary library;
-    library.addTrack(filepath1, QDateTime(), TrackInfo());
-    library.addTrack(filepath2, QDateTime(), TrackInfo());
-    library.addTrack(filepath3, QDateTime(), TrackInfo());
+    library.addTrack(filepath1, QDateTime(), 0, TrackInfo());
+    library.addTrack(filepath2, QDateTime(), 0, TrackInfo());
+    library.addTrack(filepath3, QDateTime(), 0, TrackInfo());
 
     QString new_filepath3 = dirpath2 + "/new file3.txt";
 
     RETURN_IF_FAILED(QDir().rename(filepath3, new_filepath3));
 
-    library.addTrack(new_filepath3, QDateTime(), TrackInfo());
+    library.addTrack(new_filepath3, QDateTime(), 0, TrackInfo());
 
     std::unordered_set<QString> loaded_audio_files;
     loaded_audio_files.insert(filepath2);
@@ -229,8 +229,8 @@ bool testLibraryTrackCleanup(const QString binary_dir)
     // filepath3 does not exist anymore, so the library must not contain it anymore
 
     AudioLibrary library2;
-    library2.addTrack(filepath2, QDateTime(), TrackInfo());
-    library2.addTrack(new_filepath3, QDateTime(), TrackInfo());
+    library2.addTrack(filepath2, QDateTime(), 0, TrackInfo());
+    library2.addTrack(new_filepath3, QDateTime(), 0, TrackInfo());
 
     RETURN_IF_FAILED(compareLibraries(library, library2));
 
@@ -363,13 +363,13 @@ bool testAudioLibraryViewAllArtists()
     AudioLibrary library;
 
     for (int i = 1; i <= 10; ++i)
-        library.addTrack(QString("Artist 1 - %1").arg(i), QDateTime(), createTrackInfo("Artist 1", QString(), "Album", 2000, "Genre 1", QByteArray(), QString::number(i), i));
+        library.addTrack(QString("Artist 1 - %1").arg(i), QDateTime(), 0, createTrackInfo("Artist 1", QString(), "Album", 2000, "Genre 1", QByteArray(), QString::number(i), i));
 
     for (int i = 1; i <= 10; ++i)
-        library.addTrack(QString("Artist 2 - %1").arg(i), QDateTime(), createTrackInfo("Artist 2", "Artist 2", "Album", 2001, "Genre 2", QByteArray(), QString::number(i), i));
+        library.addTrack(QString("Artist 2 - %1").arg(i), QDateTime(), 0, createTrackInfo("Artist 2", "Artist 2", "Album", 2001, "Genre 2", QByteArray(), QString::number(i), i));
 
-    library.addTrack("Sampler - 1", QDateTime(), createTrackInfo("Artist 1", "Various Artists", "Sampler", 2001, "Genre 3", QByteArray(), "1", 1));
-    library.addTrack("Sampler - 2", QDateTime(), createTrackInfo("Artist 3", "Various Artists", "Sampler", 2001, "Genre 3", QByteArray(), "2", 2));
+    library.addTrack("Sampler - 1", QDateTime(), 0, createTrackInfo("Artist 1", "Various Artists", "Sampler", 2001, "Genre 3", QByteArray(), "1", 1));
+    library.addTrack("Sampler - 2", QDateTime(), 0, createTrackInfo("Artist 3", "Various Artists", "Sampler", 2001, "Genre 3", QByteArray(), "2", 2));
 
     AudioLibraryModel model(nullptr);
 

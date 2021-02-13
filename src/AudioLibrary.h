@@ -115,6 +115,7 @@ public:
     AudioLibraryTrack(AudioLibraryAlbum* album,
         const QString& filepath,
         const QDateTime& last_modified,
+        qint64 file_size,
         const QString& artist,
         const QString& album_artist,
         const QString& title,
@@ -135,6 +136,7 @@ public:
     const QString& getAlbumArtist() const { return _album_artist; }
     const QString& getFilepath() const { return _filepath; }
     const QDateTime& getLastModified() const { return _last_modified; }
+    qint64 getFileSize() const { return _file_size; }
     const QString& getTitle() const { return _title; }
     int getTrackNumber() const { return _track_number; }
     int getDiscNumber() const { return _disc_number; }
@@ -156,6 +158,7 @@ private:
     QString _album_artist;
     QString _filepath;
     QDateTime _last_modified;
+    qint64 _file_size;
     QString _title;
     int _track_number;
     int _disc_number;
@@ -173,7 +176,7 @@ class AudioLibrary
 {
 public:
     const AudioLibraryTrack* findTrack(const QString& filepath) const;
-    void addTrack(const QString& filepath, const QDateTime& last_modified, const TrackInfo& track_info);
+    void addTrack(const QString& filepath, const QDateTime& last_modified, qint64 file_size, const TrackInfo& track_info);
 
     void removeTrack(AudioLibraryTrack* track);
     void removeTracksWithInvalidPaths();
@@ -208,6 +211,7 @@ private:
     AudioLibraryTrack* addTrack(AudioLibraryAlbum* album,
         const QString& filepath,
         const QDateTime& last_modified,
+        qint64 file_size,
         const QString& artist,
         const QString& album_artist,
         const QString& title,

@@ -223,8 +223,8 @@ void AudioFilesLoader::threadLoadAudioFiles(const QString& cache_location, const
             if (_thread_abort_flag)
                 return false; // stop iteration
 
-            QString filepath = file.filePath();
-            QDateTime last_modified = file.lastModified();
+            const QString filepath = file.filePath();
+            const QDateTime last_modified = file.lastModified();
 
             {
                 ThreadSafeAudioLibrary::LibraryAccessor acc(_library);
@@ -245,7 +245,7 @@ void AudioFilesLoader::threadLoadAudioFiles(const QString& cache_location, const
                 {
                     ThreadSafeAudioLibrary::LibraryAccessor acc(_library);
 
-                    acc.getLibraryForUpdate().addTrack(filepath, last_modified, track_info);
+                    acc.getLibraryForUpdate().addTrack(filepath, last_modified, file.size(), track_info);
                 }
 
                 ++files_loaded;

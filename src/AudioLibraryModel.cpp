@@ -426,6 +426,9 @@ void AudioLibraryModel::addTrackItem(const AudioLibraryTrack* track)
         _item_model->setDataInternal(row, AudioLibraryView::COMMENT, track->getComment());
         _item_model->setDataInternal(row, AudioLibraryView::PATH, track->getFilepath());
         setDateTimeColumn(row, AudioLibraryView::DATE_MODIFIED, track->getLastModified());
+        QString file_size = QLocale().formattedDataSize(track->getFileSize());
+        _item_model->setDataInternal(row, AudioLibraryView::FILE_SIZE, file_size);
+        _item_model->setDataInternal(row, AudioLibraryView::FILE_SIZE, QString::number(track->getFileSize()), AudioLibraryView::SORT_ROLE);
         _item_model->setDataInternal(row, AudioLibraryView::TAG_TYPES, track->getTagTypes());
         setLengthColumn(row, track->getLengthMs());
         _item_model->setDataInternal(row, AudioLibraryView::CHANNELS, QString::number(track->getChannels()));

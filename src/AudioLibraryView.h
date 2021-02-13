@@ -32,6 +32,7 @@ public:
         COMMENT,
         PATH,
         DATE_MODIFIED,
+        FILE_SIZE,
         TAG_TYPES,
         LENGTH_SECONDS,
         CHANNELS,
