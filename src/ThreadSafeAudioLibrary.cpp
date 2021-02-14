@@ -145,10 +145,6 @@ void AudioFilesLoader::startLoading(const QString& cache_location, const QString
     _audio_file_loading_thread = std::thread([this, cache_location, audio_dir_paths](){
         threadLoadAudioFiles(cache_location, audio_dir_paths);
     });
-
-    _cover_decoding_thread = std::thread([this](){
-        threadDecodeCovers();
-    });
 }
 
 bool AudioFilesLoader::isLoading() const
@@ -162,9 +158,6 @@ void AudioFilesLoader::stopLoading()
 
     if (_audio_file_loading_thread.joinable())
         _audio_file_loading_thread.join();
-
-    if (_cover_decoding_thread.joinable())
-        _cover_decoding_thread.join();
 }
 
 void AudioFilesLoader::loadFromCache(const QString& cache_location)
@@ -267,71 +260,4 @@ void AudioFilesLoader::threadLoadAudioFiles(const QString& cache_location, const
     auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
 
     libraryLoadFinished(files_loaded, files_in_cache, float(millis.count()) / 1000.0);
-}
-
-void AudioFilesLoader::threadDecodeCovers()
-{
-    while (true)
-    {
-        // get cover bytes from library
-
-        std::map<AudioLibraryAlbumKey, std::pair<QByteArray, QPixmap>> covers_to_load;
-        bool enough_bytes_for_now = false;
-
-        {
-            ThreadSafeAudioLibrary::LibraryAccessor acc(_library);
-            for (const AudioLibraryAlbum* album : acc.getLibrary().getAlbums())
-            {
-                if (_thread_abort_flag)
-                    return;
-
-                if (!album->getCover().isEmpty() && !album->isCoverPixmapSet())
-                {
-                    covers_to_load[album->getKey()].first = album->getCover();
-                }
-
-                if (covers_to_load.size() >= 100)
-                {
-                    enough_bytes_for_now = true;
-                    break;
-                }
-            }
-        }
-
-        if (covers_to_load.empty() && !enough_bytes_for_now && !_is_loading)
-        {
-            coverLoadFinished();
-            return; // ok, finished
-        }
-
-        // decode covers
-
-        for (auto& cover : covers_to_load)
-        {
-            if (_thread_abort_flag)
-                return;
-
-            cover.second.second.loadFromData(cover.second.first);
-        }
-
-        // write decoded covers to library
-
-        {
-            ThreadSafeAudioLibrary::LibraryAccessor acc(_library);
-
-            for (auto& cover : covers_to_load)
-            {
-                if (_thread_abort_flag)
-                    return;
-
-                // album pointer may be invalid
-                // because the audio file loading thread may have detected that a cached file no longer exists
-
-                if (AudioLibraryAlbum* album = acc.getLibraryForUpdate().getAlbum(cover.first))
-                {
-                    album->setCoverPixmap(cover.second.second);
-                }
-            }
-        }
-    }
 }

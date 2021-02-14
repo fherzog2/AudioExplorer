@@ -69,7 +69,7 @@ namespace {
         AudioLibraryArtistGroupData& group_data = displayed_groups[artist];
 
         if (!group_data.showcase_album ||
-            group_data.showcase_album->getCoverPixmap().isNull())
+            group_data.showcase_album->getCover().isEmpty())
         {
             group_data.showcase_album = track->getAlbum();
         }
@@ -85,7 +85,7 @@ namespace {
         AudioLibraryGroupData& group_data = displayed_groups[group];
 
         if (!group_data.showcase_album ||
-            group_data.showcase_album->getCoverPixmap().isNull())
+            group_data.showcase_album->getCover().isEmpty())
         {
             group_data.showcase_album = album;
         }
@@ -464,7 +464,7 @@ void AudioLibraryViewAllArtists::createItems(const AudioLibrary& library,
             group.first + QLatin1Char(',') +
             group.second.getId() + QLatin1Char(')');
 
-        model->addItem(id, group.first, group.second.showcase_album->getCoverPixmap(), static_cast<int>(group.second.albums.size()), group.second.num_tracks, [group](){
+        model->addItem(id, group.first, group.second.showcase_album, static_cast<int>(group.second.albums.size()), group.second.num_tracks, [group](){
             return std::make_unique<AudioLibraryViewArtist>(group.first);
         });
     }
@@ -605,7 +605,7 @@ void AudioLibraryViewAllYears::createItems(const AudioLibrary& library,
             QString::number(group.first) + QLatin1Char(',') +
             group.second.getId() + QLatin1Char(')');
 
-        model->addItem(id, QString::number(group.first), group.second.showcase_album->getCoverPixmap(), group.second.num_albums, group.second.num_tracks, [group]() {
+        model->addItem(id, QString::number(group.first), group.second.showcase_album, group.second.num_albums, group.second.num_tracks, [group]() {
             return std::make_unique<AudioLibraryViewYear>(group.first);
         });
     }
@@ -670,7 +670,7 @@ void AudioLibraryViewAllGenres::createItems(const AudioLibrary& library,
                 group.first + QLatin1Char(',') +
                 group.second.getId() + QLatin1Char(')');
 
-            model->addItem(id, group.first, group.second.showcase_album->getCoverPixmap(), group.second.num_albums, group.second.num_tracks, [group]() {
+            model->addItem(id, group.first, group.second.showcase_album, group.second.num_albums, group.second.num_tracks, [group]() {
                 return std::make_unique<AudioLibraryViewGenre>(group.first);
             });
         }
@@ -705,7 +705,7 @@ void AudioLibraryViewAllGenres::createItems(const AudioLibrary& library,
                 group.first + QLatin1Char(',') +
                 group.second.getId() + QLatin1Char(')');
 
-            model->addItem(id, group.first, group.second.showcase_album->getCoverPixmap(), group.second.num_albums, group.second.num_tracks, [group]() {
+            model->addItem(id, group.first, group.second.showcase_album, group.second.num_albums, group.second.num_tracks, [group]() {
                 return std::make_unique<AudioLibraryViewArtist>(group.first);
             });
         }

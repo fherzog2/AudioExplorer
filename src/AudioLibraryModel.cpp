@@ -4,6 +4,7 @@
 #include <array>
 #include <QtCore/qabstractitemmodel.h>
 #include <QtCore/qcollator.h>
+#include <QtCore/qtimer.h>
 
 class AudioLibraryModelImpl : public QAbstractTableModel
 {
@@ -13,23 +14,43 @@ public:
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     int columnCount(const QModelIndex& parent = QModelIndex()) const override;
     void setDataInternal(int row, AudioLibraryView::Column column, const QVariant& data, int role = Qt::DisplayRole);
+    void setDecoration(int row, const AudioLibraryAlbum* album);
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
     void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
+
+    struct Decoration
+    {
+        QByteArray bytes;
+        bool load_finished = false;
+        QPixmap pixmap;
+        QVariant variant;
+
+        bool load();
+    };
 
     struct Row
     {
         std::array<QVariant, AudioLibraryView::NUMBER_OF_COLUMNS> display_role_data;
         std::array<QString, AudioLibraryView::NUMBER_OF_COLUMNS> sort_role_data;
 
-        QVariant decoration_role_data;
+        /**
+        * decoration data can be shared between rows, because multiple tracks can have the same album cover
+        * this keeps the memory consumption and decoding effort low
+        */
+        std::shared_ptr<Decoration> decoration;
+
+        //!< the decoration has been requested and will be loaded by a timer
+        mutable bool decoration_requested = false;
+
+        //!< the decoration has been loaded and a dataChanged signal has been called for this row
+        bool decoration_has_been_applied = false;
+
         QVariant multiline_display_role;
         QVariant id;
         std::unique_ptr<AudioLibraryView> view;
 
         int index = -1;
-
-        QIcon icon() const { return qvariant_cast<QIcon>(decoration_role_data); }
     };
 
     Row* createRow(const QString& id);
@@ -42,17 +63,36 @@ public:
 
     std::vector<QString> getAllIds() const;
 
+    const QIcon& getDefaultIcon() const;
+
+    void updateDecoration(const QModelIndex& index);
+
 private:
     void updateRowIndexes();
 
+    void loadRequestedDecorations();
+
     std::vector<std::unique_ptr<Row>> _rows;
     std::unordered_map<QString, Row*> _id_to_row_map;
+    std::unordered_map<QString, std::shared_ptr<Decoration>> _decorations_for_album_ids;
     QStringList _header_labels;
+    QIcon _default_icon;
 };
 
 AudioLibraryModelImpl::AudioLibraryModelImpl(QObject* parent)
     : QAbstractTableModel(parent)
 {
+    QPixmap default_pixmap = QPixmap(256, 256);
+    default_pixmap.fill(Qt::transparent);
+
+    _default_icon = default_pixmap;
+
+    auto load_requested_decorations_timer = new QTimer(this);
+
+    connect(load_requested_decorations_timer, &QTimer::timeout,
+        this, &AudioLibraryModelImpl::loadRequestedDecorations);
+    load_requested_decorations_timer->setSingleShot(false);
+    load_requested_decorations_timer->start(100);
 }
 
 int AudioLibraryModelImpl::rowCount(const QModelIndex& /*parent*/) const
@@ -81,10 +121,6 @@ void AudioLibraryModelImpl::setDataInternal(int row, AudioLibraryView::Column co
                 row_data->sort_role_data[column] = data.toString();
             }
         }
-        else if (role == Qt::DecorationRole && column == AudioLibraryView::ZERO)
-        {
-            row_data->decoration_role_data = data;
-        }
         else if (role == AudioLibraryView::MULTILINE_DISPLAY_ROLE && column == AudioLibraryView::ZERO)
         {
             row_data->multiline_display_role = data;
@@ -101,6 +137,26 @@ void AudioLibraryModelImpl::setDataInternal(int row, AudioLibraryView::Column co
                 row_data->sort_role_data[column] = data.toString();
             }
         }
+    }
+}
+
+void AudioLibraryModelImpl::setDecoration(int row, const AudioLibraryAlbum* album)
+{
+    if (row >= 0 &&
+        row < static_cast<int>(_rows.size()))
+    {
+        Row* row_data = _rows[row].get();
+
+        auto it = _decorations_for_album_ids.find(album->getId());
+        if (it == _decorations_for_album_ids.end())
+        {
+            auto decoration = std::make_shared<Decoration>();
+            decoration->bytes = album->getCover();
+            decoration->variant = _default_icon;
+            it = _decorations_for_album_ids.emplace(std::make_pair(album->getId(), decoration)).first;
+        }
+
+        row_data->decoration = it->second;
     }
 }
 
@@ -124,7 +180,8 @@ QVariant AudioLibraryModelImpl::data(const QModelIndex& index, int role) const
         }
         else if (role == Qt::DecorationRole && column == AudioLibraryView::ZERO)
         {
-            return row_data->decoration_role_data;
+            row_data->decoration_requested = true;
+            return row_data->decoration->variant;
         }
         else if (role == AudioLibraryView::MULTILINE_DISPLAY_ROLE && column == AudioLibraryView::ZERO)
         {
@@ -296,10 +353,80 @@ std::vector<QString> AudioLibraryModelImpl::getAllIds() const
     return ids;
 }
 
+const QIcon& AudioLibraryModelImpl::getDefaultIcon() const
+{
+    return _default_icon;
+}
+
+void AudioLibraryModelImpl::updateDecoration(const QModelIndex& index)
+{
+    int row = index.row();
+
+    if (row >= 0 &&
+        row < static_cast<int>(_rows.size()))
+    {
+        Row* row_data = _rows[row].get();
+
+        if (row_data->decoration->load())
+        {
+            const QModelIndex i = this->index(row, AudioLibraryView::ZERO);
+            dataChanged(i, i);
+        }
+    }
+}
+
 void AudioLibraryModelImpl::updateRowIndexes()
 {
     for (size_t i = 0; i < _rows.size(); ++i)
         _rows[i]->index = static_cast<int>(i);
+}
+
+void AudioLibraryModelImpl::loadRequestedDecorations()
+{
+    auto start_time = std::chrono::steady_clock::now();
+
+    for (const auto& row : _rows)
+    {
+        if (row->decoration_requested && !row->decoration_has_been_applied)
+        {
+            // limit the amount of work that this function can do in a single run
+
+            auto current_time = std::chrono::steady_clock::now();
+
+            if (std::chrono::duration_cast<std::chrono::milliseconds>(current_time - start_time).count() > 50)
+            {
+                // to avoid stalling, only a few decorations are loaded with each call of this function
+                return;
+            }
+
+            // try to load the shared decoration
+
+            row->decoration->load();
+
+            row->decoration_has_been_applied = true;
+
+            const QModelIndex i = index(row->index, AudioLibraryView::ZERO);
+            dataChanged(i, i);
+        }
+    }
+}
+
+//=============================================================================
+
+bool AudioLibraryModelImpl::Decoration::load()
+{
+    if (!load_finished)
+    {
+        const bool ok = pixmap.loadFromData(bytes);
+        if (ok)
+            variant = QIcon(pixmap);
+
+        load_finished = true;
+
+        return ok;
+    }
+
+    return false;
 }
 
 //=============================================================================
@@ -308,14 +435,9 @@ AudioLibraryModel::AudioLibraryModel(QObject* parent)
     : QObject(parent)
 {
     _item_model = new AudioLibraryModelImpl(this);
-
-    QPixmap default_pixmap = QPixmap(256, 256);
-    default_pixmap.fill(Qt::transparent);
-
-    _default_icon = default_pixmap;
 }
 
-void AudioLibraryModel::addItemInternal(const QString& id, const QIcon& icon,
+void AudioLibraryModel::addItemInternal(const QString& id,
     const std::function<void(int row)>& item_factory,
     const std::function<std::unique_ptr<AudioLibraryView>()>& view_factory)
 {
@@ -323,19 +445,9 @@ void AudioLibraryModel::addItemInternal(const QString& id, const QIcon& icon,
 
     if (AudioLibraryModelImpl::Row* existing_row = _item_model->findRowForId(id))
     {
-        if (existing_row->icon().cacheKey() == _default_icon.cacheKey() &&
-            !icon.isNull())
-        {
-            existing_row->decoration_role_data = icon;
-
-            QModelIndex index = _item_model->index(existing_row->index, AudioLibraryView::ZERO);
-            _item_model->dataChanged(index, index);
-        }
-
         // already exists, nothing to do
         return;
     }
-
     AudioLibraryModelImpl::Row* row = _item_model->createRow(id);
     if (!row)
         return;
@@ -347,26 +459,25 @@ void AudioLibraryModel::addItemInternal(const QString& id, const QIcon& icon,
     _item_model->dataChanged(_item_model->index(row->index, 0), _item_model->index(row->index, AudioLibraryView::NUMBER_OF_COLUMNS - 1));
 }
 
-void AudioLibraryModel::addItem(const QString& id, const QString& name, const QIcon& icon, int number_of_albums, int number_of_tracks, const std::function<std::unique_ptr<AudioLibraryView>()>& view_factory)
+void AudioLibraryModel::addItem(const QString& id, const QString& name, const AudioLibraryAlbum* showcase_album, int number_of_albums, int number_of_tracks, const std::function<std::unique_ptr<AudioLibraryView>()>& view_factory)
 {
-    auto item_factory = [this, name, icon, number_of_albums, number_of_tracks](int row) {
+    auto item_factory = [this, name, showcase_album, number_of_albums, number_of_tracks](int row) {
 
         _item_model->setDataInternal(row, AudioLibraryView::ZERO, name);
-        _item_model->setDataInternal(row, AudioLibraryView::ZERO, icon.isNull() ? _default_icon : icon, Qt::DecorationRole);
+        _item_model->setDecoration(row, showcase_album);
 
         _item_model->setDataInternal(row, AudioLibraryView::NUMBER_OF_ALBUMS, QString::number(number_of_albums));
         _item_model->setDataInternal(row, AudioLibraryView::NUMBER_OF_TRACKS, QString::number(number_of_tracks));
     };
 
-    addItemInternal(id, icon, item_factory, view_factory);
+    addItemInternal(id, item_factory, view_factory);
 }
 
 void AudioLibraryModel::addAlbumItem(const AudioLibraryAlbum* album)
 {
     QString id = album->getId();
-    QIcon icon = album->getCoverPixmap().isNull() ? _default_icon : album->getCoverPixmap();
 
-    auto item_factory = [this, album, icon](int row) {
+    auto item_factory = [this, album](int row) {
 
         QLatin1Char sep(' ');
 
@@ -375,7 +486,7 @@ void AudioLibraryModel::addAlbumItem(const AudioLibraryAlbum* album)
             album->getKey().getAlbum();
 
         _item_model->setDataInternal(row, AudioLibraryView::ZERO, album->getKey().getArtist() + " - " + album->getKey().getAlbum());
-        _item_model->setDataInternal(row, AudioLibraryView::ZERO, icon, Qt::DecorationRole);
+        _item_model->setDecoration(row, album);
         _item_model->setDataInternal(row, AudioLibraryView::ZERO, album->getKey().getArtist() + QChar(QChar::LineSeparator) + album->getKey().getAlbum(), AudioLibraryView::MULTILINE_DISPLAY_ROLE);
         _item_model->setDataInternal(row, AudioLibraryView::ZERO, sort_key, AudioLibraryView::SORT_ROLE);
 
@@ -390,7 +501,7 @@ void AudioLibraryModel::addAlbumItem(const AudioLibraryAlbum* album)
         setLengthColumn(row, length_milliseconds);
     };
 
-    addItemInternal(id, icon, item_factory, [album](){
+    addItemInternal(id, item_factory, [album](){
         return std::make_unique<AudioLibraryViewAlbum>(album->getKey());
     });
 }
@@ -398,9 +509,8 @@ void AudioLibraryModel::addAlbumItem(const AudioLibraryAlbum* album)
 void AudioLibraryModel::addTrackItem(const AudioLibraryTrack* track)
 {
     QString id = track->getId();
-    QIcon icon = track->getAlbum()->getCoverPixmap().isNull() ? _default_icon : track->getAlbum()->getCoverPixmap();
 
-    auto item_factory = [this, track, icon](int row) {
+    auto item_factory = [this, track](int row) {
 
         QLatin1Char sep(' ');
 
@@ -411,7 +521,7 @@ void AudioLibraryModel::addTrackItem(const AudioLibraryTrack* track)
             QString::number(track->getTrackNumber());
 
         _item_model->setDataInternal(row, AudioLibraryView::ZERO, track->getArtist() + " - " + track->getTitle());
-        _item_model->setDataInternal(row, AudioLibraryView::ZERO, icon, Qt::DecorationRole);
+        _item_model->setDecoration(row, track->getAlbum());
         _item_model->setDataInternal(row, AudioLibraryView::ZERO, track->getArtist() + QChar(QChar::LineSeparator) + track->getTitle(), AudioLibraryView::MULTILINE_DISPLAY_ROLE);
         _item_model->setDataInternal(row, AudioLibraryView::ZERO, sort_key, AudioLibraryView::SORT_ROLE);
 
@@ -438,7 +548,7 @@ void AudioLibraryModel::addTrackItem(const AudioLibraryTrack* track)
 
     // no view for track items
 
-    addItemInternal(id, icon, item_factory, []() {
+    addItemInternal(id, item_factory, []() {
         return nullptr;
     });
 }
@@ -482,7 +592,12 @@ QString AudioLibraryModel::getFilepathFromIndex(const QModelIndex& index) const
 
 bool AudioLibraryModel::isDefaultIcon(const QIcon& icon) const
 {
-    return icon.cacheKey() == _default_icon.cacheKey();
+    return icon.cacheKey() == _item_model->getDefaultIcon().cacheKey();
+}
+
+void AudioLibraryModel::updateDecoration(const QModelIndex& index)
+{
+    _item_model->updateDecoration(index);
 }
 
 void AudioLibraryModel::removeId(const QString& id)
@@ -559,9 +674,6 @@ void AudioLibraryModel::setAlbumColumns(int row, const AudioLibraryAlbum* album)
 
     _item_model->setDataInternal(row, AudioLibraryView::COVER_TYPE, album->getCoverType());
 
-    if (!album->getCoverPixmap().isNull())
-    {
-        _item_model->setDataInternal(row, AudioLibraryView::COVER_WIDTH, QString::number(album->getCoverPixmap().width()));
-        _item_model->setDataInternal(row, AudioLibraryView::COVER_HEIGHT, QString::number(album->getCoverPixmap().height()));
-    }
+    _item_model->setDataInternal(row, AudioLibraryView::COVER_WIDTH, QString::number(album->getCoverSize().width()));
+    _item_model->setDataInternal(row, AudioLibraryView::COVER_HEIGHT, QString::number(album->getCoverSize().height()));
 }

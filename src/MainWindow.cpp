@@ -433,6 +433,7 @@ MainWindow::MainWindow(Settings& settings)
     _list->setSelectionMode(QAbstractItemView::ExtendedSelection);
     _list->setTextElideMode(Qt::ElideNone);
     _list->setItemDelegate(new MultiLinesElidedItemDelegate(this));
+    _list->setUniformItemSizes(true);
 
     _table = new QTableView(this);
     _table->setSortingEnabled(true);
@@ -494,7 +495,6 @@ MainWindow::MainWindow(Settings& settings)
     connect(&_audio_files_loader, &AudioFilesLoader::libraryCacheLoading, this, &MainWindow::onLibraryCacheLoading);
     connect(&_audio_files_loader, &AudioFilesLoader::libraryLoadProgressed, this, &MainWindow::onLibraryLoadProgressed);
     connect(&_audio_files_loader, &AudioFilesLoader::libraryLoadFinished, this, &MainWindow::onLibraryLoadFinished);
-    connect(&_audio_files_loader, &AudioFilesLoader::coverLoadFinished, this, &MainWindow::onCoverLoadFinished);
     connect(_display_mode_tabs, &QTabBar::tabBarClicked, this, &MainWindow::onDisplayModeSelected);
     connect(_view_type_tabs, &QTabBar::tabBarClicked, this, &MainWindow::onViewTypeSelected);
     connect(_list, &QAbstractItemView::doubleClicked, this, &MainWindow::onItemDoubleClicked);
@@ -765,11 +765,6 @@ void MainWindow::onLibraryLoadFinished(int files_loaded, int files_in_cache, flo
     updateCurrentView();
 }
 
-void MainWindow::onCoverLoadFinished()
-{
-    updateCurrentView();
-}
-
 void MainWindow::onShowDuplicateAlbums()
 {
     setBreadCrumb(std::make_unique<AudioLibraryViewDuplicateAlbums>());
@@ -987,6 +982,7 @@ void MainWindow::onModelSelectionChanged()
 {
     QAbstractItemView* current_view = static_cast<QAbstractItemView*>(_view_stack->currentWidget());
 
+    _model->updateDecoration(current_view->currentIndex());
     _details->setSelection(_model->getModel(), current_view, *_current_display_mode);
 }
 

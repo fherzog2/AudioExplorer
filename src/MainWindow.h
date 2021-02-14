@@ -120,7 +120,6 @@ private:
     void onLibraryCacheLoading();
     void onLibraryLoadProgressed(int files_loaded, int files_in_cache);
     void onLibraryLoadFinished(int files_loaded, int files_in_cache, float duration_sec);
-    void onCoverLoadFinished();
     void onShowDuplicateAlbums();
     void onBreadCrumbClicked();
     void onHistoryBack();

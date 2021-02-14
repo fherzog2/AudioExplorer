@@ -76,18 +76,15 @@ private:
 class AudioLibraryAlbum
 {
 public:
-    AudioLibraryAlbum(const AudioLibraryAlbumKey& key, const QByteArray& cover);
+    AudioLibraryAlbum(const AudioLibraryAlbumKey& key, const QByteArray& cover, const QSize& cover_size);
 
     const AudioLibraryAlbumKey& getKey() const { return _key; }
     const QByteArray& getCover() const { return _cover; }
+    const QSize& getCoverSize() const { return _cover_size; }
 
     const QString& getId() const { return _id; }
 
     const QString& getCoverType() const { return _cover_type; }
-
-    const QPixmap& getCoverPixmap() const;
-    void setCoverPixmap(const QPixmap& pixmap);
-    bool isCoverPixmapSet() const;
 
     void addTrack(const AudioLibraryTrack* track);
     void removeTrack(const AudioLibraryTrack* track);
@@ -98,15 +95,13 @@ private:
 
     AudioLibraryAlbumKey _key;
     QByteArray _cover;
+    QSize _cover_size;
 
     std::vector<const AudioLibraryTrack*> _tracks;
 
     QString _id;
 
     QString _cover_type;
-
-    bool _is_cover_pixmap_set = false;
-    QPixmap _cover_pixmap;
 };
 
 class AudioLibraryTrack
@@ -208,6 +203,7 @@ public:
 
 private:
     AudioLibraryAlbum* addAlbum(const AudioLibraryAlbumKey& album_key, const QByteArray& cover);
+    AudioLibraryAlbum* addAlbum(const AudioLibraryAlbumKey& album_key, const QByteArray& cover, const QSize& cover_size);
     AudioLibraryTrack* addTrack(AudioLibraryAlbum* album,
         const QString& filepath,
         const QDateTime& last_modified,

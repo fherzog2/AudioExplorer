@@ -67,21 +67,17 @@ signals:
     void libraryCacheLoading();
     void libraryLoadProgressed(int files_loaded, int files_in_cache);
     void libraryLoadFinished(int files_loaded, int files_in_cache, float duration_sec);
-    void coverLoadFinished();
 
 private:
     void stopLoading();
     void loadFromCache(const QString& cache_location);
     void threadLoadAudioFiles(const QString& cache_location, const QStringList& audio_dir_paths);
-    void threadDecodeCovers();
 
     ThreadSafeAudioLibrary& _library;
 
     std::thread _audio_file_loading_thread;
-    std::thread _cover_decoding_thread;
 
     std::atomic_bool _thread_abort_flag = ATOMIC_VAR_INIT(false);
 
-    // keeps the cover decoding thread alive
     std::atomic_bool _is_loading = ATOMIC_VAR_INIT(false);
 };

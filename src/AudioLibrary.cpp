@@ -67,29 +67,14 @@ QString AudioLibraryAlbumKey::toString() const
 
 //=============================================================================
 
-AudioLibraryAlbum::AudioLibraryAlbum(const AudioLibraryAlbumKey& key, const QByteArray& cover)
+AudioLibraryAlbum::AudioLibraryAlbum(const AudioLibraryAlbumKey& key, const QByteArray& cover, const QSize& cover_size)
     : _key(key)
     , _cover(cover)
+    , _cover_size(cover_size)
 {
     _id = QLatin1String("album(") + _key.getId() + QLatin1Char(')');
 
     _cover_type = getCoverTypeInternal();
-}
-
-const QPixmap& AudioLibraryAlbum::getCoverPixmap() const
-{
-    return _cover_pixmap;
-}
-
-void AudioLibraryAlbum::setCoverPixmap(const QPixmap& pixmap)
-{
-    _cover_pixmap = pixmap;
-    _is_cover_pixmap_set = true;
-}
-
-bool AudioLibraryAlbum::isCoverPixmapSet() const
-{
-    return _is_cover_pixmap_set;
 }
 
 void AudioLibraryAlbum::addTrack(const AudioLibraryTrack* track)
@@ -351,7 +336,7 @@ void AudioLibrary::removeTracksExcept(const std::unordered_set<QString>& loaded_
 
 void AudioLibrary::save(QDataStream& s) const
 {
-    s << qint32(6); // version
+    s << qint32(7); // version
 
     s << quint64(_album_map.size());
 
@@ -359,6 +344,7 @@ void AudioLibrary::save(QDataStream& s) const
     {
         s << i.second->getKey();
         s << i.second->getCover();
+        s << i.second->getCoverSize();
 
         s << quint64(i.second->getTracks().size());
 
@@ -403,7 +389,7 @@ void AudioLibrary::Loader::init(AudioLibrary& library, QDataStream& s)
 
     qint32 version;
     s >> version;
-    if (version != 6)
+    if (version != 7)
         return;
 
     s >> _num_albums;
@@ -418,11 +404,13 @@ void AudioLibrary::Loader::loadNextAlbum(AudioLibrary& library)
 {
     AudioLibraryAlbumKey key;
     QByteArray cover;
+    QSize cover_size;
 
     *_s >> key;
     *_s >> cover;
+    *_s >> cover_size;
 
-    AudioLibraryAlbum* album = library.addAlbum(key, cover);
+    AudioLibraryAlbum* album = library.addAlbum(key, cover, cover_size);
 
     quint64 num_tracks;
     *_s >> num_tracks;
@@ -470,7 +458,21 @@ AudioLibraryAlbum* AudioLibrary::addAlbum(const AudioLibraryAlbumKey& album_key,
     auto it = _album_map.find(album_key);
     if (it == _album_map.end())
     {
-        it = _album_map.insert(make_pair(album_key, std::make_unique<AudioLibraryAlbum>(album_key, cover))).first;
+        QPixmap cover_pixmap;
+        cover_pixmap.loadFromData(cover);
+
+        it = _album_map.insert(make_pair(album_key, std::make_unique<AudioLibraryAlbum>(album_key, cover, cover_pixmap.size()))).first;
+    }
+
+    return it->second.get();
+}
+
+AudioLibraryAlbum* AudioLibrary::addAlbum(const AudioLibraryAlbumKey& album_key, const QByteArray& cover, const QSize& cover_size)
+{
+    auto it = _album_map.find(album_key);
+    if (it == _album_map.end())
+    {
+        it = _album_map.insert(make_pair(album_key, std::make_unique<AudioLibraryAlbum>(album_key, cover, cover_size))).first;
     }
 
     return it->second.get();

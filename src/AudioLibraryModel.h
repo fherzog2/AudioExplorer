@@ -20,7 +20,7 @@ public:
         AudioLibraryModel& _model;
     };
 
-    void addItem(const QString& id, const QString& name, const QIcon& icon, int number_of_albums, int number_of_tracks, const std::function<std::unique_ptr<AudioLibraryView>()>& view_factory);
+    void addItem(const QString& id, const QString& name, const AudioLibraryAlbum* showcase_album, int number_of_albums, int number_of_tracks, const std::function<std::unique_ptr<AudioLibraryView>()>& view_factory);
     void addAlbumItem(const AudioLibraryAlbum* album);
     void addTrackItem(const AudioLibraryTrack* track);
 
@@ -34,8 +34,10 @@ public:
 
     bool isDefaultIcon(const QIcon& icon) const;
 
+    void updateDecoration(const QModelIndex& index);
+
 private:
-    void addItemInternal(const QString& id, const QIcon& icon,
+    void addItemInternal(const QString& id,
         const std::function<void(int row)>& item_factory,
         const std::function<std::unique_ptr<AudioLibraryView>()>& view_factory);
     void removeId(const QString& id);
@@ -46,8 +48,6 @@ private:
     void setAlbumColumns(int row, const AudioLibraryAlbum* album);
 
     AudioLibraryModelImpl* _item_model;
-
-    QIcon _default_icon;
 
     std::unordered_set<QString> _requested_ids;
 };
