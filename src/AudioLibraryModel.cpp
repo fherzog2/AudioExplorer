@@ -19,10 +19,20 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
     void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 
+    /**
+    * States of the decoration pixmap
+    */
+    enum class LoadState
+    {
+        NotLoaded, //!< the decoration has not been requested yet
+        Requested, //!< the decoration has been requested and will be decoded soon
+        Done       //!< the decoration has been decoded
+    };
+
     struct Decoration
     {
         QByteArray bytes;
-        bool load_finished = false;
+        LoadState load_state = LoadState::NotLoaded;
         QPixmap pixmap;
         QVariant variant;
 
@@ -39,12 +49,7 @@ public:
         * this keeps the memory consumption and decoding effort low
         */
         std::shared_ptr<Decoration> decoration;
-
-        //!< the decoration has been requested and will be loaded by a timer
-        mutable bool decoration_requested = false;
-
-        //!< the decoration has been loaded and a dataChanged signal has been called for this row
-        bool decoration_has_been_applied = false;
+        mutable LoadState decoration_load_state = LoadState::NotLoaded;
 
         QVariant multiline_display_role;
         QVariant id;
@@ -75,6 +80,7 @@ private:
     std::vector<std::unique_ptr<Row>> _rows;
     std::unordered_map<QString, Row*> _id_to_row_map;
     std::unordered_map<QString, std::shared_ptr<Decoration>> _decorations_for_album_ids;
+    mutable std::vector< std::shared_ptr<Decoration>> _requested_decorations;
     QStringList _header_labels;
     QIcon _default_icon;
 };
@@ -180,7 +186,17 @@ QVariant AudioLibraryModelImpl::data(const QModelIndex& index, int role) const
         }
         else if (role == Qt::DecorationRole && column == AudioLibraryView::ZERO)
         {
-            row_data->decoration_requested = true;
+            if (row_data->decoration->load_state == LoadState::NotLoaded)
+            {
+                row_data->decoration->load_state = LoadState::Requested;
+                _requested_decorations.push_back(row_data->decoration);
+            }
+
+            if (row_data->decoration_load_state == LoadState::NotLoaded)
+            {
+                row_data->decoration_load_state = LoadState::Requested;
+            }
+
             return row_data->decoration->variant;
         }
         else if (role == AudioLibraryView::MULTILINE_DISPLAY_ROLE && column == AudioLibraryView::ZERO)
@@ -383,27 +399,34 @@ void AudioLibraryModelImpl::updateRowIndexes()
 
 void AudioLibraryModelImpl::loadRequestedDecorations()
 {
+    // first, load requested decorations until we either run out of time or out of work
+    // the most recently requested decoration should always be loaded first
+
     auto start_time = std::chrono::steady_clock::now();
+
+    for (auto it = _requested_decorations.rbegin(), end = _requested_decorations.rend(); it != end; ++it)
+    {
+        const auto& decoration = *it;
+
+        auto current_time = std::chrono::steady_clock::now();
+
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(current_time - start_time).count() > 50)
+        {
+            // to avoid stalling, only a few decorations are loaded with each call of this function
+            break;
+        }
+
+        decoration->load();
+    }
+
+    // notify the rows if their decorations have been loaded
+    // this part is inexpensive, so no timing is used here
 
     for (const auto& row : _rows)
     {
-        if (row->decoration_requested && !row->decoration_has_been_applied)
+        if (row->decoration_load_state == LoadState::Requested && row->decoration->load_state == LoadState::Done)
         {
-            // limit the amount of work that this function can do in a single run
-
-            auto current_time = std::chrono::steady_clock::now();
-
-            if (std::chrono::duration_cast<std::chrono::milliseconds>(current_time - start_time).count() > 50)
-            {
-                // to avoid stalling, only a few decorations are loaded with each call of this function
-                return;
-            }
-
-            // try to load the shared decoration
-
-            row->decoration->load();
-
-            row->decoration_has_been_applied = true;
+            row->decoration_load_state = LoadState::Done;
 
             const QModelIndex i = index(row->index, AudioLibraryView::ZERO);
             dataChanged(i, i);
@@ -415,13 +438,13 @@ void AudioLibraryModelImpl::loadRequestedDecorations()
 
 bool AudioLibraryModelImpl::Decoration::load()
 {
-    if (!load_finished)
+    if (load_state == LoadState::Requested)
     {
         const bool ok = pixmap.loadFromData(bytes);
         if (ok)
             variant = QIcon(pixmap);
 
-        load_finished = true;
+        load_state = LoadState::Done;
 
         return ok;
     }
@@ -443,7 +466,7 @@ void AudioLibraryModel::addItemInternal(const QString& id,
 {
     _requested_ids.insert(id);
 
-    if (AudioLibraryModelImpl::Row* existing_row = _item_model->findRowForId(id))
+    if (_item_model->findRowForId(id))
     {
         // already exists, nothing to do
         return;

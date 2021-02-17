@@ -1450,6 +1450,7 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
                 }
             }
 
+            _model->updateDecoration(mouse_index);
             const QVariant icon_variant = mouse_index.sibling(mouse_index.row(), AudioLibraryView::ZERO).data(Qt::DecorationRole);
 
             if(icon_variant.isValid())
