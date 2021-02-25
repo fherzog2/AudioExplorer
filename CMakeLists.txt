@@ -22,31 +22,6 @@ if(MSVC AND ENABLE_STATIC_RUNTIME)
     foreach(flag_var CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
         string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
     endforeach(flag_var)
-
-    # linking Mincore.lib causes problems on Windows 7
-    # because then the program looks for a specific api-ms-win-core-file*.dll which is not present
-
-    get_property(QT5_CORE_DEPENDENCIES TARGET Qt5::Core PROPERTY INTERFACE_LINK_LIBRARIES)
-    list(REMOVE_ITEM QT5_CORE_DEPENDENCIES "Mincore.lib")
-    set_property(TARGET Qt5::Core PROPERTY INTERFACE_LINK_LIBRARIES ${QT5_CORE_DEPENDENCIES})
-
-    find_library(QWindowsVistaStyle_DEBUG NAMES qwindowsvistastyled PATH_SUFFIXES plugins/styles)
-    find_library(QJpegPlugin_DEBUG NAMES qjpegd PATH_SUFFIXES plugins/imageformats)
-    find_library(Qt5VulkanSupport NAMES Qt5VulkanSupport.lib)
-    find_library(Qt5VulkanSupport_DEBUG NAMES Qt5VulkanSupportd.lib)
-
-    set(STATIC_LINK_DEPENDENCIES debug ${QWindowsVistaStyle_DEBUG}
-                                 optimized Qt5::QWindowsVistaStylePlugin # without it, the program looks dated
-                                 debug ${QJpegPlugin_DEBUG}
-                                 optimized Qt5::QJpegPlugin
-                                 debug ${Qt5VulkanSupport_DEBUG}
-                                 optimized ${Qt5VulkanSupport}
-                                 Uxtheme.lib # prerequisite for Qt5::QWindowsVistaStylePlugin
-                                 Userenv.lib # replacement for Mincore.lib
-                                 version.lib # replacement for Mincore.lib
-                                 )
-
-    set(STATIC_PLUGIN_INCLUDE src/static_plugin_include.cpp)
 endif()
 
 if(WIN32)
@@ -116,8 +91,7 @@ add_executable(AudioExplorer WIN32 src/main.cpp
                                    ${TS_FILES}
                                    ${CMAKE_BINARY_DIR}/compiled_resources.cpp
                                    ${CMAKE_BINARY_DIR}/compiled_resources.h
-                                   ${WIN_RESOURCE_FILE}
-                                   ${STATIC_PLUGIN_INCLUDE})
+                                   ${WIN_RESOURCE_FILE})
 target_link_libraries(AudioExplorer ${CMAKE_THREAD_LIBS_INIT} Qt5::Widgets Qt5::Svg ${TAGLIB_LIBRARY} ${STATIC_LINK_DEPENDENCIES})
 
 target_include_directories(AudioExplorer PRIVATE ${TAGLIB_INCLUDE_DIR})
@@ -154,8 +128,7 @@ add_executable(test1 test/test.cpp
                      src/ThreadSafeAudioLibrary.cpp
                      src/ThreadSafeAudioLibrary.h
                      src/TrackInfoReader.h
-                     src/TrackInfoReader.cpp
-                     ${STATIC_PLUGIN_INCLUDE})
+                     src/TrackInfoReader.cpp)
 target_link_libraries(test1 ${CMAKE_THREAD_LIBS_INIT} Qt5::Widgets ${TAGLIB_LIBRARY} ${STATIC_LINK_DEPENDENCIES})
 
 target_include_directories(test1 PRIVATE ${TAGLIB_INCLUDE_DIR})
