@@ -290,9 +290,10 @@ bool testVisualIndexRestoration()
 bool testThreadSafeAudioLibrary(const QString& audio_files_dir)
 {
     ThreadSafeAudioLibrary library;
-    AudioFilesLoader audio_files_loader(library);
+    library.setCacheLocation(QString());
 
-    audio_files_loader.startLoading(QString(), { audio_files_dir });
+    AudioFilesLoader audio_files_loader(library);
+    audio_files_loader.startLoading({ audio_files_dir });
 
     // wait until the thread is finished
 

@@ -102,7 +102,7 @@ class MainWindow : public QFrame
     Q_OBJECT
 
 public:
-    MainWindow(Settings& settings);
+    MainWindow(Settings& settings, ThreadSafeAudioLibrary& library, AudioFilesLoader& audio_files_loader);
 
     virtual bool eventFilter(QObject* watched, QEvent* event) override;
     void setBreadCrumb(std::unique_ptr<AudioLibraryView> view);
@@ -167,8 +167,8 @@ private:
     QTableView* _table = nullptr;
     QStackedWidget* _view_stack = nullptr;
 
-    ThreadSafeAudioLibrary _library;
-    AudioFilesLoader _audio_files_loader;
+    ThreadSafeAudioLibrary& _library;
+    AudioFilesLoader& _audio_files_loader;
 
     std::chrono::steady_clock::time_point _last_view_update_time;
     bool _is_last_view_update_time_valid = false;

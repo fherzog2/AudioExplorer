@@ -43,13 +43,16 @@ public:
 
     bool hasFinishedLoadingFromCache() const;
     void setFinishedLoadingFromCache();
-    void saveToCache(const QString& cache_dir, const QString& cache_location);
 
+    void setCacheLocation(const QString& cache_location);
+    QString getCacheLocation() const;
+    void saveToCache();
 
 private:
     SpinLock _library_spin_lock;
     AudioLibrary _library;
     std::atomic_bool _has_finished_loading_from_cache = ATOMIC_VAR_INIT(false);
+    QString _cache_location;
 };
 
 class AudioFilesLoader : public QObject
@@ -60,7 +63,7 @@ public:
     AudioFilesLoader(ThreadSafeAudioLibrary& library);
     ~AudioFilesLoader();
 
-    void startLoading(const QString& cache_location, const QStringList& audio_dir_paths);
+    void startLoading(const QStringList& audio_dir_paths);
     bool isLoading() const;
 
 signals:

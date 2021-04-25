@@ -2,6 +2,7 @@
 #include "MainWindow.h"
 
 #include <QtCore/qtranslator.h>
+#include <QtCore/qstandardpaths.h>
 #include <QtWidgets/qapplication.h>
 #include <QtWidgets/qmessagebox.h>
 #include "project_version.h"
@@ -99,7 +100,7 @@ void TranslationManager::setLanguageInternal(const QString& lang)
 class MainWindowCreator : public QObject
 {
 public:
-    MainWindowCreator(Settings& settings, TranslationManager& translation_manager);
+    MainWindowCreator(Settings& settings, ThreadSafeAudioLibrary& library, AudioFilesLoader& audio_files_loader, TranslationManager& translation_manager);
 
     void create();
 
@@ -107,18 +108,22 @@ private:
     void checkLanguageChangedSlot();
 
     Settings& _settings;
+    ThreadSafeAudioLibrary& _library;
+    AudioFilesLoader& _audio_files_loader;
     TranslationManager& _translation_manager;
     std::unique_ptr<MainWindow> _main;
 };
 
-MainWindowCreator::MainWindowCreator(Settings& settings, TranslationManager& translation_manager)
+MainWindowCreator::MainWindowCreator(Settings& settings, ThreadSafeAudioLibrary& library, AudioFilesLoader& audio_files_loader, TranslationManager& translation_manager)
     : _settings(settings)
+    , _library(library)
+    , _audio_files_loader(audio_files_loader)
     , _translation_manager(translation_manager)
 {}
 
 void MainWindowCreator::create()
 {
-    _main = std::make_unique<MainWindow>(_settings);
+    _main = std::make_unique<MainWindow>(_settings, _library, _audio_files_loader);
     connect(_main.get(), &MainWindow::checkLanguageChanged, this, &MainWindowCreator::checkLanguageChangedSlot);
 }
 
@@ -159,10 +164,18 @@ int main(int argc, char** argv)
 
     Settings settings;
 
+    ThreadSafeAudioLibrary library;
+    const QString cache_dir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+    const QString filepath = cache_dir + "/AudioLibrary";
+    library.setCacheLocation(filepath);
+
+    AudioFilesLoader audio_files_loader(library);
+    audio_files_loader.startLoading(settings.audio_dir_paths.getValue());
+
     TranslationManager translation_manager(&app);
     translation_manager.setLanguage(settings.language.getValue());
 
-    MainWindowCreator main_creator(settings, translation_manager);
+    MainWindowCreator main_creator(settings, library, audio_files_loader, translation_manager);
     main_creator.create();
 
     return app.exec();

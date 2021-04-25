@@ -8,7 +8,6 @@
 #include <QtCore/qmimedata.h>
 #include <QtCore/qprocess.h>
 #include <QtCore/qsettings.h>
-#include <QtCore/qstandardpaths.h>
 #include <QtCore/qtimer.h>
 #include <QtGui/qdesktopservices.h>
 #include <QtGui/qdrag.h>
@@ -378,9 +377,10 @@ void ContainingFolderOpener::operator()() const
 
 //=============================================================================
 
-MainWindow::MainWindow(Settings& settings)
+MainWindow::MainWindow(Settings& settings, ThreadSafeAudioLibrary& library, AudioFilesLoader& audio_files_loader)
     : _settings(settings)
-    , _audio_files_loader(_library)
+    , _library(library)
+    , _audio_files_loader(audio_files_loader)
 {
     setWindowTitle(APPLICATION_NAME);
 
@@ -519,8 +519,6 @@ MainWindow::MainWindow(Settings& settings)
         FirstStartDialog dlg(this, _settings);
         dlg.exec();
     }
-
-    scanAudioDirs();
 }
 
 void MainWindow::closeEvent(QCloseEvent* e)
@@ -988,18 +986,12 @@ void MainWindow::onModelSelectionChanged()
 
 void MainWindow::saveLibrary()
 {
-    QString cache_dir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
-    QString filepath = cache_dir + "/AudioLibrary";
-
-    _library.saveToCache(cache_dir, filepath);
+    _library.saveToCache();
 }
 
 void MainWindow::scanAudioDirs()
 {
-    QString cache_dir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
-    QString filepath = cache_dir + "/AudioLibrary";
-
-    _audio_files_loader.startLoading(filepath, _settings.audio_dir_paths.getValue());
+    _audio_files_loader.startLoading(_settings.audio_dir_paths.getValue());
 }
 
 const AudioLibraryView* MainWindow::getCurrentView() const

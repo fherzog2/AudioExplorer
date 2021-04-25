@@ -86,7 +86,17 @@ void ThreadSafeAudioLibrary::setFinishedLoadingFromCache()
     _has_finished_loading_from_cache = true;
 }
 
-void ThreadSafeAudioLibrary::saveToCache(const QString& cache_dir, const QString& cache_location)
+void ThreadSafeAudioLibrary::setCacheLocation(const QString& cache_location)
+{
+    _cache_location = cache_location;
+}
+
+QString ThreadSafeAudioLibrary::getCacheLocation() const
+{
+    return _cache_location;
+}
+
+void ThreadSafeAudioLibrary::saveToCache()
 {
     if (!_has_finished_loading_from_cache)
         return; // don't save back a partially loaded library
@@ -99,12 +109,14 @@ void ThreadSafeAudioLibrary::saveToCache(const QString& cache_dir, const QString
     }
 
     {
+        const QString cache_dir = QFileInfo(_cache_location).path();
+
         QDir dir(cache_dir);
         if (!dir.mkpath(cache_dir))
             return;
     }
 
-    QSaveFile file(cache_location);
+    QSaveFile file(_cache_location);
     if (!file.open(QIODevice::WriteOnly))
         return;
 
@@ -131,8 +143,10 @@ AudioFilesLoader::~AudioFilesLoader()
     stopLoading();
 }
 
-void AudioFilesLoader::startLoading(const QString& cache_location, const QStringList& audio_dir_paths)
+void AudioFilesLoader::startLoading(const QStringList& audio_dir_paths)
 {
+    const QString cache_location = _library.getCacheLocation();
+
     // stop existing threads before creating new ones
 
     stopLoading();
