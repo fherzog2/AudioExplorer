@@ -419,7 +419,7 @@ MainWindow::MainWindow(Settings& settings, ThreadSafeAudioLibrary& library, Audi
     _display_mode_tabs = new QTabBar(toolarea);
     _display_mode_tabs->setAutoHide(true);
 
-    _model = new AudioLibraryModel(this);
+    _model = new AudioLibraryModel(this, _group_uuids);
 
     _list = new QListView(this);
     _list->setModel(_model->getModel());
@@ -1080,7 +1080,7 @@ void MainWindow::updateCurrentView()
     }
     else
     {
-        AudioLibraryModel* model = new AudioLibraryModel(this);
+        AudioLibraryModel* model = new AudioLibraryModel(this, _group_uuids);
 
         QStringList model_headers;
         for (const auto& column : AudioLibraryView::columnToStringMapping())
@@ -1553,8 +1553,8 @@ std::unique_ptr<ViewRestoreData> MainWindow::saveViewSettings() const
 
     if (first_index.isValid() && !multiple_rows_selected)
     {
-        const QString id = _model->getItemId(first_index);
-        if (!id.isEmpty())
+        const QUuid id = _model->getItemId(first_index);
+        if (!id.isNull())
             restore_data->_selected_item = id;
     }
 
@@ -1583,7 +1583,7 @@ void MainWindow::restoreViewSettings(ViewRestoreData* restore_data)
 
     // restore selection
 
-    if (!restore_data->_selected_item.isEmpty())
+    if (!restore_data->_selected_item.isNull())
     {
         const QModelIndex index = _model->getIndexForId(restore_data->_selected_item);
         setCurrentSelectedIndex(index);

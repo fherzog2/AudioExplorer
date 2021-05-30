@@ -4,11 +4,12 @@
 #include "AudioLibraryView.h"
 
 class AudioLibraryModelImpl;
+class AudioLibraryGroupUuidCache;
 
 class AudioLibraryModel : public QObject
 {
 public:
-    AudioLibraryModel(QObject* parent);
+    AudioLibraryModel(QObject* parent, AudioLibraryGroupUuidCache& group_uuids);
 
     class IncrementalUpdateScope
     {
@@ -20,15 +21,15 @@ public:
         AudioLibraryModel& _model;
     };
 
-    void addItem(const QString& id, const QString& name, const AudioLibraryAlbum* showcase_album, int number_of_albums, int number_of_tracks, const std::function<std::unique_ptr<AudioLibraryView>()>& view_factory);
+    void addGroupItem(const QString& name, const AudioLibraryAlbum* showcase_album, int number_of_albums, int number_of_tracks, const std::function<std::unique_ptr<AudioLibraryView>()>& view_factory);
     void addAlbumItem(const AudioLibraryAlbum* album);
     void addTrackItem(const AudioLibraryTrack* track);
 
     QAbstractItemModel* getModel();
     const QAbstractItemModel* getModel() const;
     void setHorizontalHeaderLabels(const QStringList& labels);
-    QString getItemId(const QModelIndex& index) const;
-    QModelIndex getIndexForId(const QString& id) const;
+    QUuid getItemId(const QModelIndex& index) const;
+    QModelIndex getIndexForId(const QUuid& id) const;
     const AudioLibraryView* getViewForIndex(const QModelIndex& index) const;
     QString getFilepathFromIndex(const QModelIndex& index) const;
 
@@ -37,10 +38,10 @@ public:
     void updateDecoration(const QModelIndex& index);
 
 private:
-    void addItemInternal(const QString& id,
+    void addItemInternal(const QUuid& id,
         const std::function<void(int row)>& item_factory,
         const std::function<std::unique_ptr<AudioLibraryView>()>& view_factory);
-    void removeId(const QString& id);
+    void removeId(const QUuid& id);
     void onUpdateStarted();
     void onUpdateFinished();
     void setDateTimeColumn(int row, AudioLibraryView::Column column, const QDateTime& date);
@@ -49,5 +50,19 @@ private:
 
     AudioLibraryModelImpl* _item_model;
 
-    std::unordered_set<QString> _requested_ids;
+    std::unordered_set<QUuid> _requested_ids;
+    AudioLibraryGroupUuidCache& _group_uuids;
+};
+
+class AudioLibraryGroupUuidCache
+{
+public:
+    AudioLibraryGroupUuidCache();
+    ~AudioLibraryGroupUuidCache();
+
+    QUuid getUuidForGroup(const QString& name, const AudioLibraryAlbum* showcase_album, int number_of_albums, int number_of_tracks);
+
+private:
+    class Private;
+    std::unique_ptr<Private> _p;
 };

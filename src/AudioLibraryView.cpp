@@ -34,16 +34,6 @@ namespace {
         const AudioLibraryAlbum* showcase_album = nullptr;
         std::unordered_set<const AudioLibraryAlbum*> albums;
         int num_tracks = 0;
-
-        QString getId() const
-        {
-            QLatin1Char sep(',');
-
-            return showcase_album->getKey().getAlbum() + sep +
-                QString::number(showcase_album->getKey().getCoverChecksum()) + sep +
-                QString::number(albums.size()) + sep +
-                QString::number(num_tracks) + QLatin1Char(')');
-        }
     };
 
     struct AudioLibraryGroupData
@@ -51,16 +41,6 @@ namespace {
         const AudioLibraryAlbum* showcase_album = nullptr;
         int num_albums = 0;
         int num_tracks = 0;
-
-        QString getId() const
-        {
-            QLatin1Char sep(',');
-
-            return showcase_album->getKey().getAlbum() + sep +
-                QString::number(showcase_album->getKey().getCoverChecksum()) + sep +
-                QString::number(num_albums) + sep +
-                QString::number(num_tracks) + QLatin1Char(')');
-        }
     };
 
     void addTrackToArtistGroup(const QString& artist, const AudioLibraryTrack* track,
@@ -460,11 +440,7 @@ void AudioLibraryViewAllArtists::createItems(const AudioLibrary& library,
 
     for (const auto& group : displayed_groups)
     {
-        QString id = QLatin1String("artist(") +
-            group.first + QLatin1Char(',') +
-            group.second.getId() + QLatin1Char(')');
-
-        model->addItem(id, group.first, group.second.showcase_album, static_cast<int>(group.second.albums.size()), group.second.num_tracks, [group](){
+        model->addGroupItem(group.first, group.second.showcase_album, static_cast<int>(group.second.albums.size()), group.second.num_tracks, [group](){
             return std::make_unique<AudioLibraryViewArtist>(group.first);
         });
     }
@@ -601,11 +577,7 @@ void AudioLibraryViewAllYears::createItems(const AudioLibrary& library,
 
     for (const auto& group : displayed_groups)
     {
-        QString id = QLatin1String("year(") +
-            QString::number(group.first) + QLatin1Char(',') +
-            group.second.getId() + QLatin1Char(')');
-
-        model->addItem(id, QString::number(group.first), group.second.showcase_album, group.second.num_albums, group.second.num_tracks, [group]() {
+        model->addGroupItem(QString::number(group.first), group.second.showcase_album, group.second.num_albums, group.second.num_tracks, [group]() {
             return std::make_unique<AudioLibraryViewYear>(group.first);
         });
     }
@@ -666,11 +638,7 @@ void AudioLibraryViewAllGenres::createItems(const AudioLibrary& library,
 
         for (const auto& group : displayed_groups)
         {
-            QString id = QLatin1String("genre(") +
-                group.first + QLatin1Char(',') +
-                group.second.getId() + QLatin1Char(')');
-
-            model->addItem(id, group.first, group.second.showcase_album, group.second.num_albums, group.second.num_tracks, [group]() {
+            model->addGroupItem(group.first, group.second.showcase_album, group.second.num_albums, group.second.num_tracks, [group]() {
                 return std::make_unique<AudioLibraryViewGenre>(group.first);
             });
         }
@@ -701,11 +669,7 @@ void AudioLibraryViewAllGenres::createItems(const AudioLibrary& library,
 
         for (const auto& group : displayed_groups)
         {
-            QString id = QLatin1String("artist(") +
-                group.first + QLatin1Char(',') +
-                group.second.getId() + QLatin1Char(')');
-
-            model->addItem(id, group.first, group.second.showcase_album, group.second.num_albums, group.second.num_tracks, [group]() {
+            model->addGroupItem(group.first, group.second.showcase_album, group.second.num_albums, group.second.num_tracks, [group]() {
                 return std::make_unique<AudioLibraryViewArtist>(group.first);
             });
         }
@@ -847,7 +811,7 @@ void AudioLibraryViewAlbum::resolveToTracks(const AudioLibrary& library, std::ve
 
 QString AudioLibraryViewAlbum::getId() const
 {
-    return QLatin1String("AudioLibraryViewAlbum,") + _key.getId();
+    return QLatin1String("AudioLibraryViewAlbum,") + _key.toString();
 }
 
 //=============================================================================

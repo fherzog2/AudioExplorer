@@ -13,6 +13,7 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qhashfunctions.h>
 #include <QtCore/qstring.h>
+#include <QtCore/QUuid>
 #include <QtGui/qpixmap.h>
 #include "TrackInfoReader.h"
 
@@ -32,6 +33,17 @@ namespace std
 }
 #endif
 
+namespace std
+{
+    template<> struct hash<QUuid>
+    {
+        std::size_t operator()(const QUuid& uuid) const
+        {
+            return qHash(uuid);
+        }
+    };
+}
+
 class AudioLibraryAlbumKey
 {
 public:
@@ -44,33 +56,19 @@ public:
     const QString& getGenre() const { return _genre; }
     int getYear() const { return _year; }
     quint16 getCoverChecksum() const { return _cover_checksum; }
-    const QString& getId() const { return _id; }
 
-    bool operator<(const AudioLibraryAlbumKey& other) const
-    {
-        return _id < other._id;
-    }
+    bool operator<(const AudioLibraryAlbumKey& other) const;
+    bool operator==(const AudioLibraryAlbumKey& other) const;
+    bool operator!=(const AudioLibraryAlbumKey& other) const;
 
-    bool operator==(const AudioLibraryAlbumKey& other) const
-    {
-        return _id == other._id;
-    }
-
-    bool operator!=(const AudioLibraryAlbumKey& other) const
-    {
-        return !operator==(other);
-    }
-
-private:
     QString toString() const;
 
+private:
     QString _artist;
     QString _album;
     QString _genre;
     int _year = 0;
     quint16 _cover_checksum = 0;
-
-    QString _id;
 };
 
 class AudioLibraryAlbum
@@ -82,7 +80,7 @@ public:
     const QByteArray& getCover() const { return _cover; }
     const QSize& getCoverSize() const { return _cover_size; }
 
-    const QString& getId() const { return _id; }
+    const QUuid& getUuid() const { return _uuid; }
 
     const QString& getCoverType() const { return _cover_type; }
 
@@ -99,7 +97,7 @@ private:
 
     std::vector<const AudioLibraryTrack*> _tracks;
 
-    QString _id;
+    QUuid _uuid = QUuid::createUuid();
 
     QString _cover_type;
 };
@@ -142,7 +140,7 @@ public:
     int getBitrateKbs() const { return _bitrate_kbs; }
     int getSampleRateHz() const { return _samplerate_hz; }
 
-    const QString& getId() const { return _id;  }
+    const QUuid& getUuid() const { return _uuid; }
 
     AudioLibraryAlbum* getAlbum() { return _album; }
     void setAlbumPtr(AudioLibraryAlbum* album) { _album = album; }
@@ -164,7 +162,7 @@ private:
     int _bitrate_kbs;
     int _samplerate_hz;
 
-    QString _id;
+    const QUuid _uuid = QUuid::createUuid();
 };
 
 class AudioLibrary

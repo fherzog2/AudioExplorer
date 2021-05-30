@@ -67,7 +67,7 @@ struct ViewRestoreData
     int _table_sort_indicator_section = 0;
     Qt::SortOrder _table_sort_indicator_order = Qt::AscendingOrder;
 
-    QString _selected_item;
+    QUuid _selected_item;
 };
 
 class History
@@ -156,6 +156,7 @@ private:
 
     Settings& _settings;
 
+    AudioLibraryGroupUuidCache _group_uuids;
     AudioLibraryModel* _model = nullptr;
 
     ViewSelector _view_selector;

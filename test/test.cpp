@@ -52,17 +52,46 @@ TrackInfo createTrackInfo(QString artist,
     return info;
 }
 
+QString audioLibraryAlbumKeyToString(const AudioLibraryAlbumKey& key)
+{
+    QLatin1Char sep(',');
+
+    return key.getArtist() + sep +
+        QString::number(key.getYear()) + sep +
+        key.getAlbum() + sep +
+        key.getGenre() + sep +
+        QString::number(key.getCoverChecksum());
+}
+
+QString audioLibraryTrackToString(const AudioLibraryTrack& track)
+{
+    QLatin1Char sep(',');
+
+    return track.getArtist() + sep +
+        track.getAlbumArtist() + sep +
+        track.getFilepath() + sep +
+        track.getTitle() + sep +
+        QString::number(track.getTrackNumber()) + sep +
+        QString::number(track.getDiscNumber()) + sep +
+        track.getComment() + sep +
+        track.getTagTypes() + sep +
+        QString::number(track.getLengthMs()) + sep +
+        QString::number(track.getChannels()) + sep +
+        QString::number(track.getBitrateKbs()) + sep +
+        QString::number(track.getSampleRateHz());
+}
+
 void debugPrint(const AudioLibrary& lib)
 {
     QString str;
 
     for (auto a : lib.getAlbums())
     {
-        str += a->getKey().getId() + "\n";
+        str += audioLibraryAlbumKeyToString(a->getKey()) + "\n";
 
         for (auto t : a->getTracks())
         {
-            str += t->getId() + "\n";
+            str += audioLibraryTrackToString(*t) + "\n";
         }
     }
 
@@ -372,7 +401,8 @@ bool testAudioLibraryViewAllArtists()
     library.addTrack("Sampler - 1", QDateTime(), 0, createTrackInfo("Artist 1", "Various Artists", "Sampler", 2001, "Genre 3", QByteArray(), "1", 1));
     library.addTrack("Sampler - 2", QDateTime(), 0, createTrackInfo("Artist 3", "Various Artists", "Sampler", 2001, "Genre 3", QByteArray(), "2", 2));
 
-    AudioLibraryModel model(nullptr);
+    AudioLibraryGroupUuidCache group_uuids;
+    AudioLibraryModel model(nullptr, group_uuids);
 
     // unfiltered view
 

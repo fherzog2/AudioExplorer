@@ -58,15 +58,15 @@ public:
         int index = -1;
     };
 
-    Row* createRow(const QString& id);
-    void removeRow(const QString& id);
-    Row* findRowForId(const QString& id) const;
-    QModelIndex findIndexForId(const QString& id) const;
+    Row* createRow(const QUuid& id);
+    void removeRow(const QUuid& id);
+    Row* findRowForId(const QUuid& id) const;
+    QModelIndex findIndexForId(const QUuid& id) const;
     const AudioLibraryView* getViewForIndex(const QModelIndex& index) const;
 
     void setHorizontalHeaderLabels(const QStringList& labels);
 
-    std::vector<QString> getAllIds() const;
+    std::vector<QUuid> getAllIds() const;
 
     const QIcon& getDefaultIcon() const;
 
@@ -78,8 +78,8 @@ private:
     void loadRequestedDecorations();
 
     std::vector<std::unique_ptr<Row>> _rows;
-    std::unordered_map<QString, Row*> _id_to_row_map;
-    std::unordered_map<QString, std::shared_ptr<Decoration>> _decorations_for_album_ids;
+    std::unordered_map<QUuid, Row*> _id_to_row_map;
+    std::unordered_map<QUuid, std::shared_ptr<Decoration>> _decorations_for_album_ids;
     mutable std::vector< std::shared_ptr<Decoration>> _requested_decorations;
     QStringList _header_labels;
     QIcon _default_icon;
@@ -153,13 +153,13 @@ void AudioLibraryModelImpl::setDecoration(int row, const AudioLibraryAlbum* albu
     {
         Row* row_data = _rows[row].get();
 
-        auto it = _decorations_for_album_ids.find(album->getId());
+        auto it = _decorations_for_album_ids.find(album->getUuid());
         if (it == _decorations_for_album_ids.end())
         {
             auto decoration = std::make_shared<Decoration>();
             decoration->bytes = album->getCover();
             decoration->variant = _default_icon;
-            it = _decorations_for_album_ids.emplace(std::make_pair(album->getId(), decoration)).first;
+            it = _decorations_for_album_ids.emplace(std::make_pair(album->getUuid(), decoration)).first;
         }
 
         row_data->decoration = it->second;
@@ -291,7 +291,7 @@ void AudioLibraryModelImpl::sort(int column, Qt::SortOrder order)
     layoutChanged(parents, QAbstractItemModel::VerticalSortHint);
 }
 
-AudioLibraryModelImpl::Row* AudioLibraryModelImpl::createRow(const QString& id)
+AudioLibraryModelImpl::Row* AudioLibraryModelImpl::createRow(const QUuid& id)
 {
     if (_rows.size() + 1 > INT_MAX)
         return nullptr; // QModelIndex uses int, so we can't have more than INT_MAX rows
@@ -311,7 +311,7 @@ AudioLibraryModelImpl::Row* AudioLibraryModelImpl::createRow(const QString& id)
     return result;
 }
 
-void AudioLibraryModelImpl::removeRow(const QString& id)
+void AudioLibraryModelImpl::removeRow(const QUuid& id)
 {
     auto found = _id_to_row_map.find(id);
     if (found != _id_to_row_map.end())
@@ -328,7 +328,7 @@ void AudioLibraryModelImpl::removeRow(const QString& id)
     }
 }
 
-AudioLibraryModelImpl::Row* AudioLibraryModelImpl::findRowForId(const QString& id) const
+AudioLibraryModelImpl::Row* AudioLibraryModelImpl::findRowForId(const QUuid& id) const
 {
     auto found = _id_to_row_map.find(id);
     if (found != _id_to_row_map.end())
@@ -337,7 +337,7 @@ AudioLibraryModelImpl::Row* AudioLibraryModelImpl::findRowForId(const QString& i
     return nullptr;
 }
 
-QModelIndex AudioLibraryModelImpl::findIndexForId(const QString& id) const
+QModelIndex AudioLibraryModelImpl::findIndexForId(const QUuid& id) const
 {
     if (const Row* row = findRowForId(id))
     {
@@ -357,9 +357,9 @@ void AudioLibraryModelImpl::setHorizontalHeaderLabels(const QStringList& labels)
     _header_labels = labels;
 }
 
-std::vector<QString> AudioLibraryModelImpl::getAllIds() const
+std::vector<QUuid> AudioLibraryModelImpl::getAllIds() const
 {
-    std::vector<QString> ids;
+    std::vector<QUuid> ids;
 
     for (const auto& i : _id_to_row_map)
     {
@@ -454,13 +454,14 @@ bool AudioLibraryModelImpl::Decoration::load()
 
 //=============================================================================
 
-AudioLibraryModel::AudioLibraryModel(QObject* parent)
+AudioLibraryModel::AudioLibraryModel(QObject* parent, AudioLibraryGroupUuidCache& group_uuids)
     : QObject(parent)
+    , _group_uuids(group_uuids)
 {
     _item_model = new AudioLibraryModelImpl(this);
 }
 
-void AudioLibraryModel::addItemInternal(const QString& id,
+void AudioLibraryModel::addItemInternal(const QUuid& id,
     const std::function<void(int row)>& item_factory,
     const std::function<std::unique_ptr<AudioLibraryView>()>& view_factory)
 {
@@ -482,8 +483,10 @@ void AudioLibraryModel::addItemInternal(const QString& id,
     _item_model->dataChanged(_item_model->index(row->index, 0), _item_model->index(row->index, AudioLibraryView::NUMBER_OF_COLUMNS - 1));
 }
 
-void AudioLibraryModel::addItem(const QString& id, const QString& name, const AudioLibraryAlbum* showcase_album, int number_of_albums, int number_of_tracks, const std::function<std::unique_ptr<AudioLibraryView>()>& view_factory)
+void AudioLibraryModel::addGroupItem(const QString& name, const AudioLibraryAlbum* showcase_album, int number_of_albums, int number_of_tracks, const std::function<std::unique_ptr<AudioLibraryView>()>& view_factory)
 {
+    const QUuid id = _group_uuids.getUuidForGroup(name, showcase_album, number_of_albums, number_of_tracks);
+
     auto item_factory = [this, name, showcase_album, number_of_albums, number_of_tracks](int row) {
 
         _item_model->setDataInternal(row, AudioLibraryView::ZERO, name);
@@ -498,7 +501,7 @@ void AudioLibraryModel::addItem(const QString& id, const QString& name, const Au
 
 void AudioLibraryModel::addAlbumItem(const AudioLibraryAlbum* album)
 {
-    QString id = album->getId();
+    const QUuid id = album->getUuid();
 
     auto item_factory = [this, album](int row) {
 
@@ -531,7 +534,7 @@ void AudioLibraryModel::addAlbumItem(const AudioLibraryAlbum* album)
 
 void AudioLibraryModel::addTrackItem(const AudioLibraryTrack* track)
 {
-    QString id = track->getId();
+    const QUuid id = track->getUuid();
 
     auto item_factory = [this, track](int row) {
 
@@ -591,13 +594,13 @@ void AudioLibraryModel::setHorizontalHeaderLabels(const QStringList& labels)
     _item_model->setHorizontalHeaderLabels(labels);
 }
 
-QString AudioLibraryModel::getItemId(const QModelIndex& index) const
+QUuid AudioLibraryModel::getItemId(const QModelIndex& index) const
 {
     QModelIndex zero_column = index.sibling(index.row(), AudioLibraryView::ZERO);
-    return zero_column.data(AudioLibraryView::ID_ROLE).toString();
+    return zero_column.data(AudioLibraryView::ID_ROLE).toUuid();
 }
 
-QModelIndex AudioLibraryModel::getIndexForId(const QString& id) const
+QModelIndex AudioLibraryModel::getIndexForId(const QUuid& id) const
 {
     return _item_model->findIndexForId(id);
 }
@@ -623,7 +626,7 @@ void AudioLibraryModel::updateDecoration(const QModelIndex& index)
     _item_model->updateDecoration(index);
 }
 
-void AudioLibraryModel::removeId(const QString& id)
+void AudioLibraryModel::removeId(const QUuid& id)
 {
     _item_model->removeRow(id);
 }
@@ -648,13 +651,13 @@ void AudioLibraryModel::onUpdateFinished()
 {
     // remove all IDs that were not requested
 
-    QStringList ids_to_remove;
+    std::vector<QUuid> ids_to_remove;
 
-    for (const QString& id : _item_model->getAllIds())
+    for (const QUuid& id : _item_model->getAllIds())
         if (_requested_ids.find(id) == _requested_ids.end())
             ids_to_remove.push_back(id);
 
-    for (const QString& id : ids_to_remove)
+    for (const QUuid& id : ids_to_remove)
         removeId(id);
 }
 
@@ -699,4 +702,53 @@ void AudioLibraryModel::setAlbumColumns(int row, const AudioLibraryAlbum* album)
 
     _item_model->setDataInternal(row, AudioLibraryView::COVER_WIDTH, QString::number(album->getCoverSize().width()));
     _item_model->setDataInternal(row, AudioLibraryView::COVER_HEIGHT, QString::number(album->getCoverSize().height()));
+}
+
+//=============================================================================
+
+class AudioLibraryGroupUuidCache::Private
+{
+public:
+    struct GroupData
+    {
+        QString name;
+        QUuid showcase_album_uuid;
+        int num_albums = 0;
+        int num_tracks = 0;
+
+        bool operator<(const GroupData& other) const
+        {
+            auto tie = [](const GroupData& g) {
+                return std::tie(
+                    g.name,
+                    g.showcase_album_uuid,
+                    g.num_albums,
+                    g.num_tracks);
+            };
+
+            return tie(*this) < tie(other);
+        }
+    };
+
+    std::map<GroupData, QUuid> _group_uuids;
+};
+
+AudioLibraryGroupUuidCache::AudioLibraryGroupUuidCache()
+    : _p(new Private())
+{
+}
+
+AudioLibraryGroupUuidCache::~AudioLibraryGroupUuidCache() = default;
+
+/**
+* Assigns a persistent uuid for a group with the given parameters.
+*/
+QUuid AudioLibraryGroupUuidCache::getUuidForGroup(const QString& name, const AudioLibraryAlbum* showcase_album, int number_of_albums, int number_of_tracks)
+{
+    // the uuid is only inserted if the group does not already exist in the map
+    auto it = _p->_group_uuids.insert({
+        Private::GroupData{name, showcase_album->getUuid(), number_of_albums, number_of_tracks},
+        QUuid::createUuid() });
+
+    return it.first->second;
 }

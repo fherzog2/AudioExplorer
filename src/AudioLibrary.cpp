@@ -41,7 +41,6 @@ AudioLibraryAlbumKey::AudioLibraryAlbumKey(QString artist, QString album, QStrin
     , _year(year)
     , _cover_checksum(cover_checksum)
 {
-    _id = toString();
 }
 
 AudioLibraryAlbumKey::AudioLibraryAlbumKey(const TrackInfo& info)
@@ -51,7 +50,6 @@ AudioLibraryAlbumKey::AudioLibraryAlbumKey(const TrackInfo& info)
     , _year(info.year)
     , _cover_checksum(qChecksum(info.cover.data(), info.cover.size()))
 {
-    _id = toString();
 }
 
 QString AudioLibraryAlbumKey::toString() const
@@ -65,6 +63,39 @@ QString AudioLibraryAlbumKey::toString() const
         QString::number(_cover_checksum);
 }
 
+bool AudioLibraryAlbumKey::operator<(const AudioLibraryAlbumKey& other) const
+{
+    auto tie = [](const AudioLibraryAlbumKey& key) {
+        return std::tie(
+            key._artist,
+            key._year,
+            key._album,
+            key._genre,
+            key._cover_checksum);
+    };
+
+    return tie(*this) < tie(other);
+}
+
+bool AudioLibraryAlbumKey::operator==(const AudioLibraryAlbumKey& other) const
+{
+    auto tie = [](const AudioLibraryAlbumKey& key) {
+        return std::tie(
+            key._artist,
+            key._year,
+            key._album,
+            key._genre,
+            key._cover_checksum);
+    };
+
+    return tie(*this) == tie(other);
+}
+
+bool AudioLibraryAlbumKey::operator!=(const AudioLibraryAlbumKey& other) const
+{
+    return !operator==(other);
+}
+
 //=============================================================================
 
 AudioLibraryAlbum::AudioLibraryAlbum(const AudioLibraryAlbumKey& key, const QByteArray& cover, const QSize& cover_size)
@@ -72,20 +103,24 @@ AudioLibraryAlbum::AudioLibraryAlbum(const AudioLibraryAlbumKey& key, const QByt
     , _cover(cover)
     , _cover_size(cover_size)
 {
-    _id = QLatin1String("album(") + _key.getId() + QLatin1Char(')');
-
     _cover_type = getCoverTypeInternal();
 }
 
 void AudioLibraryAlbum::addTrack(const AudioLibraryTrack* track)
 {
     _tracks.push_back(track);
+
+    // reset the uuid because data has been modified
+    _uuid = QUuid::createUuid();
 }
 
 void AudioLibraryAlbum::removeTrack(const AudioLibraryTrack* track)
 {
     auto new_end = std::remove(_tracks.begin(), _tracks.end(), track);
     _tracks.erase(new_end, _tracks.end());
+
+    // reset the uuid because data has been modified
+    _uuid = QUuid::createUuid();
 }
 
 template<class ARRAY>
@@ -153,22 +188,6 @@ AudioLibraryTrack::AudioLibraryTrack(AudioLibraryAlbum* album,
     , _bitrate_kbs(bitrate_kbs)
     , _samplerate_hz(samplerate_hz)
 {
-    QLatin1Char sep(',');
-
-    _id = _album->getId() +
-        QLatin1String(".track(") +
-        _artist + sep +
-        _album_artist + sep +
-        _filepath + sep +
-        _title + sep +
-        QString::number(_track_number) + sep +
-        QString::number(_disc_number) + sep +
-        _comment + sep +
-        _tag_types + sep +
-        QString::number(_length_milliseconds) + sep +
-        QString::number(_channels) + sep +
-        QString::number(_bitrate_kbs) + sep +
-        QString::number(_samplerate_hz) + QLatin1Char(')');
 }
 
 bool AudioLibraryTrack::operator==(const AudioLibraryTrack& other) const
