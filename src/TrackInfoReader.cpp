@@ -176,7 +176,7 @@ namespace{
 
         if (info.cover.isEmpty())
         {
-            const TagLib::MP4::ItemListMap& item_list_map = tag->itemListMap();
+            const TagLib::MP4::ItemMap& item_list_map = tag->itemMap();
             if (item_list_map.contains("covr"))
             {
                 const TagLib::MP4::Item& cover_item = item_list_map["covr"];
@@ -191,7 +191,7 @@ namespace{
 
         if (info.album_artist.isEmpty())
         {
-            const TagLib::MP4::ItemListMap& item_list_map = tag->itemListMap();
+            const TagLib::MP4::ItemMap& item_list_map = tag->itemMap();
 
             auto album_artist_item = item_list_map.find("aART");
             if (album_artist_item != item_list_map.end())
@@ -206,7 +206,7 @@ namespace{
 
         if (info.disc_number == 0)
         {
-            const TagLib::MP4::ItemListMap& item_list_map = tag->itemListMap();
+            const TagLib::MP4::ItemMap& item_list_map = tag->itemMap();
 
             auto disc_number_item = item_list_map.find("disk");
             if (disc_number_item != item_list_map.end())
