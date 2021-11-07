@@ -62,31 +62,29 @@ namespace{
 
         if (info.cover.isEmpty())
         {
-            TagLib::ID3v2::FrameList picture_frames = tag->frameListMap()["APIC"];
-
-            const TagLib::ID3v2::AttachedPictureFrame* first_picture_frame = nullptr;
-            const TagLib::ID3v2::AttachedPictureFrame* picture_frame = nullptr;
-
-            for (TagLib::ID3v2::Frame* frame : picture_frames)
-                if (auto f = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame*>(frame))
-                {
-                    if (!first_picture_frame)
-                        first_picture_frame = f;
-
-                    if (f->type() == TagLib::ID3v2::AttachedPictureFrame::FrontCover)
-                    {
-                        picture_frame = f;
-                        break;
-                    }
-                }
-
-            if (!picture_frame)
-                picture_frame = first_picture_frame;
-
-            if (picture_frame)
+            const auto picture_frames_it = tag->frameListMap().find("APIC");
+            if (picture_frames_it != tag->frameListMap().end())
             {
-                TagLib::ByteVector bytes = picture_frame->picture();
-                info.cover = QByteArray(bytes.data(), bytes.size());
+                const TagLib::ID3v2::AttachedPictureFrame* picture_frame = nullptr;
+
+                for (TagLib::ID3v2::Frame* frame : picture_frames_it->second)
+                    if (auto f = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame*>(frame))
+                    {
+                        if (!picture_frame)
+                            picture_frame = f;
+
+                        if (f->type() == TagLib::ID3v2::AttachedPictureFrame::FrontCover)
+                        {
+                            picture_frame = f;
+                            break;
+                        }
+                    }
+
+                if (picture_frame)
+                {
+                    const TagLib::ByteVector bytes = picture_frame->picture();
+                    info.cover = QByteArray(bytes.data(), bytes.size());
+                }
             }
         }
 
@@ -177,13 +175,13 @@ namespace{
         if (info.cover.isEmpty())
         {
             const TagLib::MP4::ItemMap& item_list_map = tag->itemMap();
-            if (item_list_map.contains("covr"))
+            const auto cover_item_it = item_list_map.find("covr");
+            if (cover_item_it != item_list_map.end())
             {
-                const TagLib::MP4::Item& cover_item = item_list_map["covr"];
-                TagLib::MP4::CoverArtList cover_art_list = cover_item.toCoverArtList();
+                const TagLib::MP4::CoverArtList cover_art_list = cover_item_it->second.toCoverArtList();
                 if (!cover_art_list.isEmpty())
                 {
-                    TagLib::ByteVector bytes = cover_art_list.front().data();
+                    const TagLib::ByteVector bytes = cover_art_list.front().data();
                     info.cover = QByteArray(bytes.data(), bytes.size());
                 }
             }
@@ -223,14 +221,15 @@ namespace{
         if (info.cover.isEmpty())
         {
             const TagLib::APE::ItemListMap& item_map = tag->itemListMap();
-            if (item_map.contains("COVER ART (FRONT)"))
+            const auto item_it = item_map.find("COVER ART (FRONT)");
+            if (item_it != item_map.end())
             {
                 const TagLib::ByteVector null_terminator(1, 0);
-                TagLib::ByteVector item = item_map["COVER ART (FRONT)"].value();
+                const TagLib::ByteVector item = item_it->second.value();
                 const int pos = item.find(null_terminator); // Skip the filename.
                 if (pos != -1)
                 {
-                    TagLib::ByteVector bytes = item.mid(pos + 1);
+                    const TagLib::ByteVector bytes = item.mid(pos + 1);
                     info.cover = QByteArray(bytes.data(), bytes.size());
                 }
             }
@@ -266,9 +265,10 @@ namespace{
         if (info.cover.isEmpty())
         {
             const TagLib::ASF::AttributeListMap& attr_list_map = tag->attributeListMap();
-            if (attr_list_map.contains("WM/Picture"))
+            const auto attr_list_it = attr_list_map.find("WM/Picture");
+            if (attr_list_it != attr_list_map.end())
             {
-                const TagLib::ASF::AttributeList& attr_list = attr_list_map["WM/Picture"];
+                const TagLib::ASF::AttributeList& attr_list = attr_list_it->second;
                 if (!attr_list.isEmpty())
                 {
                     auto found = std::find_if(attr_list.begin(), attr_list.end(), [](const TagLib::ASF::Attribute& a){
@@ -278,7 +278,7 @@ namespace{
                     if (found == attr_list.end())
                         found = attr_list.begin();
 
-                    TagLib::ByteVector bytes = found->toPicture().picture();
+                    const TagLib::ByteVector bytes = found->toPicture().picture();
                     info.cover = QByteArray(bytes.data(), bytes.size());
                 }
             }
