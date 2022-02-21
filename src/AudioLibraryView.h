@@ -6,6 +6,14 @@
 
 class AudioLibraryModel;
 
+class ResolveToTracksIF
+{
+public:
+    virtual ~ResolveToTracksIF() = default;
+
+    virtual void resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const = 0;
+};
+
 class AudioLibraryView
 {
 public:
@@ -71,7 +79,7 @@ public:
     virtual void createItems(const AudioLibrary& library,
         DisplayMode display_mode,
         AudioLibraryModel* model) const = 0;
-    virtual void resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const;
+    virtual const ResolveToTracksIF* getResolveToTracksIF() const;
     virtual QString getId() const = 0;
 };
 
@@ -165,7 +173,7 @@ private:
     QString _filter;
 };
 
-class AudioLibraryViewArtist : public AudioLibraryView
+class AudioLibraryViewArtist : public AudioLibraryView, public ResolveToTracksIF
 {
 public:
     AudioLibraryViewArtist(const QString& artist);
@@ -177,13 +185,14 @@ public:
         DisplayMode display_mode,
         AudioLibraryModel* model) const override;
     virtual void resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const override;
+    virtual const ResolveToTracksIF* getResolveToTracksIF() const override;
     virtual QString getId() const override;
 
 private:
     QString _artist;
 };
 
-class AudioLibraryViewAlbum : public AudioLibraryView
+class AudioLibraryViewAlbum : public AudioLibraryView, public ResolveToTracksIF
 {
 public:
     AudioLibraryViewAlbum(const AudioLibraryAlbumKey& key);
@@ -195,13 +204,14 @@ public:
         DisplayMode display_mode,
         AudioLibraryModel* model) const override;
     virtual void resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const override;
+    virtual const ResolveToTracksIF* getResolveToTracksIF() const override;
     virtual QString getId() const override;
 
 private:
     AudioLibraryAlbumKey _key;
 };
 
-class AudioLibraryViewYear : public AudioLibraryView
+class AudioLibraryViewYear : public AudioLibraryView, public ResolveToTracksIF
 {
 public:
     AudioLibraryViewYear(int year);
@@ -213,13 +223,14 @@ public:
         DisplayMode display_mode,
         AudioLibraryModel* model) const override;
     virtual void resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const override;
+    virtual const ResolveToTracksIF* getResolveToTracksIF() const override;
     virtual QString getId() const override;
 
 private:
     int _year;
 };
 
-class AudioLibraryViewGenre : public AudioLibraryView
+class AudioLibraryViewGenre : public AudioLibraryView, public ResolveToTracksIF
 {
 public:
     AudioLibraryViewGenre(const QString& genre);
@@ -231,6 +242,7 @@ public:
         DisplayMode display_mode,
         AudioLibraryModel* model) const override;
     virtual void resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const override;
+    virtual const ResolveToTracksIF* getResolveToTracksIF() const override;
     virtual QString getId() const override;
 
 private:

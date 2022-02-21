@@ -382,9 +382,9 @@ bool AudioLibraryView::isGroupDisplayMode(DisplayMode mode)
     return false;
 }
 
-void AudioLibraryView::resolveToTracks(const AudioLibrary& /*library*/, std::vector<const AudioLibraryTrack*>& /*tracks*/) const
+const ResolveToTracksIF* AudioLibraryView::getResolveToTracksIF() const
 {
-    throw std::runtime_error("not implemented");
+    return nullptr;
 }
 
 //=============================================================================
@@ -758,6 +758,11 @@ void AudioLibraryViewArtist::resolveToTracks(const AudioLibrary& library, std::v
     }
 }
 
+const ResolveToTracksIF* AudioLibraryViewArtist::getResolveToTracksIF() const
+{
+    return this;
+}
+
 QString AudioLibraryViewArtist::getId() const
 {
     return QString("AudioLibraryViewArtist,%1").arg(_artist);
@@ -807,6 +812,11 @@ void AudioLibraryViewAlbum::resolveToTracks(const AudioLibrary& library, std::ve
             tracks.insert(tracks.end(), album->getTracks().begin(), album->getTracks().end());
         }
     }
+}
+
+const ResolveToTracksIF* AudioLibraryViewAlbum::getResolveToTracksIF() const
+{
+    return this;
 }
 
 QString AudioLibraryViewAlbum::getId() const
@@ -860,6 +870,11 @@ void AudioLibraryViewYear::resolveToTracks(const AudioLibrary& library, std::vec
     }
 }
 
+const ResolveToTracksIF* AudioLibraryViewYear::getResolveToTracksIF() const
+{
+    return this;
+}
+
 QString AudioLibraryViewYear::getId() const
 {
     return QString("AudioLibraryViewYear,%1").arg(_year);
@@ -909,6 +924,11 @@ void AudioLibraryViewGenre::resolveToTracks(const AudioLibrary& library, std::ve
             tracks.insert(tracks.end(), album->getTracks().begin(), album->getTracks().end());
         }
     }
+}
+
+const ResolveToTracksIF* AudioLibraryViewGenre::getResolveToTracksIF() const
+{
+    return this;
 }
 
 QString AudioLibraryViewGenre::getId() const

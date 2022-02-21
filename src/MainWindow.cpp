@@ -1192,7 +1192,8 @@ void MainWindow::getFilepathsFromIndex(const QModelIndex& index, std::vector<QSt
         ThreadSafeAudioLibrary::LibraryAccessor acc(_library);
 
         std::vector<const AudioLibraryTrack*> tracks;
-        view->resolveToTracks(acc.getLibrary(), tracks);
+        if (view->getResolveToTracksIF())
+            view->getResolveToTracksIF()->resolveToTracks(acc.getLibrary(), tracks);
 
         for (const AudioLibraryTrack* track : tracks)
             filepaths.push_back(track->getFilepath());
@@ -1217,7 +1218,8 @@ void MainWindow::forEachFilepathAtIndex(const QModelIndex& index, std::function<
         ThreadSafeAudioLibrary::LibraryAccessor acc(_library);
 
         std::vector<const AudioLibraryTrack*> tracks;
-        view->resolveToTracks(acc.getLibrary(), tracks);
+        if (view->getResolveToTracksIF())
+            view->getResolveToTracksIF()->resolveToTracks(acc.getLibrary(), tracks);
 
         std::sort(tracks.begin(), tracks.end(), [](const AudioLibraryTrack* a, const AudioLibraryTrack* b) {
 
