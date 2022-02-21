@@ -130,6 +130,10 @@
         <source>View coverart</source>
         <translation>Zeige Albumcover</translation>
     </message>
+    <message>
+        <source>Select random item</source>
+        <translation>Zufälligen Eintrag auswählen</translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>
@@ -280,6 +284,10 @@
     <message>
         <source>Do you want to restart the program now to change the language?</source>
         <translation>Wollen Sie das Programm neustarten, um die geänderte Sprache zu übernehmen?</translation>
+    </message>
+    <message>
+        <source>File size</source>
+        <translation>Dateigröße</translation>
     </message>
 </context>
 <context>

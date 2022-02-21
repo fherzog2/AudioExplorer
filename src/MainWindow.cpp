@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <set>
+#include <random>
 #include <QtCore/qmimedata.h>
 #include <QtCore/qprocess.h>
 #include <QtCore/qsettings.h>
@@ -396,6 +397,7 @@ MainWindow::MainWindow(Settings& settings, ThreadSafeAudioLibrary& library, Audi
     addMenuAction(*viewmenu, tr("Find..."), this, &MainWindow::onShowFindWidget, QKeySequence::Find);
     addMenuAction(*viewmenu, tr("Badly tagged albums"), this, &MainWindow::onShowDuplicateAlbums);
     addMenuAction(*viewmenu, tr("Reload all files"), this, &MainWindow::scanAudioDirs, QKeySequence::Refresh);
+    addMenuAction(*viewmenu, tr("Select random item"), this, &MainWindow::selectRandomItem, QKeySequence(Qt::Key_F6));
 
     auto toolarea = new QWidget(this);
 
@@ -992,6 +994,29 @@ void MainWindow::saveLibrary()
 void MainWindow::scanAudioDirs()
 {
     _audio_files_loader.startLoading(_settings.audio_dir_paths.getValue());
+}
+
+void MainWindow::selectRandomItem()
+{
+    if (QAbstractItemView* view = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget()))
+    {
+        const int row_count = view->model()->rowCount();
+        if (row_count < 1)
+            return;
+
+        std::random_device rd;  //Will be used to obtain a seed for the random number engine
+        std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+        std::uniform_int_distribution<> distrib(0, row_count - 1);
+
+        const int row = distrib(gen);
+
+        const QModelIndex index = view->model()->index(row, 0);
+        const QModelIndex index_last_column = view->model()->index(row, view->model()->columnCount() - 1);
+
+        view->selectionModel()->setCurrentIndex(index, QItemSelectionModel::Current);
+        view->selectionModel()->select(QItemSelection(index, index_last_column), QItemSelectionModel::ClearAndSelect);
+        view->scrollTo(index);
+    }
 }
 
 const AudioLibraryView* MainWindow::getCurrentView() const

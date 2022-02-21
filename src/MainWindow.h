@@ -135,6 +135,7 @@ private:
 
     void saveLibrary();
     void scanAudioDirs();
+    void selectRandomItem();
     const AudioLibraryView* getCurrentView() const;
     void updateCurrentView();
     void updateCurrentViewIfOlderThan(int msecs);
