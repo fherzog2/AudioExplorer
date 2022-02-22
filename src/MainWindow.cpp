@@ -418,9 +418,6 @@ MainWindow::MainWindow(Settings& settings, ThreadSafeAudioLibrary& library, Audi
         _view_selector.show();
     });
 
-    _display_mode_tabs = new QTabBar(toolarea);
-    _display_mode_tabs->setAutoHide(true);
-
     _model = new AudioLibraryModel(this, _group_uuids);
 
     _list = new QListView(this);
@@ -463,25 +460,71 @@ MainWindow::MainWindow(Settings& settings, ThreadSafeAudioLibrary& library, Audi
     _details_splitter->addWidget(_details);
     _details_splitter->setChildrenCollapsible(false);
 
-    _view_type_tabs = new QTabBar(toolarea);
-    addViewTypeTab(_list, tr("Icons"), "icons");
-    addViewTypeTab(_table, tr("Table"), "table");
+    _toolbar = new QToolBar(toolarea);
 
-    QToolButton* details_toggle_button = new QToolButton(toolarea);
-    details_toggle_button->setText(tr("Details"));
-    details_toggle_button->setToolTip(tr("Show details pane"));
+    // display modes
+
+    auto display_mode_group = new QActionGroup(this);
+
+    for (auto display_mode : {
+        AudioLibraryView::DisplayMode::GENRES,
+        AudioLibraryView::DisplayMode::YEARS,
+        AudioLibraryView::DisplayMode::ARTISTS,
+        AudioLibraryView::DisplayMode::ALBUMS,
+        AudioLibraryView::DisplayMode::TRACKS })
+    {
+        auto action = new QAction(AudioLibraryView::getDisplayModeFriendlyName(display_mode), this);
+        action->setCheckable(true);
+
+        connect(action, &QAction::triggered, this, [this, display_mode]() {
+            onDisplayModeChanged(display_mode);
+        });
+
+        _display_mode_actions.push_back(std::make_pair(action, display_mode));
+        display_mode_group->addAction(action);
+        _toolbar->addAction(action);
+    }
+
+    _separator_display_modes_view_types = _toolbar->addSeparator();
+
+    // view types
+
+    addViewTypeAction(_list, tr("Icons"), "icons");
+    addViewTypeAction(_table, tr("Table"), "table");
+
+    auto view_type_group = new QActionGroup(this);
+    for (const auto& action : _view_type_actions)
+    {
+        view_type_group->addAction(action.first);
+        _toolbar->addAction(action.first);
+    }
+
+    // details action
+
+    _details_action = new QAction(tr("Details"), this);
+    _details_action->setToolTip(tr("Show details pane"));
+    _details_action->setCheckable(true);
+
+    connect(_details_action, &QAction::triggered, this, [this](bool checked) {
+        _details->setVisible(checked);
+    });
+
+    _toolbar->addSeparator();
+    _toolbar->addAction(_details_action);
+
+    // status bar
 
     _status_bar = new QStatusBar(this);
     _status_bar->setSizeGripEnabled(false);
+
+    // breadcrumbs
 
     QHBoxLayout* breadcrumb_layout_wrapper = new QHBoxLayout();
     _breadcrumb_layout = new QHBoxLayout();
     breadcrumb_layout_wrapper->addWidget(view_selector_popup_button);
     breadcrumb_layout_wrapper->addLayout(_breadcrumb_layout);
     breadcrumb_layout_wrapper->addStretch();
-    breadcrumb_layout_wrapper->addWidget(_display_mode_tabs);
-    breadcrumb_layout_wrapper->addWidget(_view_type_tabs);
-    breadcrumb_layout_wrapper->addWidget(details_toggle_button);
+    breadcrumb_layout_wrapper->addWidget(_toolbar);
 
     QVBoxLayout* tool_vbox = new QVBoxLayout(toolarea);
     tool_vbox->addLayout(breadcrumb_layout_wrapper);
@@ -497,13 +540,10 @@ MainWindow::MainWindow(Settings& settings, ThreadSafeAudioLibrary& library, Audi
     connect(&_audio_files_loader, &AudioFilesLoader::libraryCacheLoading, this, &MainWindow::onLibraryCacheLoading);
     connect(&_audio_files_loader, &AudioFilesLoader::libraryLoadProgressed, this, &MainWindow::onLibraryLoadProgressed);
     connect(&_audio_files_loader, &AudioFilesLoader::libraryLoadFinished, this, &MainWindow::onLibraryLoadFinished);
-    connect(_display_mode_tabs, &QTabBar::tabBarClicked, this, &MainWindow::onDisplayModeSelected);
-    connect(_view_type_tabs, &QTabBar::tabBarClicked, this, &MainWindow::onViewTypeSelected);
     connect(_list, &QAbstractItemView::doubleClicked, this, &MainWindow::onItemDoubleClicked);
     connect(_table, &QAbstractItemView::doubleClicked, this, &MainWindow::onItemDoubleClicked);
     connect(_table->horizontalHeader(), &QHeaderView::sectionClicked, this, &MainWindow::onTableHeaderSectionClicked);
     connect(_table->horizontalHeader(), &QHeaderView::customContextMenuRequested, this, &MainWindow::onTableHeaderContextMenu);
-    connect(details_toggle_button, &QToolButton::clicked, this, &MainWindow::onToggleDetails);
     connect(_list->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onModelSelectionChanged);
     connect(_table->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onModelSelectionChanged);
 
@@ -820,40 +860,19 @@ void MainWindow::onDisplayModeChanged(AudioLibraryView::DisplayMode display_mode
     updateCurrentView();
 }
 
-void MainWindow::onDisplayModeSelected(int index)
+void MainWindow::onViewTypeSelected(QWidget* view)
 {
-    for (const auto& i : _display_mode_tab_indexes)
+    QAbstractItemView* previous_view = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget());
+
+    _view_stack->setCurrentWidget(view);
+
+    QAbstractItemView* current_view = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget());
+
+    if (previous_view && current_view && previous_view != current_view)
     {
-        if (i.first == index)
-        {
-            onDisplayModeChanged(i.second);
-            break;
-        }
+        double relative_scroll_pos = getRelativeScrollPos(previous_view->verticalScrollBar());
+        setRelativeScrollPos(current_view->verticalScrollBar(), relative_scroll_pos);
     }
-}
-
-void MainWindow::onViewTypeSelected(int index)
-{
-    QVariant var = _view_type_tabs->tabData(index);
-    QString internal_name = var.toString();
-
-    for (const auto& i : _view_type_map)
-        if (i.first == internal_name)
-        {
-            QAbstractItemView* previous_view = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget());
-
-            _view_stack->setCurrentWidget(i.second);
-
-            QAbstractItemView* current_view = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget());
-
-            if (previous_view && current_view && previous_view != current_view)
-            {
-                double relative_scroll_pos = getRelativeScrollPos(previous_view->verticalScrollBar());
-                setRelativeScrollPos(current_view->verticalScrollBar(), relative_scroll_pos);
-            }
-
-            break;
-        }
 }
 
 void MainWindow::onItemDoubleClicked(const QModelIndex &index)
@@ -973,11 +992,6 @@ void MainWindow::onTableHeaderContextMenu(const QPoint& pos)
         menu.exec(global_pos);
 }
 
-void MainWindow::onToggleDetails()
-{
-    _details->setVisible(!_details->isVisibleTo(_details->parentWidget()));
-}
-
 void MainWindow::onModelSelectionChanged()
 {
     QAbstractItemView* current_view = static_cast<QAbstractItemView*>(_view_stack->currentWidget());
@@ -1061,22 +1075,23 @@ void MainWindow::updateCurrentView()
     else
         *_current_display_mode = current_display_mode;
 
-    // create tabs for supported display modes
+    // display mode actions
 
-    while (_display_mode_tabs->count() > 0)
-        _display_mode_tabs->removeTab(0);
-    _display_mode_tab_indexes.clear();
+    const bool have_display_mode_choice = supported_modes.size() > 1;
 
-    for (AudioLibraryView::DisplayMode display_mode : supported_modes)
+    for (const auto& action_and_mode : _display_mode_actions)
     {
-        int index = _display_mode_tabs->addTab(AudioLibraryView::getDisplayModeFriendlyName(display_mode));
-        _display_mode_tab_indexes.emplace_back(index, display_mode);
+        // hide actions for unsupported display modes
+        // if there is only one mode, hide all actions
+        const bool is_supported = std::find(supported_modes.begin(), supported_modes.end(), action_and_mode.second) != supported_modes.end();
+        action_and_mode.first->setVisible(is_supported && have_display_mode_choice);
 
-        if (current_display_mode == display_mode)
-        {
-            _display_mode_tabs->setCurrentIndex(index);
-        }
+        // select current mode
+        if (action_and_mode.second == current_display_mode)
+            action_and_mode.first->setChecked(true);
     }
+
+    _separator_display_modes_view_types->setVisible(have_display_mode_choice);
 
     // hide unused columns
 
@@ -1200,11 +1215,16 @@ void MainWindow::advanceIconSize(int direction)
     }
 }
 
-void MainWindow::addViewTypeTab(QWidget* view, const QString& friendly_name, const QString& internal_name)
+void MainWindow::addViewTypeAction(QWidget* view, const QString& friendly_name, const QString& internal_name)
 {
-    int index = _view_type_tabs->addTab(friendly_name);
-    _view_type_tabs->setTabData(index, internal_name);
-    _view_type_map.emplace_back(internal_name, view);
+    auto action = new QAction(friendly_name, this);
+    action->setCheckable(action);
+
+    connect(action, &QAction::triggered, this, [this, view]() {
+        onViewTypeSelected(view);
+    });
+
+    _view_type_actions.push_back(std::make_pair(action, internal_name));
 }
 
 void MainWindow::getFilepathsFromIndex(const QModelIndex& index, std::vector<QString>& filepaths)
@@ -1670,21 +1690,14 @@ void MainWindow::restoreSettingsOnStart()
 
     // current view
 
-    for (const auto& type : _view_type_map)
-        if (type.first == _settings.main_window_view_type.getValue())
+    for (const auto& type : _view_type_actions)
+    {
+        if (type.second == _settings.main_window_view_type.getValue())
         {
-            _view_stack->setCurrentWidget(type.second);
-            for (int i = 0, end = _view_type_tabs->count(); i < end; ++i)
-            {
-                QVariant var = _view_type_tabs->tabData(i);
-                if (var.toString() == type.first)
-                {
-                    _view_type_tabs->setCurrentIndex(i);
-                    break;
-                }
-            }
+            type.first->trigger();
             break;
         }
+    }
 
     // icon size
 
@@ -1740,10 +1753,10 @@ void MainWindow::saveSettingsOnExit()
 
     // current view
 
-    for (const auto& i : _view_type_map)
-        if (i.second == _view_stack->currentWidget())
+    for (const auto& type : _view_type_actions)
+        if (type.first->isChecked())
         {
-            _settings.main_window_view_type.setValue(i.first);
+            _settings.main_window_view_type.setValue(type.second);
             break;
         }
 
@@ -1771,6 +1784,7 @@ void MainWindow::restoreDetailsSizeOnStart()
     const bool details_visible = details_width > 0;
 
     _details->setVisible(details_visible);
+    _details_action->setChecked(details_visible);
 
     if (details_visible)
     {

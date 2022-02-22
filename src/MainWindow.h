@@ -13,6 +13,7 @@
 #include <QtWidgets/qstatusbar.h>
 #include <QtWidgets/qtableview.h>
 #include <QtWidgets/qstackedwidget.h>
+#include <QtWidgets/QToolBar>
 
 #include "Settings.h"
 #include "AudioLibrary.h"
@@ -125,12 +126,10 @@ private:
     void onHistoryBack();
     void onHistoryForward();
     void onDisplayModeChanged(AudioLibraryView::DisplayMode display_mode);
-    void onDisplayModeSelected(int index);
-    void onViewTypeSelected(int index);
+    void onViewTypeSelected(QWidget* view);
     void onItemDoubleClicked(const QModelIndex &index);
     void onTableHeaderSectionClicked();
     void onTableHeaderContextMenu(const QPoint& pos);
-    void onToggleDetails();
     void onModelSelectionChanged();
 
     void saveLibrary();
@@ -140,7 +139,7 @@ private:
     void updateCurrentView();
     void updateCurrentViewIfOlderThan(int msecs);
     void advanceIconSize(int direction);
-    void addViewTypeTab(QWidget* view, const QString& friendly_name, const QString& internal_name);
+    void addViewTypeAction(QWidget* view, const QString& friendly_name, const QString& internal_name);
     void getFilepathsFromIndex(const QModelIndex& index, std::vector<QString>& filepaths);
     void forEachFilepathAtIndex(const QModelIndex& index, std::function<void(const QString&)> callback);
 
@@ -162,8 +161,9 @@ private:
 
     ViewSelector _view_selector;
 
-    std::vector<std::pair<QString, QWidget*>> _view_type_map;
-    QTabBar* _view_type_tabs = nullptr;
+    std::vector<std::pair<QAction*, QString>> _view_type_actions;
+
+    QToolBar* _toolbar = nullptr;
 
     QListView* _list = nullptr;
     QTableView* _table = nullptr;
@@ -192,8 +192,8 @@ private:
     QHBoxLayout* _breadcrumb_layout = nullptr;
     std::vector<std::unique_ptr<QObject, LateDeleter>> _breadcrumb_buttons;
 
-    QTabBar* _display_mode_tabs = nullptr;
-    std::vector<std::pair<int, AudioLibraryView::DisplayMode>> _display_mode_tab_indexes;
+    std::vector<std::pair<QAction*, AudioLibraryView::DisplayMode>> _display_mode_actions;
+    QAction* _separator_display_modes_view_types = nullptr;
 
     QString _current_view_id;
     std::unique_ptr<AudioLibraryView::DisplayMode> _current_display_mode;
@@ -216,4 +216,5 @@ private:
 
     QSplitter* _details_splitter = nullptr;
     DetailsPane* _details = nullptr;
+    QAction* _details_action = nullptr;
 };
