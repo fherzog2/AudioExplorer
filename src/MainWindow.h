@@ -130,7 +130,8 @@ private:
     void onItemDoubleClicked(const QModelIndex &index);
     void onTableHeaderSectionClicked();
     void onTableHeaderContextMenu(const QPoint& pos);
-    void onModelSelectionChanged();
+    void onModelCurrentChanged(const QModelIndex& current, const QModelIndex& previous);
+    void onModelDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles);
 
     void saveLibrary();
     void scanAudioDirs();

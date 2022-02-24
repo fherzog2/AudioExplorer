@@ -5,23 +5,25 @@
 #include <QtGui/qstandarditemmodel.h>
 #include <QtWidgets/qframe.h>
 #include <QtWidgets/qgridlayout.h>
+#include <QtWidgets/QLabel>
 #include "AudioLibraryView.h"
 
 class PictureBox;
+class ElidedLabel;
 
 class DetailsPane : public QFrame
 {
 public:
     DetailsPane(QWidget* parent);
 
-    void setSelection(const QAbstractItemModel* model, const QAbstractItemView* view, AudioLibraryView::DisplayMode display_mode);
+    void setSelection(const QAbstractItemModel* model, const QModelIndex& current, AudioLibraryView::DisplayMode display_mode);
 
 protected:
     virtual void paintEvent(QPaintEvent* e) override;
 
 private:
     QGridLayout* _data_grid = nullptr;
-    std::vector<QWidget*> _data_labels;
+    std::vector<std::pair<QLabel*, ElidedLabel*>> _data_labels;
 
     PictureBox* _picture_box = nullptr;
 

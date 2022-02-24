@@ -544,8 +544,9 @@ MainWindow::MainWindow(Settings& settings, ThreadSafeAudioLibrary& library, Audi
     connect(_table, &QAbstractItemView::doubleClicked, this, &MainWindow::onItemDoubleClicked);
     connect(_table->horizontalHeader(), &QHeaderView::sectionClicked, this, &MainWindow::onTableHeaderSectionClicked);
     connect(_table->horizontalHeader(), &QHeaderView::customContextMenuRequested, this, &MainWindow::onTableHeaderContextMenu);
-    connect(_list->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onModelSelectionChanged);
-    connect(_table->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onModelSelectionChanged);
+    connect(_list->selectionModel(), &QItemSelectionModel::currentChanged, this, &MainWindow::onModelCurrentChanged);
+    connect(_table->selectionModel(), &QItemSelectionModel::currentChanged, this, &MainWindow::onModelCurrentChanged);
+    connect(_list->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::onModelDataChanged);
 
     _view_selector.triggerDefaultView();
 
@@ -992,12 +993,20 @@ void MainWindow::onTableHeaderContextMenu(const QPoint& pos)
         menu.exec(global_pos);
 }
 
-void MainWindow::onModelSelectionChanged()
+void MainWindow::onModelCurrentChanged(const QModelIndex& current, const QModelIndex& /*previous*/)
+{
+    _details->setSelection(_model->getModel(), current, *_current_display_mode);
+}
+
+void MainWindow::onModelDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& /*roles*/)
 {
     QAbstractItemView* current_view = static_cast<QAbstractItemView*>(_view_stack->currentWidget());
 
-    _model->updateDecoration(current_view->currentIndex());
-    _details->setSelection(_model->getModel(), current_view, *_current_display_mode);
+    const QModelIndex current_index = current_view->selectionModel()->currentIndex();
+    if (topLeft.row() <= current_index.row() && bottomRight.row() >= current_index.row())
+    {
+        _details->setSelection(_model->getModel(), current_index, *_current_display_mode);
+    }
 }
 
 void MainWindow::saveLibrary()
@@ -1140,8 +1149,9 @@ void MainWindow::updateCurrentView()
         _list->setModel(model->getModel());
         _table->setModel(model->getModel());
 
-        connect(_list->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onModelSelectionChanged);
-        connect(_table->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::onModelSelectionChanged);
+        connect(_list->selectionModel(), &QItemSelectionModel::currentChanged, this, &MainWindow::onModelCurrentChanged);
+        connect(_table->selectionModel(), &QItemSelectionModel::currentChanged, this, &MainWindow::onModelCurrentChanged);
+        connect(_list->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::onModelDataChanged);
     }
 
     const int old_sort_section = _table->horizontalHeader()->sortIndicatorSection();
@@ -1161,8 +1171,6 @@ void MainWindow::updateCurrentView()
 
         _model->getModel()->sort(new_sort_section, new_sort_order);
     }
-
-    onModelSelectionChanged();
 
     _last_view_update_time = std::chrono::steady_clock::now();
     _is_last_view_update_time_valid = true;

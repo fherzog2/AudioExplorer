@@ -198,15 +198,18 @@ DetailsPane::DetailsPane(QWidget* parent)
     setFrameShape(QFrame::StyledPanel);
 }
 
-void DetailsPane::setSelection(const QAbstractItemModel* model, const QAbstractItemView* view, AudioLibraryView::DisplayMode display_mode)
+void DetailsPane::setSelection(const QAbstractItemModel* model, const QModelIndex& current, AudioLibraryView::DisplayMode display_mode)
 {
-    for (QWidget* w : _data_labels)
-        w->deleteLater();
-    _data_labels.clear();
+    // hide all labels, they will be reactivated as needed
+
+    for (const auto& i : _data_labels)
+    {
+        i.first->hide();
+        i.second->hide();
+    }
 
     QIcon picture;
 
-    QModelIndex current = view->currentIndex();
     if (current.isValid())
     {
         int view_row = current.row();
@@ -215,27 +218,35 @@ void DetailsPane::setSelection(const QAbstractItemModel* model, const QAbstractI
 
         // create detail rows for each view column
 
-        int next_row = 0;
-
         auto columns = AudioLibraryView::getColumnsForDisplayMode(display_mode);
 
         if(AudioLibraryView::isGroupDisplayMode(display_mode))
             columns.insert(columns.begin(), AudioLibraryView::ZERO);
 
+        // lazy init: have at least as many labels as there are columns
+
+        while (_data_labels.size() < columns.size())
+        {
+            _data_labels.push_back(std::make_pair(new QLabel(this), new ElidedLabel(QString(), this)));
+            const int next_row = _data_grid->rowCount();
+            _data_grid->addWidget(_data_labels.back().first, next_row, 0);
+            _data_grid->addWidget(_data_labels.back().second, next_row, 1);
+        }
+
+        // update and show labels
+
+        auto label_it = _data_labels.begin();
         for (AudioLibraryView::Column view_column : columns)
         {
             int logical_index = static_cast<int>(view_column);
 
-            QLabel* description = new QLabel(model->headerData(logical_index, Qt::Horizontal, Qt::DisplayRole).toString(), this);
-            QWidget* value = new ElidedLabel(model->data(model->index(view_row, logical_index), Qt::DisplayRole).toString(), this);
+            label_it->first->setText(model->headerData(logical_index, Qt::Horizontal, Qt::DisplayRole).toString());
+            label_it->second->setText(model->data(model->index(view_row, logical_index), Qt::DisplayRole).toString());
 
-            _data_grid->addWidget(description, next_row, 0);
-            _data_grid->addWidget(value, next_row, 1);
+            label_it->first->show();
+            label_it->second->show();
 
-            ++next_row;
-
-            _data_labels.push_back(description);
-            _data_labels.push_back(value);
+            ++label_it;
         }
     }
 
