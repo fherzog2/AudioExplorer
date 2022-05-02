@@ -119,35 +119,55 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/compiled_resources.cpp ${CMAKE_BIN
 
 # test
 
-add_executable(test1 test/test.cpp
-                     src/AudioLibrary.cpp
-                     src/AudioLibrary.h
-                     src/AudioLibraryModel.cpp
-                     src/AudioLibraryModel.h
-                     src/AudioLibraryView.cpp
-                     src/AudioLibraryView.h
-                     src/ThreadSafeAudioLibrary.cpp
-                     src/ThreadSafeAudioLibrary.h
-                     src/TrackInfoReader.h
-                     src/TrackInfoReader.cpp)
-target_link_libraries(test1 ${CMAKE_THREAD_LIBS_INIT} Qt5::Widgets ${TAGLIB_LIBRARY} ${STATIC_LINK_DEPENDENCIES})
+create_test_sourcelist (TEST_SOURCES
+    TestDriver.cpp
+    test/AudioLibrarySaveAndLoad.cpp
+    test/AudioLibraryTrackCleanup.cpp
+    test/AudioLibraryViews.cpp
+    test/ThreadSafeAudioLibrary.cpp
+    test/TrackInfo.cpp
+    test/VisualIndexRestoration.cpp)
 
-target_include_directories(test1 PRIVATE ${TAGLIB_INCLUDE_DIR})
-target_compile_definitions(test1 PRIVATE TAGLIB_STATIC)
-set_property(TARGET test1 PROPERTY CXX_STANDARD 14)
-set_property(TARGET test1 PROPERTY AUTOMOC ON)
-target_include_directories(test1 PRIVATE "src")
+set(TESTS_TO_RUN
+    test/AudioLibrarySaveAndLoad
+    test/AudioLibraryTrackCleanup
+    test/AudioLibraryViews
+    test/ThreadSafeAudioLibrary
+    test/TrackInfo
+    test/VisualIndexRestoration)
+
+add_executable(TestDriver ${TEST_SOURCES}
+                          test/tools.h
+                          src/AudioLibrary.cpp
+                          src/AudioLibrary.h
+                          src/AudioLibraryModel.cpp
+                          src/AudioLibraryModel.h
+                          src/AudioLibraryView.cpp
+                          src/AudioLibraryView.h
+                          src/ThreadSafeAudioLibrary.cpp
+                          src/ThreadSafeAudioLibrary.h
+                          src/TrackInfoReader.h
+                          src/TrackInfoReader.cpp)
+target_link_libraries(TestDriver ${CMAKE_THREAD_LIBS_INIT} Qt5::Widgets ${TAGLIB_LIBRARY} ${STATIC_LINK_DEPENDENCIES})
+
+target_include_directories(TestDriver PRIVATE ${TAGLIB_INCLUDE_DIR})
+target_compile_definitions(TestDriver PRIVATE TAGLIB_STATIC)
+set_property(TARGET TestDriver PROPERTY CXX_STANDARD 14)
+set_property(TARGET TestDriver PROPERTY AUTOMOC ON)
+target_include_directories(TestDriver PRIVATE "src")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND SANITIZE_ADDRESS)
-    target_compile_options(test1 PRIVATE -fno-omit-frame-pointer -fsanitize=address)
-    target_link_options(test1 PRIVATE -fno-omit-frame-pointer -fsanitize=address)
+    target_compile_options(TestDriver PRIVATE -fno-omit-frame-pointer -fsanitize=address)
+    target_link_options(TestDriver PRIVATE -fno-omit-frame-pointer -fsanitize=address)
 endif()
 
 if(MSVC)
-  target_compile_options(test1 PRIVATE /W4 /WX)
+  target_compile_options(TestDriver PRIVATE /W4 /WX)
 else(MSVC)
-  target_compile_options(test1 PRIVATE -Wall -Wextra -pedantic -Werror)
+  target_compile_options(TestDriver PRIVATE -Wall -Wextra -pedantic -Werror)
 endif(MSVC)
 
 enable_testing()
-add_test(NAME test1 COMMAND test1 ${CMAKE_SOURCE_DIR}/test/data ${CMAKE_BINARY_DIR})
+foreach (test ${TESTS_TO_RUN})
+  add_test(NAME ${test} COMMAND TestDriver ${test} ${CMAKE_SOURCE_DIR}/test/data ${CMAKE_BINARY_DIR})
+endforeach ()
