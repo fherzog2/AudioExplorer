@@ -6,103 +6,184 @@
 #include <AudioLibraryModel.h>
 #include "tools.h"
 
-void printModel(const QAbstractItemModel& model)
+bool testAudioLibraryView(const AudioLibrary& library, const AudioLibraryView& view, AudioLibraryView::DisplayMode display_mode, QStringList& result_list)
 {
-    for (int row = 0; row < model.rowCount(); ++row)
+    // create model
+
+    AudioLibraryGroupUuidCache group_uuids;
+    AudioLibraryModel model(nullptr, group_uuids);
+
+    view.createItems(library, display_mode, &model);
+    model.getModel()->sort(AudioLibraryView::ZERO);
+
+    // serialize model
+
+    QStringList row_str_list;
+
+    const QAbstractItemModel* m = model.getModel();
+    for (int row = 0; row < m->rowCount(); ++row)
     {
-        for (int col = 0; col < model.columnCount(); ++col)
+        QStringList row_str;
+
+        for (int col = 0; col < m->columnCount(); ++col)
         {
-            QString text = model.data(model.index(row, col), Qt::DisplayRole).toString();
-            fprintf(stderr, "%s\t", qPrintable(text));
+            const QVariant v = m->data(m->index(row, col), Qt::DisplayRole);
+            if (v.isValid())
+                row_str << v.toString();
         }
 
-        fprintf(stderr, "\n");
+        row_str_list << row_str.join(',');
     }
 
-    fprintf(stderr, "\n");
+    const auto display_mode_mapping = AudioLibraryView::displayModeToStringMapping();
+    const auto display_mode_str = std::find_if(display_mode_mapping.begin(), display_mode_mapping.end(), [display_mode](const auto& i) { return i.first == display_mode; });
+
+    result_list << "===============================================================================";
+    result_list << "    " + view.getId() + "|" + display_mode_str->second;
+    result_list << "===============================================================================";
+    result_list.append(row_str_list);
+
+    return true;
 }
 
-void addModelRow(QStandardItemModel& model, const std::vector<std::pair<AudioLibraryView::Column, QString>>& data)
+bool checkAgainstReferenceDataFile(const QString& reference_data_filepath, const QString& data)
 {
-    int row = model.rowCount();
+    const bool create_reference_data = !qEnvironmentVariable("AUDIO_LIBRARY_CREATE_REFERENCE_DATA").isEmpty();
 
-    for (const auto& i : data)
-        model.setItem(row, i.first, new QStandardItem(i.second));
-}
-
-#define CHECK_MODEL(expression, model1, model2) \
-    if (!(expression)) \
-    { \
-        printModel(*(model1).getModel()); \
-        printModel((model2)); \
-        RETURN_IF_FAILED((expression)); \
-    }
-
-bool compareModels(const AudioLibraryModel& model1, const QStandardItemModel& model2)
-{
-    CHECK_MODEL(model1.getModel()->rowCount() == model2.rowCount(), model1, model2);
-
-    for (int row = 0; row < model1.getModel()->rowCount(); ++row)
+    QFile reference_data_file(reference_data_filepath);
+    if (create_reference_data)
     {
-        for (int col = 0; col < model1.getModel()->columnCount(); ++col)
-        {
-            QString text1 = model1.getModel()->data(model1.getModel()->index(row, col), Qt::DisplayRole).toString();
-            QString text2 = model2.data(model2.index(row, col), Qt::DisplayRole).toString();
+        RETURN_IF_FAILED(reference_data_file.open(QFile::WriteOnly));
+        reference_data_file.write(data.toUtf8());
+    }
+    else
+    {
+        RETURN_IF_FAILED(reference_data_file.open(QFile::ReadOnly));
+        const QByteArray reference_data_bytes = reference_data_file.readAll();
+        const QString reference_data = QString::fromUtf8(reference_data_bytes);
 
-            CHECK_MODEL(text1 == text2, model1, model2);
-        }
+        RETURN_IF_FAILED(data == reference_data);
     }
 
     return true;
 }
 
-bool testAudioLibraryViewAllArtists()
+class AlbumCreator
+{
+public:
+    AlbumCreator(AudioLibrary& library, QString artist, QString album_artist, QString album, int year, QString genre);
+
+    void addTrack(QString title, int min, int sec);
+
+private:
+    AudioLibrary& _library;
+    QString _artist;
+    QString _album_artist;
+    QString _album;
+    int _year;
+    QString _genre;
+
+    int _track_number;
+};
+
+AlbumCreator::AlbumCreator(AudioLibrary& library, QString artist, QString album_artist, QString album, int year, QString genre)
+    : _library(library)
+    , _artist(artist)
+    , _album_artist(album_artist)
+    , _album(album)
+    , _year(year)
+    , _genre(genre)
+    , _track_number(1)
+{}
+
+void AlbumCreator::addTrack(QString title, int min, int sec)
+{
+    const int length_milliseconds = (min * 60 + sec) * 1000;
+
+    _library.addTrack(QString("%1 %2 %3").arg(_artist).arg(_year).arg(title), QDateTime(), 0,
+        createTrackInfo(_artist, _album_artist, _album, _year, _genre, QByteArray(), title, _track_number, length_milliseconds));
+
+    ++_track_number;
+}
+
+bool testAudioLibraryViewAllArtists(const QString& source_test_dir)
 {
     // build library
 
     AudioLibrary library;
 
-    for (int i = 1; i <= 10; ++i)
-        library.addTrack(QString("Artist 1 - %1").arg(i), QDateTime(), 0, createTrackInfo("Artist 1", QString(), "Album", 2000, "Genre 1", QByteArray(), QString::number(i), i));
-
-    for (int i = 1; i <= 10; ++i)
-        library.addTrack(QString("Artist 2 - %1").arg(i), QDateTime(), 0, createTrackInfo("Artist 2", "Artist 2", "Album", 2001, "Genre 2", QByteArray(), QString::number(i), i));
-
-    library.addTrack("Sampler - 1", QDateTime(), 0, createTrackInfo("Artist 1", "Various Artists", "Sampler", 2001, "Genre 3", QByteArray(), "1", 1));
-    library.addTrack("Sampler - 2", QDateTime(), 0, createTrackInfo("Artist 3", "Various Artists", "Sampler", 2001, "Genre 3", QByteArray(), "2", 2));
-
-    AudioLibraryGroupUuidCache group_uuids;
-    AudioLibraryModel model(nullptr, group_uuids);
-
-    // unfiltered view
-
-    AudioLibraryViewAllArtists all_artists_view("");
-
-    all_artists_view.createItems(library, AudioLibraryView::DisplayMode::ARTISTS, &model);
-    model.getModel()->sort(AudioLibraryView::ZERO);
-
-    QStandardItemModel expected_artists(nullptr);
-
-    addModelRow(expected_artists, { {AudioLibraryView::ZERO, "Artist 1"}, {AudioLibraryView::NUMBER_OF_ALBUMS, "2"}, {AudioLibraryView::NUMBER_OF_TRACKS, "11"} });
-    addModelRow(expected_artists, { {AudioLibraryView::ZERO, "Artist 2"}, {AudioLibraryView::NUMBER_OF_ALBUMS, "1"}, {AudioLibraryView::NUMBER_OF_TRACKS, "10"} });
-    addModelRow(expected_artists, { {AudioLibraryView::ZERO, "Artist 3"}, {AudioLibraryView::NUMBER_OF_ALBUMS, "1"}, {AudioLibraryView::NUMBER_OF_TRACKS, "1"} });
-    addModelRow(expected_artists, { {AudioLibraryView::ZERO, "Various Artists"}, {AudioLibraryView::NUMBER_OF_ALBUMS, "1"}, {AudioLibraryView::NUMBER_OF_TRACKS, "2"} });
-
-    RETURN_IF_FAILED(compareModels(model, expected_artists));
-
-    // filtered view
-
-    all_artists_view = AudioLibraryViewAllArtists("1");
-
     {
-        AudioLibraryModel::IncrementalUpdateScope update_scope(model);
-        all_artists_view.createItems(library, AudioLibraryView::DisplayMode::ARTISTS, &model);
+        AlbumCreator creator(library, "Blind Guardian", "", "Somewhere Far Beyond", 1992, "Power Metal");
+
+        creator.addTrack("Time What Is Time", 5, 46);
+        creator.addTrack("Journey Through the Dark", 4, 48);
+        creator.addTrack("Black Chamber", 0, 58);
+        creator.addTrack("Theatre of Pain", 4, 17);
+        creator.addTrack("The Quest for Tanelorn", 5, 57);
+        creator.addTrack("Ashes to Ashes", 6, 00);
+        creator.addTrack("The Bard's Song - In the Forest", 3, 10);
+        creator.addTrack("The Bard's Song - The Hobbit", 3, 54);
+        creator.addTrack("The Piper's Calling", 0, 59);
+        creator.addTrack("Somewhere Far Beyond", 7, 30);
+        creator.addTrack("Spread Your Wings (Queen cover)", 4, 15);
+        creator.addTrack("Trial by Fire (Satan cover)", 3, 45);
+        creator.addTrack("Theatre of Pain (Classic Version)", 4, 15);
     }
 
-    expected_artists.clear();
-    addModelRow(expected_artists, { {AudioLibraryView::ZERO, "Artist 1"}, {AudioLibraryView::NUMBER_OF_ALBUMS, "2"}, {AudioLibraryView::NUMBER_OF_TRACKS, "11"} });
+    {
+        AlbumCreator creator(library, "Blind Guardian", "", "Imaginations from the Other Side", 1995, "Power Metal");
 
-    RETURN_IF_FAILED(compareModels(model, expected_artists));
+        creator.addTrack("Imaginations from the Other Side", 7, 19);
+        creator.addTrack("I'm Alive", 5, 31);
+        creator.addTrack("A Past and Future Secret", 3, 48);
+        creator.addTrack("The Script for My Requiem", 6, 9);
+        creator.addTrack("Mordred's Song", 5, 28);
+        creator.addTrack("Born in a Mourning Hall", 5, 14);
+        creator.addTrack("Bright Eyes", 5, 16);
+        creator.addTrack("Another Holy War", 4, 32);
+        creator.addTrack("And the Story Ends", 6, 0);
+    }
+
+    {
+        AlbumCreator creator(library, "Kreator", "", "Pleasure to Kill", 1986, "Thrash Metal");
+
+        creator.addTrack("Choir of the Damned", 0, 46);
+        creator.addTrack("Ripping Corpse", 3, 36);
+        creator.addTrack("Death Is Your Saviour", 3, 58);
+        creator.addTrack("Pleasure to Kill", 4, 11);
+        creator.addTrack("Riot of Violence", 4, 56);
+        creator.addTrack("The Pestilence", 6, 58);
+        creator.addTrack("Carrion", 4, 48);
+        creator.addTrack("Command of the Blade", 3, 57);
+        creator.addTrack("Under the Guillotine", 4, 38);
+    }
+
+    QStringList result_list;
+
+    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAllArtists(QString()), AudioLibraryView::DisplayMode::ARTISTS, result_list));
+    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAllArtists("Blind"), AudioLibraryView::DisplayMode::ARTISTS, result_list));
+    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAllAlbums(QString()), AudioLibraryView::DisplayMode::ALBUMS, result_list));
+    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAllAlbums("Other"), AudioLibraryView::DisplayMode::ALBUMS, result_list));
+    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAllTracks(QString()), AudioLibraryView::DisplayMode::TRACKS, result_list));
+    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAllTracks("the"), AudioLibraryView::DisplayMode::TRACKS, result_list));
+    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAllYears(), AudioLibraryView::DisplayMode::YEARS, result_list));
+    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAllGenres(QString()), AudioLibraryView::DisplayMode::GENRES, result_list));
+    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAllGenres("Power"), AudioLibraryView::DisplayMode::GENRES, result_list));
+    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAllGenres("Power"), AudioLibraryView::DisplayMode::ARTISTS, result_list));
+    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAllGenres("Power"), AudioLibraryView::DisplayMode::ALBUMS, result_list));
+
+    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewArtist("Blind Guardian"), AudioLibraryView::DisplayMode::ALBUMS, result_list));
+    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewArtist("Blind Guardian"), AudioLibraryView::DisplayMode::TRACKS, result_list));
+    AudioLibraryAlbumKey key("Blind Guardian", "Imaginations from the Other Side", "Power Metal", 1995, 0);
+    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAlbum(key), AudioLibraryView::DisplayMode::TRACKS, result_list));
+    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewYear(1995), AudioLibraryView::DisplayMode::ALBUMS, result_list));
+    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewYear(1995), AudioLibraryView::DisplayMode::TRACKS, result_list));
+    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewGenre("Power Metal"), AudioLibraryView::DisplayMode::ALBUMS, result_list));
+    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewGenre("Power Metal"), AudioLibraryView::DisplayMode::TRACKS, result_list));
+
+    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewDuplicateAlbums(), AudioLibraryView::DisplayMode::ALBUMS, result_list));
+
+    RETURN_IF_FAILED(checkAgainstReferenceDataFile(source_test_dir + "/AudioLibraryViews.txt", result_list.join('\n')));
 
     return true;
 }
@@ -111,8 +192,7 @@ int test_AudioLibraryViews(int argc, char** const argv)
 {
     QApplication app(argc, argv);
 
-    QString source_test_data_dir = app.arguments()[1];
-    QString binary_dir = app.arguments()[2];
+    const QString source_test_dir = app.arguments()[1];
 
-    return testAudioLibraryViewAllArtists() ? 0 : 1;
+    return testAudioLibraryViewAllArtists(source_test_dir) ? 0 : 1;
 }

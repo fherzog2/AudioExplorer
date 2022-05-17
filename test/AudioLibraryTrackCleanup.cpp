@@ -66,8 +66,7 @@ int test_AudioLibraryTrackCleanup(int argc, char** const argv)
 {
     QCoreApplication app(argc, argv);
 
-    QString source_test_data_dir = app.arguments()[1];
-    QString binary_dir = app.arguments()[2];
+    const QString binary_dir = app.arguments()[2];
 
     return test_AudioLibraryTrackCleanupImp(binary_dir) ? 0 : 1;
 }

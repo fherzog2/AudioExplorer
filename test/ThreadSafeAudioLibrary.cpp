@@ -28,8 +28,7 @@ int test_ThreadSafeAudioLibrary(int argc, char** const argv)
 {
     QApplication app(argc, argv);
 
-    QString source_test_data_dir = app.arguments()[1];
-    QString binary_dir = app.arguments()[2];
+    const QString source_test_dir = app.arguments()[1];
 
-    return test_ThreadSafeAudioLibraryImp(source_test_data_dir) ? 0 : 1;
+    return test_ThreadSafeAudioLibraryImp(source_test_dir + "/data") ? 0 : 1;
 }

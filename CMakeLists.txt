@@ -169,5 +169,5 @@ endif(MSVC)
 
 enable_testing()
 foreach (test ${TESTS_TO_RUN})
-  add_test(NAME ${test} COMMAND TestDriver ${test} ${CMAKE_SOURCE_DIR}/test/data ${CMAKE_BINARY_DIR})
+  add_test(NAME ${test} COMMAND TestDriver ${test} ${CMAKE_SOURCE_DIR}/test ${CMAKE_BINARY_DIR})
 endforeach ()

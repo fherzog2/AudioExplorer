@@ -27,14 +27,14 @@ bool readAndAssertTrackInfo(const QString& audio_filepath, const QString& cover_
     return true;
 }
 
-bool test_TrackInfoImp(const QString& source_test_data_dir)
+bool test_TrackInfoImp(const QString& source_test_dir)
 {
-    QString original_cover_filepath = source_test_data_dir + "/gradient.jpg";
-    RETURN_IF_FAILED(readAndAssertTrackInfo(source_test_data_dir + "/noise.mp3", original_cover_filepath));
-    RETURN_IF_FAILED(readAndAssertTrackInfo(source_test_data_dir + "/noise.ogg", original_cover_filepath));
-    RETURN_IF_FAILED(readAndAssertTrackInfo(source_test_data_dir + "/noise.m4a", original_cover_filepath));
-    RETURN_IF_FAILED(readAndAssertTrackInfo(source_test_data_dir + "/noise.wma", original_cover_filepath));
-    RETURN_IF_FAILED(readAndAssertTrackInfo(source_test_data_dir + "/noise.ape", original_cover_filepath));
+    QString original_cover_filepath = source_test_dir + "/data/gradient.jpg";
+    RETURN_IF_FAILED(readAndAssertTrackInfo(source_test_dir + "/data/noise.mp3", original_cover_filepath));
+    RETURN_IF_FAILED(readAndAssertTrackInfo(source_test_dir + "/data/noise.ogg", original_cover_filepath));
+    RETURN_IF_FAILED(readAndAssertTrackInfo(source_test_dir + "/data/noise.m4a", original_cover_filepath));
+    RETURN_IF_FAILED(readAndAssertTrackInfo(source_test_dir + "/data/noise.wma", original_cover_filepath));
+    RETURN_IF_FAILED(readAndAssertTrackInfo(source_test_dir + "/data/noise.ape", original_cover_filepath));
 
     return true;
 }
@@ -43,8 +43,7 @@ int test_TrackInfo(int argc, char** const argv)
 {
     QCoreApplication app(argc, argv);
 
-    QString source_test_data_dir = app.arguments()[1];
-    QString binary_dir = app.arguments()[2];
+    const QString source_test_dir = app.arguments()[1];
 
-    return test_TrackInfoImp(source_test_data_dir) ? 0 : 1;
+    return test_TrackInfoImp(source_test_dir) ? 0 : 1;
 }

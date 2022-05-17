@@ -1,0 +1,186 @@
+===============================================================================
+    AudioLibraryViewAllArtists, |artists
+===============================================================================
+Blind Guardian,2,22
+Kreator,1,9
+===============================================================================
+    AudioLibraryViewAllArtists, Blind|artists
+===============================================================================
+Blind Guardian,2,22
+===============================================================================
+    AudioLibraryViewAllAlbums, |albums
+===============================================================================
+Blind Guardian - Somewhere Far Beyond,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,13,55:34
+Blind Guardian - Imaginations from the Other Side,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,9,49:17
+Kreator - Pleasure to Kill,Kreator,Pleasure to Kill,1986,Thrash Metal,,0,0,9,37:48
+===============================================================================
+    AudioLibraryViewAllAlbums, Other|albums
+===============================================================================
+Blind Guardian - Imaginations from the Other Side,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,9,49:17
+===============================================================================
+    AudioLibraryViewAllTracks, |tracks
+===============================================================================
+Blind Guardian - Time What Is Time,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Time What Is Time,1,,,Blind Guardian 1992 Time What Is Time,,0 Bytes,,05:46,0,0 kbit/s,0 Hz
+Blind Guardian - Journey Through the Dark,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Journey Through the Dark,2,,,Blind Guardian 1992 Journey Through the Dark,,0 Bytes,,04:48,0,0 kbit/s,0 Hz
+Blind Guardian - Black Chamber,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Black Chamber,3,,,Blind Guardian 1992 Black Chamber,,0 Bytes,,00:58,0,0 kbit/s,0 Hz
+Blind Guardian - Theatre of Pain,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Theatre of Pain,4,,,Blind Guardian 1992 Theatre of Pain,,0 Bytes,,04:17,0,0 kbit/s,0 Hz
+Blind Guardian - The Quest for Tanelorn,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,The Quest for Tanelorn,5,,,Blind Guardian 1992 The Quest for Tanelorn,,0 Bytes,,05:57,0,0 kbit/s,0 Hz
+Blind Guardian - Ashes to Ashes,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Ashes to Ashes,6,,,Blind Guardian 1992 Ashes to Ashes,,0 Bytes,,06:00,0,0 kbit/s,0 Hz
+Blind Guardian - The Bard's Song - In the Forest,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,The Bard's Song - In the Forest,7,,,Blind Guardian 1992 The Bard's Song - In the Forest,,0 Bytes,,03:10,0,0 kbit/s,0 Hz
+Blind Guardian - The Bard's Song - The Hobbit,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,The Bard's Song - The Hobbit,8,,,Blind Guardian 1992 The Bard's Song - The Hobbit,,0 Bytes,,03:54,0,0 kbit/s,0 Hz
+Blind Guardian - The Piper's Calling,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,The Piper's Calling,9,,,Blind Guardian 1992 The Piper's Calling,,0 Bytes,,00:59,0,0 kbit/s,0 Hz
+Blind Guardian - Somewhere Far Beyond,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Somewhere Far Beyond,10,,,Blind Guardian 1992 Somewhere Far Beyond,,0 Bytes,,07:30,0,0 kbit/s,0 Hz
+Blind Guardian - Spread Your Wings (Queen cover),Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Spread Your Wings (Queen cover),11,,,Blind Guardian 1992 Spread Your Wings (Queen cover),,0 Bytes,,04:15,0,0 kbit/s,0 Hz
+Blind Guardian - Trial by Fire (Satan cover),Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Trial by Fire (Satan cover),12,,,Blind Guardian 1992 Trial by Fire (Satan cover),,0 Bytes,,03:45,0,0 kbit/s,0 Hz
+Blind Guardian - Theatre of Pain (Classic Version),Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Theatre of Pain (Classic Version),13,,,Blind Guardian 1992 Theatre of Pain (Classic Version),,0 Bytes,,04:15,0,0 kbit/s,0 Hz
+Blind Guardian - Imaginations from the Other Side,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Imaginations from the Other Side,1,,,Blind Guardian 1995 Imaginations from the Other Side,,0 Bytes,,07:19,0,0 kbit/s,0 Hz
+Blind Guardian - I'm Alive,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,I'm Alive,2,,,Blind Guardian 1995 I'm Alive,,0 Bytes,,05:31,0,0 kbit/s,0 Hz
+Blind Guardian - A Past and Future Secret,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,A Past and Future Secret,3,,,Blind Guardian 1995 A Past and Future Secret,,0 Bytes,,03:48,0,0 kbit/s,0 Hz
+Blind Guardian - The Script for My Requiem,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,The Script for My Requiem,4,,,Blind Guardian 1995 The Script for My Requiem,,0 Bytes,,06:09,0,0 kbit/s,0 Hz
+Blind Guardian - Mordred's Song,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Mordred's Song,5,,,Blind Guardian 1995 Mordred's Song,,0 Bytes,,05:28,0,0 kbit/s,0 Hz
+Blind Guardian - Born in a Mourning Hall,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Born in a Mourning Hall,6,,,Blind Guardian 1995 Born in a Mourning Hall,,0 Bytes,,05:14,0,0 kbit/s,0 Hz
+Blind Guardian - Bright Eyes,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Bright Eyes,7,,,Blind Guardian 1995 Bright Eyes,,0 Bytes,,05:16,0,0 kbit/s,0 Hz
+Blind Guardian - Another Holy War,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Another Holy War,8,,,Blind Guardian 1995 Another Holy War,,0 Bytes,,04:32,0,0 kbit/s,0 Hz
+Blind Guardian - And the Story Ends,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,And the Story Ends,9,,,Blind Guardian 1995 And the Story Ends,,0 Bytes,,06:00,0,0 kbit/s,0 Hz
+Kreator - Choir of the Damned,Kreator,Pleasure to Kill,1986,Thrash Metal,,0,0,Choir of the Damned,1,,,Kreator 1986 Choir of the Damned,,0 Bytes,,00:46,0,0 kbit/s,0 Hz
+Kreator - Ripping Corpse,Kreator,Pleasure to Kill,1986,Thrash Metal,,0,0,Ripping Corpse,2,,,Kreator 1986 Ripping Corpse,,0 Bytes,,03:36,0,0 kbit/s,0 Hz
+Kreator - Death Is Your Saviour,Kreator,Pleasure to Kill,1986,Thrash Metal,,0,0,Death Is Your Saviour,3,,,Kreator 1986 Death Is Your Saviour,,0 Bytes,,03:58,0,0 kbit/s,0 Hz
+Kreator - Pleasure to Kill,Kreator,Pleasure to Kill,1986,Thrash Metal,,0,0,Pleasure to Kill,4,,,Kreator 1986 Pleasure to Kill,,0 Bytes,,04:11,0,0 kbit/s,0 Hz
+Kreator - Riot of Violence,Kreator,Pleasure to Kill,1986,Thrash Metal,,0,0,Riot of Violence,5,,,Kreator 1986 Riot of Violence,,0 Bytes,,04:56,0,0 kbit/s,0 Hz
+Kreator - The Pestilence,Kreator,Pleasure to Kill,1986,Thrash Metal,,0,0,The Pestilence,6,,,Kreator 1986 The Pestilence,,0 Bytes,,06:58,0,0 kbit/s,0 Hz
+Kreator - Carrion,Kreator,Pleasure to Kill,1986,Thrash Metal,,0,0,Carrion,7,,,Kreator 1986 Carrion,,0 Bytes,,04:48,0,0 kbit/s,0 Hz
+Kreator - Command of the Blade,Kreator,Pleasure to Kill,1986,Thrash Metal,,0,0,Command of the Blade,8,,,Kreator 1986 Command of the Blade,,0 Bytes,,03:57,0,0 kbit/s,0 Hz
+Kreator - Under the Guillotine,Kreator,Pleasure to Kill,1986,Thrash Metal,,0,0,Under the Guillotine,9,,,Kreator 1986 Under the Guillotine,,0 Bytes,,04:38,0,0 kbit/s,0 Hz
+===============================================================================
+    AudioLibraryViewAllTracks, the|tracks
+===============================================================================
+Blind Guardian - Journey Through the Dark,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Journey Through the Dark,2,,,Blind Guardian 1992 Journey Through the Dark,,0 Bytes,,04:48,0,0 kbit/s,0 Hz
+Blind Guardian - Theatre of Pain,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Theatre of Pain,4,,,Blind Guardian 1992 Theatre of Pain,,0 Bytes,,04:17,0,0 kbit/s,0 Hz
+Blind Guardian - The Quest for Tanelorn,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,The Quest for Tanelorn,5,,,Blind Guardian 1992 The Quest for Tanelorn,,0 Bytes,,05:57,0,0 kbit/s,0 Hz
+Blind Guardian - The Bard's Song - In the Forest,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,The Bard's Song - In the Forest,7,,,Blind Guardian 1992 The Bard's Song - In the Forest,,0 Bytes,,03:10,0,0 kbit/s,0 Hz
+Blind Guardian - The Bard's Song - The Hobbit,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,The Bard's Song - The Hobbit,8,,,Blind Guardian 1992 The Bard's Song - The Hobbit,,0 Bytes,,03:54,0,0 kbit/s,0 Hz
+Blind Guardian - The Piper's Calling,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,The Piper's Calling,9,,,Blind Guardian 1992 The Piper's Calling,,0 Bytes,,00:59,0,0 kbit/s,0 Hz
+Blind Guardian - Theatre of Pain (Classic Version),Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Theatre of Pain (Classic Version),13,,,Blind Guardian 1992 Theatre of Pain (Classic Version),,0 Bytes,,04:15,0,0 kbit/s,0 Hz
+Blind Guardian - Imaginations from the Other Side,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Imaginations from the Other Side,1,,,Blind Guardian 1995 Imaginations from the Other Side,,0 Bytes,,07:19,0,0 kbit/s,0 Hz
+Blind Guardian - The Script for My Requiem,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,The Script for My Requiem,4,,,Blind Guardian 1995 The Script for My Requiem,,0 Bytes,,06:09,0,0 kbit/s,0 Hz
+Blind Guardian - Another Holy War,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Another Holy War,8,,,Blind Guardian 1995 Another Holy War,,0 Bytes,,04:32,0,0 kbit/s,0 Hz
+Blind Guardian - And the Story Ends,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,And the Story Ends,9,,,Blind Guardian 1995 And the Story Ends,,0 Bytes,,06:00,0,0 kbit/s,0 Hz
+Kreator - Choir of the Damned,Kreator,Pleasure to Kill,1986,Thrash Metal,,0,0,Choir of the Damned,1,,,Kreator 1986 Choir of the Damned,,0 Bytes,,00:46,0,0 kbit/s,0 Hz
+Kreator - The Pestilence,Kreator,Pleasure to Kill,1986,Thrash Metal,,0,0,The Pestilence,6,,,Kreator 1986 The Pestilence,,0 Bytes,,06:58,0,0 kbit/s,0 Hz
+Kreator - Command of the Blade,Kreator,Pleasure to Kill,1986,Thrash Metal,,0,0,Command of the Blade,8,,,Kreator 1986 Command of the Blade,,0 Bytes,,03:57,0,0 kbit/s,0 Hz
+Kreator - Under the Guillotine,Kreator,Pleasure to Kill,1986,Thrash Metal,,0,0,Under the Guillotine,9,,,Kreator 1986 Under the Guillotine,,0 Bytes,,04:38,0,0 kbit/s,0 Hz
+===============================================================================
+    AudioLibraryViewAllYears|years
+===============================================================================
+1986,1,9
+1992,1,13
+1995,1,9
+===============================================================================
+    AudioLibraryViewAllGenres, |genres
+===============================================================================
+Power Metal,2,22
+Thrash Metal,1,9
+===============================================================================
+    AudioLibraryViewAllGenres, Power|genres
+===============================================================================
+Power Metal,2,22
+===============================================================================
+    AudioLibraryViewAllGenres, Power|artists
+===============================================================================
+Blind Guardian,2,22
+===============================================================================
+    AudioLibraryViewAllGenres, Power|albums
+===============================================================================
+Blind Guardian - Somewhere Far Beyond,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,13,55:34
+Blind Guardian - Imaginations from the Other Side,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,9,49:17
+===============================================================================
+    AudioLibraryViewArtist,Blind Guardian|albums
+===============================================================================
+Blind Guardian - Somewhere Far Beyond,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,13,55:34
+Blind Guardian - Imaginations from the Other Side,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,9,49:17
+===============================================================================
+    AudioLibraryViewArtist,Blind Guardian|tracks
+===============================================================================
+Blind Guardian - Time What Is Time,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Time What Is Time,1,,,Blind Guardian 1992 Time What Is Time,,0 Bytes,,05:46,0,0 kbit/s,0 Hz
+Blind Guardian - Journey Through the Dark,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Journey Through the Dark,2,,,Blind Guardian 1992 Journey Through the Dark,,0 Bytes,,04:48,0,0 kbit/s,0 Hz
+Blind Guardian - Black Chamber,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Black Chamber,3,,,Blind Guardian 1992 Black Chamber,,0 Bytes,,00:58,0,0 kbit/s,0 Hz
+Blind Guardian - Theatre of Pain,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Theatre of Pain,4,,,Blind Guardian 1992 Theatre of Pain,,0 Bytes,,04:17,0,0 kbit/s,0 Hz
+Blind Guardian - The Quest for Tanelorn,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,The Quest for Tanelorn,5,,,Blind Guardian 1992 The Quest for Tanelorn,,0 Bytes,,05:57,0,0 kbit/s,0 Hz
+Blind Guardian - Ashes to Ashes,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Ashes to Ashes,6,,,Blind Guardian 1992 Ashes to Ashes,,0 Bytes,,06:00,0,0 kbit/s,0 Hz
+Blind Guardian - The Bard's Song - In the Forest,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,The Bard's Song - In the Forest,7,,,Blind Guardian 1992 The Bard's Song - In the Forest,,0 Bytes,,03:10,0,0 kbit/s,0 Hz
+Blind Guardian - The Bard's Song - The Hobbit,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,The Bard's Song - The Hobbit,8,,,Blind Guardian 1992 The Bard's Song - The Hobbit,,0 Bytes,,03:54,0,0 kbit/s,0 Hz
+Blind Guardian - The Piper's Calling,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,The Piper's Calling,9,,,Blind Guardian 1992 The Piper's Calling,,0 Bytes,,00:59,0,0 kbit/s,0 Hz
+Blind Guardian - Somewhere Far Beyond,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Somewhere Far Beyond,10,,,Blind Guardian 1992 Somewhere Far Beyond,,0 Bytes,,07:30,0,0 kbit/s,0 Hz
+Blind Guardian - Spread Your Wings (Queen cover),Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Spread Your Wings (Queen cover),11,,,Blind Guardian 1992 Spread Your Wings (Queen cover),,0 Bytes,,04:15,0,0 kbit/s,0 Hz
+Blind Guardian - Trial by Fire (Satan cover),Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Trial by Fire (Satan cover),12,,,Blind Guardian 1992 Trial by Fire (Satan cover),,0 Bytes,,03:45,0,0 kbit/s,0 Hz
+Blind Guardian - Theatre of Pain (Classic Version),Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Theatre of Pain (Classic Version),13,,,Blind Guardian 1992 Theatre of Pain (Classic Version),,0 Bytes,,04:15,0,0 kbit/s,0 Hz
+Blind Guardian - Imaginations from the Other Side,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Imaginations from the Other Side,1,,,Blind Guardian 1995 Imaginations from the Other Side,,0 Bytes,,07:19,0,0 kbit/s,0 Hz
+Blind Guardian - I'm Alive,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,I'm Alive,2,,,Blind Guardian 1995 I'm Alive,,0 Bytes,,05:31,0,0 kbit/s,0 Hz
+Blind Guardian - A Past and Future Secret,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,A Past and Future Secret,3,,,Blind Guardian 1995 A Past and Future Secret,,0 Bytes,,03:48,0,0 kbit/s,0 Hz
+Blind Guardian - The Script for My Requiem,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,The Script for My Requiem,4,,,Blind Guardian 1995 The Script for My Requiem,,0 Bytes,,06:09,0,0 kbit/s,0 Hz
+Blind Guardian - Mordred's Song,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Mordred's Song,5,,,Blind Guardian 1995 Mordred's Song,,0 Bytes,,05:28,0,0 kbit/s,0 Hz
+Blind Guardian - Born in a Mourning Hall,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Born in a Mourning Hall,6,,,Blind Guardian 1995 Born in a Mourning Hall,,0 Bytes,,05:14,0,0 kbit/s,0 Hz
+Blind Guardian - Bright Eyes,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Bright Eyes,7,,,Blind Guardian 1995 Bright Eyes,,0 Bytes,,05:16,0,0 kbit/s,0 Hz
+Blind Guardian - Another Holy War,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Another Holy War,8,,,Blind Guardian 1995 Another Holy War,,0 Bytes,,04:32,0,0 kbit/s,0 Hz
+Blind Guardian - And the Story Ends,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,And the Story Ends,9,,,Blind Guardian 1995 And the Story Ends,,0 Bytes,,06:00,0,0 kbit/s,0 Hz
+===============================================================================
+    AudioLibraryViewAlbum,Blind Guardian,1995,Imaginations from the Other Side,Power Metal,0|tracks
+===============================================================================
+Blind Guardian - Imaginations from the Other Side,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Imaginations from the Other Side,1,,,Blind Guardian 1995 Imaginations from the Other Side,,0 Bytes,,07:19,0,0 kbit/s,0 Hz
+Blind Guardian - I'm Alive,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,I'm Alive,2,,,Blind Guardian 1995 I'm Alive,,0 Bytes,,05:31,0,0 kbit/s,0 Hz
+Blind Guardian - A Past and Future Secret,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,A Past and Future Secret,3,,,Blind Guardian 1995 A Past and Future Secret,,0 Bytes,,03:48,0,0 kbit/s,0 Hz
+Blind Guardian - The Script for My Requiem,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,The Script for My Requiem,4,,,Blind Guardian 1995 The Script for My Requiem,,0 Bytes,,06:09,0,0 kbit/s,0 Hz
+Blind Guardian - Mordred's Song,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Mordred's Song,5,,,Blind Guardian 1995 Mordred's Song,,0 Bytes,,05:28,0,0 kbit/s,0 Hz
+Blind Guardian - Born in a Mourning Hall,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Born in a Mourning Hall,6,,,Blind Guardian 1995 Born in a Mourning Hall,,0 Bytes,,05:14,0,0 kbit/s,0 Hz
+Blind Guardian - Bright Eyes,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Bright Eyes,7,,,Blind Guardian 1995 Bright Eyes,,0 Bytes,,05:16,0,0 kbit/s,0 Hz
+Blind Guardian - Another Holy War,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Another Holy War,8,,,Blind Guardian 1995 Another Holy War,,0 Bytes,,04:32,0,0 kbit/s,0 Hz
+Blind Guardian - And the Story Ends,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,And the Story Ends,9,,,Blind Guardian 1995 And the Story Ends,,0 Bytes,,06:00,0,0 kbit/s,0 Hz
+===============================================================================
+    AudioLibraryViewYear,1995|albums
+===============================================================================
+Blind Guardian - Imaginations from the Other Side,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,9,49:17
+===============================================================================
+    AudioLibraryViewYear,1995|tracks
+===============================================================================
+Blind Guardian - Imaginations from the Other Side,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Imaginations from the Other Side,1,,,Blind Guardian 1995 Imaginations from the Other Side,,0 Bytes,,07:19,0,0 kbit/s,0 Hz
+Blind Guardian - I'm Alive,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,I'm Alive,2,,,Blind Guardian 1995 I'm Alive,,0 Bytes,,05:31,0,0 kbit/s,0 Hz
+Blind Guardian - A Past and Future Secret,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,A Past and Future Secret,3,,,Blind Guardian 1995 A Past and Future Secret,,0 Bytes,,03:48,0,0 kbit/s,0 Hz
+Blind Guardian - The Script for My Requiem,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,The Script for My Requiem,4,,,Blind Guardian 1995 The Script for My Requiem,,0 Bytes,,06:09,0,0 kbit/s,0 Hz
+Blind Guardian - Mordred's Song,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Mordred's Song,5,,,Blind Guardian 1995 Mordred's Song,,0 Bytes,,05:28,0,0 kbit/s,0 Hz
+Blind Guardian - Born in a Mourning Hall,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Born in a Mourning Hall,6,,,Blind Guardian 1995 Born in a Mourning Hall,,0 Bytes,,05:14,0,0 kbit/s,0 Hz
+Blind Guardian - Bright Eyes,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Bright Eyes,7,,,Blind Guardian 1995 Bright Eyes,,0 Bytes,,05:16,0,0 kbit/s,0 Hz
+Blind Guardian - Another Holy War,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Another Holy War,8,,,Blind Guardian 1995 Another Holy War,,0 Bytes,,04:32,0,0 kbit/s,0 Hz
+Blind Guardian - And the Story Ends,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,And the Story Ends,9,,,Blind Guardian 1995 And the Story Ends,,0 Bytes,,06:00,0,0 kbit/s,0 Hz
+===============================================================================
+    AudioLibraryViewGenre,Power Metal|albums
+===============================================================================
+Blind Guardian - Somewhere Far Beyond,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,13,55:34
+Blind Guardian - Imaginations from the Other Side,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,9,49:17
+===============================================================================
+    AudioLibraryViewGenre,Power Metal|tracks
+===============================================================================
+Blind Guardian - Time What Is Time,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Time What Is Time,1,,,Blind Guardian 1992 Time What Is Time,,0 Bytes,,05:46,0,0 kbit/s,0 Hz
+Blind Guardian - Journey Through the Dark,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Journey Through the Dark,2,,,Blind Guardian 1992 Journey Through the Dark,,0 Bytes,,04:48,0,0 kbit/s,0 Hz
+Blind Guardian - Black Chamber,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Black Chamber,3,,,Blind Guardian 1992 Black Chamber,,0 Bytes,,00:58,0,0 kbit/s,0 Hz
+Blind Guardian - Theatre of Pain,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Theatre of Pain,4,,,Blind Guardian 1992 Theatre of Pain,,0 Bytes,,04:17,0,0 kbit/s,0 Hz
+Blind Guardian - The Quest for Tanelorn,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,The Quest for Tanelorn,5,,,Blind Guardian 1992 The Quest for Tanelorn,,0 Bytes,,05:57,0,0 kbit/s,0 Hz
+Blind Guardian - Ashes to Ashes,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Ashes to Ashes,6,,,Blind Guardian 1992 Ashes to Ashes,,0 Bytes,,06:00,0,0 kbit/s,0 Hz
+Blind Guardian - The Bard's Song - In the Forest,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,The Bard's Song - In the Forest,7,,,Blind Guardian 1992 The Bard's Song - In the Forest,,0 Bytes,,03:10,0,0 kbit/s,0 Hz
+Blind Guardian - The Bard's Song - The Hobbit,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,The Bard's Song - The Hobbit,8,,,Blind Guardian 1992 The Bard's Song - The Hobbit,,0 Bytes,,03:54,0,0 kbit/s,0 Hz
+Blind Guardian - The Piper's Calling,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,The Piper's Calling,9,,,Blind Guardian 1992 The Piper's Calling,,0 Bytes,,00:59,0,0 kbit/s,0 Hz
+Blind Guardian - Somewhere Far Beyond,Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Somewhere Far Beyond,10,,,Blind Guardian 1992 Somewhere Far Beyond,,0 Bytes,,07:30,0,0 kbit/s,0 Hz
+Blind Guardian - Spread Your Wings (Queen cover),Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Spread Your Wings (Queen cover),11,,,Blind Guardian 1992 Spread Your Wings (Queen cover),,0 Bytes,,04:15,0,0 kbit/s,0 Hz
+Blind Guardian - Trial by Fire (Satan cover),Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Trial by Fire (Satan cover),12,,,Blind Guardian 1992 Trial by Fire (Satan cover),,0 Bytes,,03:45,0,0 kbit/s,0 Hz
+Blind Guardian - Theatre of Pain (Classic Version),Blind Guardian,Somewhere Far Beyond,1992,Power Metal,,0,0,Theatre of Pain (Classic Version),13,,,Blind Guardian 1992 Theatre of Pain (Classic Version),,0 Bytes,,04:15,0,0 kbit/s,0 Hz
+Blind Guardian - Imaginations from the Other Side,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Imaginations from the Other Side,1,,,Blind Guardian 1995 Imaginations from the Other Side,,0 Bytes,,07:19,0,0 kbit/s,0 Hz
+Blind Guardian - I'm Alive,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,I'm Alive,2,,,Blind Guardian 1995 I'm Alive,,0 Bytes,,05:31,0,0 kbit/s,0 Hz
+Blind Guardian - A Past and Future Secret,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,A Past and Future Secret,3,,,Blind Guardian 1995 A Past and Future Secret,,0 Bytes,,03:48,0,0 kbit/s,0 Hz
+Blind Guardian - The Script for My Requiem,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,The Script for My Requiem,4,,,Blind Guardian 1995 The Script for My Requiem,,0 Bytes,,06:09,0,0 kbit/s,0 Hz
+Blind Guardian - Mordred's Song,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Mordred's Song,5,,,Blind Guardian 1995 Mordred's Song,,0 Bytes,,05:28,0,0 kbit/s,0 Hz
+Blind Guardian - Born in a Mourning Hall,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Born in a Mourning Hall,6,,,Blind Guardian 1995 Born in a Mourning Hall,,0 Bytes,,05:14,0,0 kbit/s,0 Hz
+Blind Guardian - Bright Eyes,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Bright Eyes,7,,,Blind Guardian 1995 Bright Eyes,,0 Bytes,,05:16,0,0 kbit/s,0 Hz
+Blind Guardian - Another Holy War,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,Another Holy War,8,,,Blind Guardian 1995 Another Holy War,,0 Bytes,,04:32,0,0 kbit/s,0 Hz
+Blind Guardian - And the Story Ends,Blind Guardian,Imaginations from the Other Side,1995,Power Metal,,0,0,And the Story Ends,9,,,Blind Guardian 1995 And the Story Ends,,0 Bytes,,06:00,0,0 kbit/s,0 Hz
+===============================================================================
+    AudioLibraryViewDuplicateAlbums|albums
+===============================================================================

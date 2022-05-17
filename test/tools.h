@@ -33,7 +33,8 @@ namespace {
         QString genre,
         QByteArray cover,
         QString title,
-        int track_number)
+        int track_number,
+        int length_milliseconds = 0)
     {
         TrackInfo info;
 
@@ -45,6 +46,7 @@ namespace {
         info.cover = cover;
         info.title = title;
         info.track_number = track_number;
+        info.length_milliseconds = length_milliseconds;
 
         return info;
     }
