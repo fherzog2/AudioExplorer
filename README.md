@@ -11,12 +11,12 @@ AudioExplorer is a desktop application for quickly finding audio files based on 
 
 ### Windows
 
-On windows, a statically linked executable is preferred. It can be build using the following commands. The dependencies are retrieved through vcpkg.
+On Windows, vcpkg can be used to compile the dependencies.
 
 ```console
-vcpkg install qt5-base qt5-svg qt5-tools qt5-translations taglib --triplet x64-windows-static
+vcpkg install qt5-base qt5-svg qt5-tools qt5-translations taglib --triplet x64-windows
 
-cmake %AudioExplorer_PATH% -G "Visual Studio 16 2019" -A x64 -DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static -DCMAKE_BUILD_TYPE=Release -DENABLE_STATIC_RUNTIME=ON
+cmake %AudioExplorer_PATH% -G "Visual Studio 16 2019" -A x64 -DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows
 ```
 
 ### Linux
