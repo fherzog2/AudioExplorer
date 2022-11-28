@@ -10,6 +10,7 @@
 #include <QtCore/qprocess.h>
 #include <QtCore/qsettings.h>
 #include <QtCore/qtimer.h>
+#include <QtGui/qactiongroup.h>
 #include <QtGui/qdesktopservices.h>
 #include <QtGui/qdrag.h>
 #include <QtGui/qevent.h>

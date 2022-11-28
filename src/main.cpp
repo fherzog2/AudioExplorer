@@ -32,14 +32,11 @@ TranslationManager::TranslationManager(QApplication* app)
     : _app(app)
 {
     _translation_files["de"] = {
-        res::QT_DE_QM(),
-        res::QTBASE_DE_QM(),
         res::AUDIOEXPLORER_DE_QM()
     };
 
     _translation_files["en"] = {
-        res::QT_EN_QM(),
-        res::QTBASE_EN_QM()
+        // no file needed, because the default texts are already in english
     };
 }
 
@@ -92,9 +89,19 @@ void TranslationManager::setLanguageInternal(const QString& lang)
 
         // the translation file must stay in memory as long as the translator holds it
         // this is no problem with res::data as it is part of the application itself
-        translator->load(reinterpret_cast<const unsigned char*>(translation_file.ptr), static_cast<int>(translation_file.size));
-        _app->installTranslator(translator);
+        if (translator->load(reinterpret_cast<const unsigned char*>(translation_file.ptr), static_cast<int>(translation_file.size)))
+            _app->installTranslator(translator);
     }
+
+    // load Qt's own translation file
+
+    const QString languages_path = QApplication::applicationDirPath() + "/translations";
+
+    auto translator = new QTranslator(_app);
+    _translators.push_back(translator);
+
+    if (translator->load(QString("qt_%1").arg(lang), languages_path))
+        _app->installTranslator(translator);
 }
 
 class MainWindowCreator : public QObject
@@ -157,8 +164,6 @@ void MainWindowCreator::checkLanguageChangedSlot()
 
 int main(int argc, char** argv)
 {
-    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-
     QApplication app(argc, argv);
     app.setApplicationName(APPLICATION_NAME);
 

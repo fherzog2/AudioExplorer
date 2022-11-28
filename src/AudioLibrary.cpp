@@ -48,7 +48,7 @@ AudioLibraryAlbumKey::AudioLibraryAlbumKey(const TrackInfo& info)
     , _album(info.album)
     , _genre(info.genre)
     , _year(info.year)
-    , _cover_checksum(qChecksum(info.cover.data(), info.cover.size()))
+    , _cover_checksum(qChecksum(info.cover))
 {
 }
 

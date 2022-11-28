@@ -13,9 +13,7 @@ find_library(TAGLIB_LIBRARY
 )
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-find_package(Qt5Widgets CONFIG REQUIRED)
-find_package(Qt5Svg CONFIG REQUIRED)
-find_package(Qt5LinguistTools CONFIG REQUIRED)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Svg Linguist)
 find_package(Threads REQUIRED)
 
 if(MSVC AND ENABLE_STATIC_RUNTIME)
@@ -35,29 +33,10 @@ endif()
 
 set(TS_FILES ${CMAKE_SOURCE_DIR}/translations/AudioExplorer_de.ts)
 if(RECREATE_TRANSLATIONS)
-    qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR}/src ${TS_FILES} OPTIONS -no-obsolete -locations none)
+    qt_create_translation(QM_FILES ${CMAKE_SOURCE_DIR}/src ${TS_FILES} OPTIONS -no-obsolete -locations none)
 else()
-    qt5_add_translation(QM_FILES ${TS_FILES})
+    qt_add_translation(QM_FILES ${TS_FILES})
 endif()
-
-# add Qt translations
-
-get_target_property (QT_QMAKE_EXECUTABLE Qt5::qmake IMPORTED_LOCATION)
-execute_process(COMMAND ${QT_QMAKE_EXECUTABLE} -query QT_INSTALL_TRANSLATIONS
-                OUTPUT_VARIABLE QT_INSTALL_TRANSLATIONS
-                RESULT_VARIABLE QT_INSTALL_TRANSLATIONS_RESULT)
-
-if (NOT QT_INSTALL_TRANSLATIONS_RESULT EQUAL 0)
-    message(FATAL_ERROR "Cannot find Qt translations")
-endif()
-
-# remove trailing newline
-string(REGEX REPLACE "\n$" "" QT_INSTALL_TRANSLATIONS "${QT_INSTALL_TRANSLATIONS}")
-
-list(APPEND QM_FILES ${QT_INSTALL_TRANSLATIONS}/qt_en.qm
-                     ${QT_INSTALL_TRANSLATIONS}/qt_de.qm
-                     ${QT_INSTALL_TRANSLATIONS}/qtbase_en.qm
-                     ${QT_INSTALL_TRANSLATIONS}/qtbase_de.qm)
 
 set_source_files_properties(${CMAKE_BINARY_DIR}/compiled_resources.cpp
                             ${CMAKE_BINARY_DIR}/compiled_resources.h
@@ -92,7 +71,7 @@ add_executable(AudioExplorer WIN32 src/main.cpp
                                    ${CMAKE_BINARY_DIR}/compiled_resources.cpp
                                    ${CMAKE_BINARY_DIR}/compiled_resources.h
                                    ${WIN_RESOURCE_FILE})
-target_link_libraries(AudioExplorer ${CMAKE_THREAD_LIBS_INIT} Qt5::Widgets Qt5::Svg ${TAGLIB_LIBRARY} ${STATIC_LINK_DEPENDENCIES})
+target_link_libraries(AudioExplorer ${CMAKE_THREAD_LIBS_INIT} Qt::Widgets Qt::Svg ${TAGLIB_LIBRARY} ${STATIC_LINK_DEPENDENCIES})
 
 target_include_directories(AudioExplorer PRIVATE ${TAGLIB_INCLUDE_DIR})
 target_compile_definitions(AudioExplorer PRIVATE TAGLIB_STATIC)
@@ -116,6 +95,41 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/compiled_resources.cpp ${CMAKE_BIN
                    COMMAND ResCompiler -i ${CMAKE_CURRENT_LIST_DIR}/res/view_menu.svg ${QM_FILES} -o ${CMAKE_BINARY_DIR}/compiled_resources.cpp
                    DEPENDS ${CMAKE_CURRENT_LIST_DIR}/res/view_menu.svg ${QM_FILES}
                    VERBATIM)
+
+if (WIN32)
+    # copy Qt plugins and translations to bin directory
+
+    find_program(WINDEPLOYQT_DEBUG NAMES windeployqt.debug.bat)
+    find_program(WINDEPLOYQT_RELEASE NAMES windeployqt)
+
+    add_custom_command(TARGET AudioExplorer POST_BUILD
+        COMMAND $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:${WINDEPLOYQT_DEBUG}>$<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:${WINDEPLOYQT_RELEASE}>
+                $<TARGET_FILE:AudioExplorer>
+        COMMENT "Running windeployqt..."
+    )
+
+    # vcpkg automatically copies DLLs of all dependencies into the build dir
+    # unfortunately this doesn't work for libjpeg, because Qt technically can run without it (plugin system)
+    # manually copy the libjpeg DLL here to fix this
+
+    find_package(JPEG REQUIRED)
+
+    get_target_property(MY_JPEG_LIB_PATH JPEG::JPEG IMPORTED_LOCATION_RELEASE)
+
+    cmake_path(GET MY_JPEG_LIB_PATH PARENT_PATH MY_JPEG_LIB_DIR)
+
+    find_file(MY_JPEG_DLL
+        NAMES "jpeg${JPEG_VERSION}.dll"
+        PATHS "${MY_JPEG_LIB_DIR}\\..\\bin"
+        REQUIRED NO_DEFAULT_PATH)
+
+    add_custom_command(TARGET AudioExplorer POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${MY_JPEG_DLL}
+        "$<TARGET_FILE_DIR:AudioExplorer>\\jpeg${JPEG_VERSION}.dll"
+        COMMENT "Copying libjpeg to build dir..."
+    )
+endif()
 
 # test
 
@@ -148,7 +162,7 @@ add_executable(TestDriver ${TEST_SOURCES}
                           src/ThreadSafeAudioLibrary.h
                           src/TrackInfoReader.h
                           src/TrackInfoReader.cpp)
-target_link_libraries(TestDriver ${CMAKE_THREAD_LIBS_INIT} Qt5::Widgets ${TAGLIB_LIBRARY} ${STATIC_LINK_DEPENDENCIES})
+target_link_libraries(TestDriver ${CMAKE_THREAD_LIBS_INIT} Qt::Widgets ${TAGLIB_LIBRARY} ${STATIC_LINK_DEPENDENCIES})
 
 target_include_directories(TestDriver PRIVATE ${TAGLIB_INCLUDE_DIR})
 target_compile_definitions(TestDriver PRIVATE TAGLIB_STATIC)
