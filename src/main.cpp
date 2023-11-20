@@ -5,6 +5,8 @@
 #include <QtCore/qstandardpaths.h>
 #include <QtWidgets/qapplication.h>
 #include <QtWidgets/qmessagebox.h>
+#include <QtWidgets/QStyleFactory>
+#include <QtGui/QStyleHints>
 #include "project_version.h"
 #include "compiled_resources.h"
 
@@ -162,10 +164,33 @@ void MainWindowCreator::checkLanguageChangedSlot()
     _main.release()->deleteLater();
 }
 
+void enableDarkModeSupport()
+{
+#ifdef WIN32
+#if QT_VERSION >= QT_VERSION_CHECK(6,5,0)
+    QString original_style_name;
+    if (auto original_style = qApp->style())
+        original_style_name = original_style->name();
+
+    auto adjust_style_to_color_scheme = [original_style_name]() {
+        QString name = qApp->styleHints()->colorScheme() == Qt::ColorScheme::Dark ? "fusion" : original_style_name;
+        if (auto style = QStyleFactory::create(name))
+            qApp->setStyle(style);
+    };
+
+    adjust_style_to_color_scheme();
+
+    QObject::connect(qApp->styleHints(), &QStyleHints::colorSchemeChanged, qApp, adjust_style_to_color_scheme);
+#endif
+#endif
+}
+
 int main(int argc, char** argv)
 {
     QApplication app(argc, argv);
     app.setApplicationName(APPLICATION_NAME);
+
+    enableDarkModeSupport();
 
     Settings settings;
 
