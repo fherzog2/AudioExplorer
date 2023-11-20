@@ -26,7 +26,7 @@ namespace {
         fprintf(stderr, "%s (%d): ok: %s\n", __FILE__, __LINE__, #expression);\
     }
 
-    TrackInfo createTrackInfo(QString artist,
+    [[maybe_unused]] TrackInfo createTrackInfo(QString artist,
         QString album_artist,
         QString album,
         int year,
@@ -51,7 +51,7 @@ namespace {
         return info;
     }
 
-    bool compareLibraries(const AudioLibrary& a, const AudioLibrary& b)
+    [[maybe_unused]] bool compareLibraries(const AudioLibrary& a, const AudioLibrary& b)
     {
         const auto albums_a = a.getAlbums();
         const auto albums_b = b.getAlbums();

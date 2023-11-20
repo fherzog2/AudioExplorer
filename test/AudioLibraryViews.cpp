@@ -190,6 +190,11 @@ bool testAudioLibraryViewAllArtists(const QString& source_test_dir)
 
 int test_AudioLibraryViews(int argc, char** const argv)
 {
+    // pin the locale, because the reference data depends on it
+
+    QLocale l(QLocale::German, QLocale::Germany);
+    QLocale::setDefault(l);
+
     QApplication app(argc, argv);
 
     const QString source_test_dir = app.arguments()[1];
