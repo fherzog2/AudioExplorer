@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
+#include "gtest/gtest.h"
+
 #include <QtGui/qstandarditemmodel.h>
 #include <QtWidgets/qapplication.h>
 
@@ -53,16 +55,16 @@ bool checkAgainstReferenceDataFile(const QString& reference_data_filepath, const
     QFile reference_data_file(reference_data_filepath);
     if (create_reference_data)
     {
-        RETURN_IF_FAILED(reference_data_file.open(QFile::WriteOnly));
+        EXPECT_TRUE(reference_data_file.open(QFile::WriteOnly));
         reference_data_file.write(data.toUtf8());
     }
     else
     {
-        RETURN_IF_FAILED(reference_data_file.open(QFile::ReadOnly));
+        EXPECT_TRUE(reference_data_file.open(QFile::ReadOnly));
         const QByteArray reference_data_bytes = reference_data_file.readAll();
         const QString reference_data = QString::fromUtf8(reference_data_bytes);
 
-        RETURN_IF_FAILED(data == reference_data);
+        EXPECT_EQ(data, reference_data);
     }
 
     return true;
@@ -106,8 +108,17 @@ void AlbumCreator::addTrack(QString title, int min, int sec)
     ++_track_number;
 }
 
-bool testAudioLibraryViewAllArtists(const QString& source_test_dir)
+TEST(AudioExplorer, AudioLibraryViews)
 {
+    int argc = 1;
+    char* argv = const_cast<char*>("");
+    QApplication app(argc, &argv);
+
+    // pin the locale, because the reference data depends on it
+
+    QLocale l(QLocale::German, QLocale::Germany);
+    QLocale::setDefault(l);
+
     // build library
 
     AudioLibrary library;
@@ -160,44 +171,28 @@ bool testAudioLibraryViewAllArtists(const QString& source_test_dir)
 
     QStringList result_list;
 
-    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAllArtists(QString()), AudioLibraryView::DisplayMode::ARTISTS, result_list));
-    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAllArtists("Blind"), AudioLibraryView::DisplayMode::ARTISTS, result_list));
-    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAllAlbums(QString()), AudioLibraryView::DisplayMode::ALBUMS, result_list));
-    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAllAlbums("Other"), AudioLibraryView::DisplayMode::ALBUMS, result_list));
-    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAllTracks(QString()), AudioLibraryView::DisplayMode::TRACKS, result_list));
-    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAllTracks("the"), AudioLibraryView::DisplayMode::TRACKS, result_list));
-    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAllYears(), AudioLibraryView::DisplayMode::YEARS, result_list));
-    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAllGenres(QString()), AudioLibraryView::DisplayMode::GENRES, result_list));
-    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAllGenres("Power"), AudioLibraryView::DisplayMode::GENRES, result_list));
-    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAllGenres("Power"), AudioLibraryView::DisplayMode::ARTISTS, result_list));
-    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAllGenres("Power"), AudioLibraryView::DisplayMode::ALBUMS, result_list));
+    ASSERT_TRUE(testAudioLibraryView(library, AudioLibraryViewAllArtists(QString()), AudioLibraryView::DisplayMode::ARTISTS, result_list));
+    ASSERT_TRUE(testAudioLibraryView(library, AudioLibraryViewAllArtists("Blind"), AudioLibraryView::DisplayMode::ARTISTS, result_list));
+    ASSERT_TRUE(testAudioLibraryView(library, AudioLibraryViewAllAlbums(QString()), AudioLibraryView::DisplayMode::ALBUMS, result_list));
+    ASSERT_TRUE(testAudioLibraryView(library, AudioLibraryViewAllAlbums("Other"), AudioLibraryView::DisplayMode::ALBUMS, result_list));
+    ASSERT_TRUE(testAudioLibraryView(library, AudioLibraryViewAllTracks(QString()), AudioLibraryView::DisplayMode::TRACKS, result_list));
+    ASSERT_TRUE(testAudioLibraryView(library, AudioLibraryViewAllTracks("the"), AudioLibraryView::DisplayMode::TRACKS, result_list));
+    ASSERT_TRUE(testAudioLibraryView(library, AudioLibraryViewAllYears(), AudioLibraryView::DisplayMode::YEARS, result_list));
+    ASSERT_TRUE(testAudioLibraryView(library, AudioLibraryViewAllGenres(QString()), AudioLibraryView::DisplayMode::GENRES, result_list));
+    ASSERT_TRUE(testAudioLibraryView(library, AudioLibraryViewAllGenres("Power"), AudioLibraryView::DisplayMode::GENRES, result_list));
+    ASSERT_TRUE(testAudioLibraryView(library, AudioLibraryViewAllGenres("Power"), AudioLibraryView::DisplayMode::ARTISTS, result_list));
+    ASSERT_TRUE(testAudioLibraryView(library, AudioLibraryViewAllGenres("Power"), AudioLibraryView::DisplayMode::ALBUMS, result_list));
 
-    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewArtist("Blind Guardian"), AudioLibraryView::DisplayMode::ALBUMS, result_list));
-    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewArtist("Blind Guardian"), AudioLibraryView::DisplayMode::TRACKS, result_list));
+    ASSERT_TRUE(testAudioLibraryView(library, AudioLibraryViewArtist("Blind Guardian"), AudioLibraryView::DisplayMode::ALBUMS, result_list));
+    ASSERT_TRUE(testAudioLibraryView(library, AudioLibraryViewArtist("Blind Guardian"), AudioLibraryView::DisplayMode::TRACKS, result_list));
     AudioLibraryAlbumKey key("Blind Guardian", "Imaginations from the Other Side", "Power Metal", 1995, 0);
-    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewAlbum(key), AudioLibraryView::DisplayMode::TRACKS, result_list));
-    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewYear(1995), AudioLibraryView::DisplayMode::ALBUMS, result_list));
-    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewYear(1995), AudioLibraryView::DisplayMode::TRACKS, result_list));
-    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewGenre("Power Metal"), AudioLibraryView::DisplayMode::ALBUMS, result_list));
-    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewGenre("Power Metal"), AudioLibraryView::DisplayMode::TRACKS, result_list));
+    ASSERT_TRUE(testAudioLibraryView(library, AudioLibraryViewAlbum(key), AudioLibraryView::DisplayMode::TRACKS, result_list));
+    ASSERT_TRUE(testAudioLibraryView(library, AudioLibraryViewYear(1995), AudioLibraryView::DisplayMode::ALBUMS, result_list));
+    ASSERT_TRUE(testAudioLibraryView(library, AudioLibraryViewYear(1995), AudioLibraryView::DisplayMode::TRACKS, result_list));
+    ASSERT_TRUE(testAudioLibraryView(library, AudioLibraryViewGenre("Power Metal"), AudioLibraryView::DisplayMode::ALBUMS, result_list));
+    ASSERT_TRUE(testAudioLibraryView(library, AudioLibraryViewGenre("Power Metal"), AudioLibraryView::DisplayMode::TRACKS, result_list));
 
-    RETURN_IF_FAILED(testAudioLibraryView(library, AudioLibraryViewDuplicateAlbums(), AudioLibraryView::DisplayMode::ALBUMS, result_list));
+    ASSERT_TRUE(testAudioLibraryView(library, AudioLibraryViewDuplicateAlbums(), AudioLibraryView::DisplayMode::ALBUMS, result_list));
 
-    RETURN_IF_FAILED(checkAgainstReferenceDataFile(source_test_dir + "/AudioLibraryViews.txt", result_list.join('\n')));
-
-    return true;
-}
-
-int test_AudioLibraryViews(int argc, char** const argv)
-{
-    // pin the locale, because the reference data depends on it
-
-    QLocale l(QLocale::German, QLocale::Germany);
-    QLocale::setDefault(l);
-
-    QApplication app(argc, argv);
-
-    const QString source_test_dir = app.arguments()[1];
-
-    return testAudioLibraryViewAllArtists(source_test_dir) ? 0 : 1;
+    ASSERT_TRUE(checkAgainstReferenceDataFile("test_data/AudioLibraryViews.txt", result_list.join('\n')));
 }

@@ -1,12 +1,18 @@
 // SPDX-License-Identifier: GPL-2.0-only
+#include "gtest/gtest.h"
+
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qbuffer.h>
 
 #include <AudioLibrary.h>
 #include "tools.h"
 
-bool test_AudioLibrarySaveAndLoadImp()
+TEST(AudioExplorer, AudioLibrarySaveAndLoad)
 {
+    int argc = 1;
+    char* argv = const_cast<char*>("");
+    QCoreApplication app(argc, &argv);
+
     AudioLibrary lib;
 
     lib.addTrack("a", QDateTime(), 0, createTrackInfo("artist 1", QString(), "album 1", 2000, "genre 1", QByteArray(), "title 1", 1));
@@ -19,7 +25,7 @@ bool test_AudioLibrarySaveAndLoadImp()
 
     {
         QBuffer buffer(&bytes);
-        RETURN_IF_FAILED(buffer.open(QBuffer::WriteOnly));
+        ASSERT_TRUE(buffer.open(QBuffer::WriteOnly));
         QDataStream s(&buffer);
 
         lib.save(s);
@@ -32,22 +38,13 @@ bool test_AudioLibrarySaveAndLoadImp()
         // first with an empty library
         // then with one that already contains data to throw away
 
-        for(int i = 0; i < 2; ++i)
+        for (int i = 0; i < 2; ++i)
         {
             QBuffer buffer(&bytes);
-            RETURN_IF_FAILED(buffer.open(QBuffer::ReadOnly));
+            ASSERT_TRUE(buffer.open(QBuffer::ReadOnly));
             QDataStream s(&buffer);
             lib2.load(s);
-            RETURN_IF_FAILED(compareLibraries(lib, lib2));
+            ASSERT_TRUE(compareLibraries(lib, lib2));
         }
     }
-
-    return true;
-}
-
-int test_AudioLibrarySaveAndLoad(int argc, char** const argv)
-{
-    QCoreApplication app(argc, argv);
-
-    return test_AudioLibrarySaveAndLoadImp() ? 0 : 1;
 }

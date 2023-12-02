@@ -4,27 +4,12 @@
 #include <AudioLibrary.h>
 #include <TrackInfoReader.h>
 
-namespace {
-    // print an error if the expression fails
-#define RETURN_IF_FAILED(expression)\
-    if(!(expression))\
-    {\
-        fprintf(stderr, "%s (%d): error: %s\n", __FILE__, __LINE__, #expression);\
-        return false;\
-    }
+inline void PrintTo(const QString& str, ::std::ostream* os)
+{
+    *os << qPrintable(str);
+}
 
-// print the expression, whether it passes or fails
-// on error, also invalidates a variable called "ok"
-#define RESET_OK_IF_FAILED(expression)\
-    if(!(expression))\
-    {\
-        fprintf(stderr, "%s (%d): error: %s\n", __FILE__, __LINE__, #expression);\
-        ok = false;\
-    }\
-    else\
-    {\
-        fprintf(stderr, "%s (%d): ok: %s\n", __FILE__, __LINE__, #expression);\
-    }
+namespace {
 
     [[maybe_unused]] TrackInfo createTrackInfo(QString artist,
         QString album_artist,

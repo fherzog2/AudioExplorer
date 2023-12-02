@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
+#include "gtest/gtest.h"
+
 #include <QtCore/qcoreapplication.h>
 
 #include <AudioLibrary.h>
@@ -10,28 +12,30 @@ bool createEmptyFile(const QString& filepath)
     return file.open(QIODevice::WriteOnly);
 }
 
-bool test_AudioLibraryTrackCleanupImp(const QString binary_dir)
+TEST(AudioExplorer, AudioLibraryTrackCleanup)
 {
-    RETURN_IF_FAILED(!binary_dir.isEmpty());
+    int argc = 1;
+    char* argv = const_cast<char*>("");
+    QCoreApplication app(argc, &argv);
 
-    QString dirpath1 = binary_dir + "/test_AudioLibraryTrackCleanup1";
-    QString dirpath2 = binary_dir + "/test_AudioLibraryTrackCleanup2";
+    QString dirpath1 = "test_AudioLibraryTrackCleanup1";
+    QString dirpath2 = "test_AudioLibraryTrackCleanup2";
 
     QDir dir1(dirpath1);
-    RETURN_IF_FAILED(dir1.removeRecursively());
-    RETURN_IF_FAILED(QDir().mkpath(dirpath1));
+    ASSERT_TRUE(dir1.removeRecursively());
+    ASSERT_TRUE(QDir().mkpath(dirpath1));
 
     QDir dir2(dirpath2);
-    RETURN_IF_FAILED(dir2.removeRecursively());
-    RETURN_IF_FAILED(QDir().mkpath(dirpath2));
+    ASSERT_TRUE(dir2.removeRecursively());
+    ASSERT_TRUE(QDir().mkpath(dirpath2));
 
     QString filepath1 = dirpath1 + "/file1.txt";
     QString filepath2 = dirpath2 + "/file2.txt";
     QString filepath3 = dirpath2 + "/file3.txt";
 
-    RETURN_IF_FAILED(createEmptyFile(filepath1));
-    RETURN_IF_FAILED(createEmptyFile(filepath2));
-    RETURN_IF_FAILED(createEmptyFile(filepath3));
+    ASSERT_TRUE(createEmptyFile(filepath1));
+    ASSERT_TRUE(createEmptyFile(filepath2));
+    ASSERT_TRUE(createEmptyFile(filepath3));
 
     AudioLibrary library;
     library.addTrack(filepath1, QDateTime(), 0, TrackInfo());
@@ -40,7 +44,7 @@ bool test_AudioLibraryTrackCleanupImp(const QString binary_dir)
 
     QString new_filepath3 = dirpath2 + "/new file3.txt";
 
-    RETURN_IF_FAILED(QDir().rename(filepath3, new_filepath3));
+    ASSERT_TRUE(QDir().rename(filepath3, new_filepath3));
 
     library.addTrack(new_filepath3, QDateTime(), 0, TrackInfo());
 
@@ -57,16 +61,5 @@ bool test_AudioLibraryTrackCleanupImp(const QString binary_dir)
     library2.addTrack(filepath2, QDateTime(), 0, TrackInfo());
     library2.addTrack(new_filepath3, QDateTime(), 0, TrackInfo());
 
-    RETURN_IF_FAILED(compareLibraries(library, library2));
-
-    return true;
-}
-
-int test_AudioLibraryTrackCleanup(int argc, char** const argv)
-{
-    QCoreApplication app(argc, argv);
-
-    const QString binary_dir = app.arguments()[2];
-
-    return test_AudioLibraryTrackCleanupImp(binary_dir) ? 0 : 1;
+    ASSERT_TRUE(compareLibraries(library, library2));
 }

@@ -15,6 +15,7 @@ find_library(TAGLIB_LIBRARY
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Svg Linguist)
 find_package(Threads REQUIRED)
+find_package(GTest CONFIG REQUIRED)
 
 if(MSVC AND ENABLE_STATIC_RUNTIME)
     foreach(flag_var CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
@@ -133,55 +134,52 @@ endif()
 
 # test
 
-create_test_sourcelist (TEST_SOURCES
-    TestDriver.cpp
-    test/AudioLibrarySaveAndLoad.cpp
-    test/AudioLibraryTrackCleanup.cpp
-    test/AudioLibraryViews.cpp
-    test/ThreadSafeAudioLibrary.cpp
-    test/TrackInfo.cpp
-    test/VisualIndexRestoration.cpp)
+configure_file(${CMAKE_SOURCE_DIR}/test/AudioLibraryViews.txt ${CMAKE_CURRENT_BINARY_DIR}/test_data/AudioLibraryViews.txt COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/test/data/gradient.jpg ${CMAKE_CURRENT_BINARY_DIR}/test_data/gradient.jpg COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/test/data/noise.ape ${CMAKE_CURRENT_BINARY_DIR}/test_data/noise.ape COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/test/data/noise.m4a ${CMAKE_CURRENT_BINARY_DIR}/test_data/noise.m4a COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/test/data/noise.mp3 ${CMAKE_CURRENT_BINARY_DIR}/test_data/noise.mp3 COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/test/data/noise.ogg ${CMAKE_CURRENT_BINARY_DIR}/test_data/noise.ogg COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/test/data/noise.wma ${CMAKE_CURRENT_BINARY_DIR}/test_data/noise.wma COPYONLY)
 
-set(TESTS_TO_RUN
-    test/AudioLibrarySaveAndLoad
-    test/AudioLibraryTrackCleanup
-    test/AudioLibraryViews
-    test/ThreadSafeAudioLibrary
-    test/TrackInfo
-    test/VisualIndexRestoration)
+include(GoogleTest)
 
-add_executable(TestDriver ${TEST_SOURCES}
-                          test/tools.h
-                          src/AudioLibrary.cpp
-                          src/AudioLibrary.h
-                          src/AudioLibraryModel.cpp
-                          src/AudioLibraryModel.h
-                          src/AudioLibraryView.cpp
-                          src/AudioLibraryView.h
-                          src/ThreadSafeAudioLibrary.cpp
-                          src/ThreadSafeAudioLibrary.h
-                          src/TrackInfoReader.h
-                          src/TrackInfoReader.cpp)
-target_link_libraries(TestDriver ${CMAKE_THREAD_LIBS_INIT} Qt::Widgets ${TAGLIB_LIBRARY} ${STATIC_LINK_DEPENDENCIES})
+add_executable(tests
+               src/AudioLibrary.cpp
+               src/AudioLibrary.h
+               src/AudioLibraryModel.cpp
+               src/AudioLibraryModel.h
+               src/AudioLibraryView.cpp
+               src/AudioLibraryView.h
+               src/ThreadSafeAudioLibrary.cpp
+               src/ThreadSafeAudioLibrary.h
+               src/TrackInfoReader.h
+               src/TrackInfoReader.cpp
+               test/AudioLibrarySaveAndLoad.cpp
+               test/AudioLibraryTrackCleanup.cpp
+               test/AudioLibraryViews.cpp
+               test/ThreadSafeAudioLibrary.cpp
+               test/TrackInfo.cpp
+               test/VisualIndexRestoration.cpp
+               test/tools.h)
+target_link_libraries(tests GTest::gtest GTest::gtest_main ${CMAKE_THREAD_LIBS_INIT} Qt::Widgets ${TAGLIB_LIBRARY} ${STATIC_LINK_DEPENDENCIES})
 
-target_include_directories(TestDriver PRIVATE ${TAGLIB_INCLUDE_DIR})
-target_compile_definitions(TestDriver PRIVATE TAGLIB_STATIC)
-set_property(TARGET TestDriver PROPERTY CXX_STANDARD 14)
-set_property(TARGET TestDriver PROPERTY AUTOMOC ON)
-target_include_directories(TestDriver PRIVATE "src")
+target_include_directories(tests PRIVATE ${TAGLIB_INCLUDE_DIR})
+target_compile_definitions(tests PRIVATE TAGLIB_STATIC)
+set_property(TARGET tests PROPERTY CXX_STANDARD 14)
+set_property(TARGET tests PROPERTY AUTOMOC ON)
+target_include_directories(tests PRIVATE "src")
+gtest_discover_tests(tests)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND SANITIZE_ADDRESS)
-    target_compile_options(TestDriver PRIVATE -fno-omit-frame-pointer -fsanitize=address)
-    target_link_options(TestDriver PRIVATE -fno-omit-frame-pointer -fsanitize=address)
+    target_compile_options(tests PRIVATE -fno-omit-frame-pointer -fsanitize=address)
+    target_link_options(tests PRIVATE -fno-omit-frame-pointer -fsanitize=address)
 endif()
 
 if(MSVC)
-  target_compile_options(TestDriver PRIVATE /W4 /WX)
+  target_compile_options(tests PRIVATE /W4 /WX)
 else(MSVC)
-  target_compile_options(TestDriver PRIVATE -Wall -Wextra -pedantic -Werror)
+  target_compile_options(tests PRIVATE -Wall -Wextra -pedantic -Werror)
 endif(MSVC)
 
 enable_testing()
-foreach (test ${TESTS_TO_RUN})
-  add_test(NAME ${test} COMMAND TestDriver ${test} ${CMAKE_SOURCE_DIR}/test ${CMAKE_BINARY_DIR})
-endforeach ()
