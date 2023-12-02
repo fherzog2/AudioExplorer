@@ -103,10 +103,17 @@ if (WIN32)
     find_program(WINDEPLOYQT_DEBUG NAMES windeployqt.debug.bat)
     find_program(WINDEPLOYQT_RELEASE NAMES windeployqt)
 
-    add_custom_command(TARGET AudioExplorer POST_BUILD
-        COMMAND $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:${WINDEPLOYQT_DEBUG}>$<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:${WINDEPLOYQT_RELEASE}>
-                $<TARGET_FILE:AudioExplorer>
+    # write a "deployed" marker after qtwindeploy is done, to avoid unnecessary reruns
+
+    add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/$<CONFIG>/deployed.txt"
+        COMMAND $<IF:$<CONFIG:Debug>,${WINDEPLOYQT_DEBUG},${WINDEPLOYQT_RELEASE}> $<TARGET_FILE:AudioExplorer>
+        COMMAND ${CMAKE_COMMAND} -E echo "done" > "${CMAKE_BINARY_DIR}/$<CONFIG>/deployed.txt"
         COMMENT "Running windeployqt..."
+        VERBATIM
+    )
+
+    add_custom_target(QT_WIN_DEPLOY ALL
+        DEPENDS "${CMAKE_BINARY_DIR}/$<CONFIG>/deployed.txt"
     )
 
     # vcpkg automatically copies DLLs of all dependencies into the build dir
