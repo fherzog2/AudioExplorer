@@ -225,7 +225,7 @@ namespace{
             if (item_it != item_map.end())
             {
                 const TagLib::ByteVector null_terminator(1, 0);
-                const TagLib::ByteVector item = item_it->second.value();
+                const TagLib::ByteVector item = item_it->second.binaryData();
                 const int pos = item.find(null_terminator); // Skip the filename.
                 if (pos != -1)
                 {
