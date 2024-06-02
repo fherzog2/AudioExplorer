@@ -107,6 +107,18 @@ if (WIN32)
         DEPENDS "${CMAKE_BINARY_DIR}/$<CONFIG>/deployed.txt"
     )
 
+    # add qt.conf, to get correct qt translation paths when starting the app from the build directory
+
+    add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/$<CONFIG>/qt.conf"
+        COMMAND ${CMAKE_COMMAND} -E echo "[Paths] Prefix = ." > "${CMAKE_BINARY_DIR}/$<CONFIG>/qt.conf"
+        COMMENT "Adding qt.conf"
+        VERBATIM
+    )
+
+    add_custom_target(QT_CONF_DEPLOY ALL
+        DEPENDS "${CMAKE_BINARY_DIR}/$<CONFIG>/qt.conf"
+    )
+
     # vcpkg automatically copies DLLs of all dependencies into the build dir
     # unfortunately this doesn't work for libjpeg, because Qt technically can run without it (plugin system)
     # manually copy the libjpeg DLL here to fix this
@@ -179,3 +191,71 @@ else(MSVC)
 endif(MSVC)
 
 enable_testing()
+
+# install
+
+if (WIN32)
+    # install the executable
+
+    install(TARGETS AudioExplorer)
+
+    # install selected dependencies, which the qt deploy script does not find automatically
+
+    install(CODE [[
+      file(GET_RUNTIME_DEPENDENCIES
+        EXECUTABLES $<TARGET_FILE:AudioExplorer>
+        RESOLVED_DEPENDENCIES_VAR _r_deps
+        UNRESOLVED_DEPENDENCIES_VAR _u_deps
+      )
+      foreach(_file ${_r_deps})
+        # whitelist, only these dlls are required
+
+        string(FIND ${_file} pcre2 pcre2_found)
+        string(FIND ${_file} jpeg jpeg_found)
+        string(FIND ${_file} libpng libpng_found)
+        string(FIND ${_file} zlib zlib_found)
+        string(FIND ${_file} double-conversion double-conversion_found)
+        string(FIND ${_file} libcrypto libcrypto_found)
+        string(FIND ${_file} harfbuzz harfbuzz_found)
+        string(FIND ${_file} zstd zstd_found)
+        string(FIND ${_file} freetype freetype_found)
+        string(FIND ${_file} bz2 bz2_found)
+        string(FIND ${_file} brotli brotli_found)
+        string(FIND ${_file} tag tag_found)
+
+        if(NOT pcre2_found EQUAL -1 OR
+           NOT jpeg_found EQUAL -1 OR
+           NOT libpng_found EQUAL -1 OR
+           NOT zlib_found EQUAL -1 OR
+           NOT double-conversion_found EQUAL -1 OR
+           NOT libcrypto_found EQUAL -1 OR
+           NOT harfbuzz_found EQUAL -1 OR
+           NOT zstd_found EQUAL -1 OR
+           NOT freetype_found EQUAL -1 OR
+           NOT bz2_found EQUAL -1 OR
+           NOT brotli_found EQUAL -1 OR
+           NOT tag_found EQUAL -1)
+            file(INSTALL
+              DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
+              TYPE SHARED_LIBRARY
+              FOLLOW_SYMLINK_CHAIN
+              FILES "${_file}"
+            )
+        endif()
+      endforeach()
+    ]])
+
+    # extra step for jpeg, which cannot be found through the dependencies
+
+    install(FILES ${MY_JPEG_DLL}
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
+
+    # install qt dependencies
+
+    qt_generate_deploy_app_script(
+        TARGET AudioExplorer
+        OUTPUT_SCRIPT deploy_script
+        NO_UNSUPPORTED_PLATFORM_ERROR
+    )
+    install(SCRIPT ${deploy_script})
+endif()

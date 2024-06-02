@@ -3,6 +3,7 @@
 
 #include <QtCore/qtranslator.h>
 #include <QtCore/qstandardpaths.h>
+#include <QtCore/qlibraryinfo.h>
 #include <QtWidgets/qapplication.h>
 #include <QtWidgets/qmessagebox.h>
 #include <QtWidgets/QStyleFactory>
@@ -97,7 +98,7 @@ void TranslationManager::setLanguageInternal(const QString& lang)
 
     // load Qt's own translation file
 
-    const QString languages_path = QApplication::applicationDirPath() + "/translations";
+    const QString languages_path = QLibraryInfo::path(QLibraryInfo::TranslationsPath);
 
     auto translator = new QTranslator(_app);
     _translators.push_back(translator);
