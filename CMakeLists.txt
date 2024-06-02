@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.21)
 
 project(AudioExplorer)
 
@@ -66,9 +66,8 @@ add_executable(AudioExplorer WIN32 src/main.cpp
                                    ${CMAKE_BINARY_DIR}/compiled_resources.h
                                    ${WIN_RESOURCE_FILE})
 target_link_libraries(AudioExplorer ${CMAKE_THREAD_LIBS_INIT} Qt::Widgets Qt::Svg ${TAGLIB_LIBRARY})
-
 target_include_directories(AudioExplorer PRIVATE ${TAGLIB_INCLUDE_DIR})
-set_property(TARGET AudioExplorer PROPERTY CXX_STANDARD 14)
+set_property(TARGET AudioExplorer PROPERTY CXX_STANDARD 17)
 set_property(TARGET AudioExplorer PROPERTY AUTOMOC ON)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND SANITIZE_ADDRESS)
@@ -83,7 +82,7 @@ else(MSVC)
 endif(MSVC)
 
 add_executable(ResCompiler ResCompiler.cpp)
-set_property(TARGET ResCompiler PROPERTY CXX_STANDARD 14)
+set_property(TARGET ResCompiler PROPERTY CXX_STANDARD 17)
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/compiled_resources.cpp ${CMAKE_BINARY_DIR}/compiled_resources.h
                    COMMAND ResCompiler -i ${CMAKE_CURRENT_LIST_DIR}/res/view_menu.svg ${QM_FILES} -o ${CMAKE_BINARY_DIR}/compiled_resources.cpp
                    DEPENDS ${CMAKE_CURRENT_LIST_DIR}/res/view_menu.svg ${QM_FILES}
@@ -162,9 +161,8 @@ add_executable(tests
                test/VisualIndexRestoration.cpp
                test/tools.h)
 target_link_libraries(tests GTest::gtest GTest::gtest_main ${CMAKE_THREAD_LIBS_INIT} Qt::Widgets ${TAGLIB_LIBRARY})
-
 target_include_directories(tests PRIVATE ${TAGLIB_INCLUDE_DIR})
-set_property(TARGET tests PROPERTY CXX_STANDARD 14)
+set_property(TARGET tests PROPERTY CXX_STANDARD 17)
 set_property(TARGET tests PROPERTY AUTOMOC ON)
 target_include_directories(tests PRIVATE "src")
 gtest_discover_tests(tests)
