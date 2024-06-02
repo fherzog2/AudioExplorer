@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.0)
 
 project(AudioExplorer)
 
-option(ENABLE_STATIC_RUNTIME "Use static runtime library" OFF)
 option(SANITIZE_ADDRESS "Add address sanitizer flags" OFF)
 
 find_path(TAGLIB_INCLUDE_DIR
@@ -16,12 +15,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Svg Linguist)
 find_package(Threads REQUIRED)
 find_package(GTest CONFIG REQUIRED)
-
-if(MSVC AND ENABLE_STATIC_RUNTIME)
-    foreach(flag_var CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
-        string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-    endforeach(flag_var)
-endif()
 
 if(WIN32)
     set(WIN_RESOURCE_FILE res/appicon.rc
@@ -72,10 +65,9 @@ add_executable(AudioExplorer WIN32 src/main.cpp
                                    ${CMAKE_BINARY_DIR}/compiled_resources.cpp
                                    ${CMAKE_BINARY_DIR}/compiled_resources.h
                                    ${WIN_RESOURCE_FILE})
-target_link_libraries(AudioExplorer ${CMAKE_THREAD_LIBS_INIT} Qt::Widgets Qt::Svg ${TAGLIB_LIBRARY} ${STATIC_LINK_DEPENDENCIES})
+target_link_libraries(AudioExplorer ${CMAKE_THREAD_LIBS_INIT} Qt::Widgets Qt::Svg ${TAGLIB_LIBRARY})
 
 target_include_directories(AudioExplorer PRIVATE ${TAGLIB_INCLUDE_DIR})
-target_compile_definitions(AudioExplorer PRIVATE TAGLIB_STATIC)
 set_property(TARGET AudioExplorer PROPERTY CXX_STANDARD 14)
 set_property(TARGET AudioExplorer PROPERTY AUTOMOC ON)
 
@@ -169,10 +161,9 @@ add_executable(tests
                test/TrackInfo.cpp
                test/VisualIndexRestoration.cpp
                test/tools.h)
-target_link_libraries(tests GTest::gtest GTest::gtest_main ${CMAKE_THREAD_LIBS_INIT} Qt::Widgets ${TAGLIB_LIBRARY} ${STATIC_LINK_DEPENDENCIES})
+target_link_libraries(tests GTest::gtest GTest::gtest_main ${CMAKE_THREAD_LIBS_INIT} Qt::Widgets ${TAGLIB_LIBRARY})
 
 target_include_directories(tests PRIVATE ${TAGLIB_INCLUDE_DIR})
-target_compile_definitions(tests PRIVATE TAGLIB_STATIC)
 set_property(TARGET tests PROPERTY CXX_STANDARD 14)
 set_property(TARGET tests PROPERTY AUTOMOC ON)
 target_include_directories(tests PRIVATE "src")
