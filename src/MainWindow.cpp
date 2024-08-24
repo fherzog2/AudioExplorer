@@ -57,6 +57,30 @@ namespace
         scroll_bar->setValue(int(scroll_pos * double(maximum - minimum)));
     }
 
+    QVariantList toVariantList(const QList<int>& list)
+    {
+        QVariantList result;
+        for (int i : list)
+            result.push_back(i);
+        return result;
+    }
+
+    QList<int> fromVariantList(const QVariantList& list)
+    {
+        QList<int> result;
+        for (const QVariant& v : list)
+        {
+            bool ok = false;
+            const int i = v.toInt(&ok);
+
+            if (!ok)
+                return {};
+
+            result.push_back(i);
+        }
+        return result;
+    }
+
     /**
     * A special QItemDelegate that can elide each line of a multi-lined text independently.
     */
@@ -1779,33 +1803,19 @@ void MainWindow::saveSettingsOnExit()
 
     // details
 
-    const QList<int> details_splitter_sizes = _details_splitter->sizes();
-    if (details_splitter_sizes.size() >= 2)
-    {
-        _settings.details_width.setValue(details_splitter_sizes[1]);
-    }
+    _settings.details_splitter_sizes.setValue(toVariantList(_details_splitter->sizes()));
 }
 
 void MainWindow::restoreDetailsSizeOnStart()
 {
-    const int details_width = _settings.details_width.getValue();
-
-    const bool details_visible = details_width > 0;
+    const QList<int> details_splitter_sizes = fromVariantList(_settings.details_splitter_sizes.getValue());
+    const bool details_visible = details_splitter_sizes.size() >= 2 && details_splitter_sizes[1] > 0;
 
     _details->setVisible(details_visible);
     _details_action->setChecked(details_visible);
 
-    if (details_visible)
+    if (details_splitter_sizes.size() >= 2)
     {
-        QList<int> sizes = _details_splitter->sizes();
-
-        // redistribute sizes between view and details
-
-        int size_view = sizes[0] + sizes[1] - details_width;
-
-        sizes[0] = size_view;
-        sizes[1] = details_width;
-
-        _details_splitter->setSizes(sizes);
+        _details_splitter->setSizes(details_splitter_sizes);
     }
 }

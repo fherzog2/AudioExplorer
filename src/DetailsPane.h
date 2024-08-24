@@ -18,6 +18,8 @@ public:
 
     void setSelection(const QAbstractItemModel* model, const QModelIndex& current, AudioLibraryView::DisplayMode display_mode);
 
+    QSize minimumSizeHint() const override;
+
 protected:
     virtual void paintEvent(QPaintEvent* e) override;
 

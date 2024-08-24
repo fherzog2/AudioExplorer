@@ -102,6 +102,6 @@ public:
     SettingsItem<QStringList> audio_library_view_hidden_columns;
     SettingsItem<QString> main_window_view_type;
     SettingsItem<int> main_window_icon_size;
-    SettingsItem<int> details_width;
+    SettingsItem<QVariantList> details_splitter_sizes;
     SettingsItem<QString> language;
 };

@@ -261,6 +261,15 @@ void DetailsPane::setSelection(const QAbstractItemModel* model, const QModelInde
     update();
 }
 
+QSize DetailsPane::minimumSizeHint() const
+{
+    const QFontMetrics fm = fontMetrics();
+
+    QSize sh = QFrame::minimumSizeHint();
+    sh.rwidth() = std::max(sh.width(), fm.averageCharWidth() * 40);
+    return sh;
+}
+
 void DetailsPane::paintEvent(QPaintEvent* e)
 {
     QFrame::paintEvent(e);

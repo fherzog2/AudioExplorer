@@ -71,7 +71,7 @@ Settings::Settings()
     , audio_library_view_hidden_columns(_settings, "audio_library_view_hidden_columns", QStringList())
     , main_window_view_type(_settings, "main_window_view_type", QString())
     , main_window_icon_size(_settings, "main_window_icon_size", 0)
-    , details_width(_settings, "details_width", 0)
+    , details_splitter_sizes(_settings, "details_splitter_sizes", QVariantList())
     , language(_settings, "language", "")
 {
 }
