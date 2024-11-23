@@ -27,7 +27,6 @@
 #include <QtWidgets/qtooltip.h>
 #include "ImageViewWindow.h"
 #include "project_version.h"
-#include "resource_helpers.h"
 #include "SettingsEditorWindow.h"
 
 namespace
@@ -429,7 +428,7 @@ MainWindow::MainWindow(Settings& settings, ThreadSafeAudioLibrary& library, Audi
     QToolButton* view_selector_popup_button = new QToolButton(toolarea);
     view_selector_popup_button->setToolTip(tr("Select view"));
 
-    view_selector_popup_button->setIcon(iconFromResource(res::VIEW_MENU_SVG()));
+    view_selector_popup_button->setIcon(QIcon(":/res/view_menu.svg"));
     view_selector_popup_button->setIconSize(QSize(24, 24));
 
     connect(&_view_selector, &ViewSelector::selectionChanged, this, [this]() {

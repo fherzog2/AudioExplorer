@@ -9,7 +9,6 @@
 #include <QtWidgets/QStyleFactory>
 #include <QtGui/QStyleHints>
 #include "project_version.h"
-#include "compiled_resources.h"
 
 class TranslationManager
 {
@@ -24,7 +23,7 @@ public:
 private:
     void setLanguageInternal(const QString& lang);
 
-    std::unordered_map<QString, std::vector<res::data>> _translation_files;
+    std::unordered_map<QString, std::vector<QString>> _translation_files;
 
     QApplication* _app = nullptr;
     QString _current_lang;
@@ -35,7 +34,7 @@ TranslationManager::TranslationManager(QApplication* app)
     : _app(app)
 {
     _translation_files["de"] = {
-        res::AUDIOEXPLORER_DE_QM()
+        ":/res/AudioExplorer_de.qm"
     };
 
     _translation_files["en"] = {
@@ -92,7 +91,7 @@ void TranslationManager::setLanguageInternal(const QString& lang)
 
         // the translation file must stay in memory as long as the translator holds it
         // this is no problem with res::data as it is part of the application itself
-        if (translator->load(reinterpret_cast<const unsigned char*>(translation_file.ptr), static_cast<int>(translation_file.size)))
+        if (translator->load(translation_file))
             _app->installTranslator(translator);
     }
 

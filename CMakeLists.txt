@@ -32,11 +32,6 @@ else()
     qt_add_translation(QM_FILES ${TS_FILES})
 endif()
 
-set_source_files_properties(${CMAKE_BINARY_DIR}/compiled_resources.cpp
-                            ${CMAKE_BINARY_DIR}/compiled_resources.h
-                            PROPERTIES GENERATED TRUE
-                                       SKIP_AUTOMOC ON)
-
 add_executable(AudioExplorer WIN32 src/main.cpp
                                    src/MainWindow.cpp
                                    src/MainWindow.h
@@ -51,8 +46,6 @@ add_executable(AudioExplorer WIN32 src/main.cpp
                                    src/ImageViewWindow.cpp
                                    src/ImageViewWindow.h
                                    src/project_version.h
-                                   src/resource_helpers.cpp
-                                   src/resource_helpers.h
                                    src/Settings.h
                                    src/Settings.cpp
                                    src/SettingsEditorWindow.cpp
@@ -62,8 +55,6 @@ add_executable(AudioExplorer WIN32 src/main.cpp
                                    src/TrackInfoReader.cpp
                                    src/TrackInfoReader.h
                                    ${TS_FILES}
-                                   ${CMAKE_BINARY_DIR}/compiled_resources.cpp
-                                   ${CMAKE_BINARY_DIR}/compiled_resources.h
                                    ${WIN_RESOURCE_FILE})
 target_link_libraries(AudioExplorer ${CMAKE_THREAD_LIBS_INIT} Qt::Widgets Qt::Svg ${TAGLIB_LIBRARY})
 target_include_directories(AudioExplorer PRIVATE ${TAGLIB_INCLUDE_DIR})
@@ -81,12 +72,12 @@ else(MSVC)
   target_compile_options(AudioExplorer PRIVATE -Wall -Wextra -pedantic -Werror)
 endif(MSVC)
 
-add_executable(ResCompiler ResCompiler.cpp)
-set_property(TARGET ResCompiler PROPERTY CXX_STANDARD 17)
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/compiled_resources.cpp ${CMAKE_BINARY_DIR}/compiled_resources.h
-                   COMMAND ResCompiler -i ${CMAKE_CURRENT_LIST_DIR}/res/view_menu.svg ${QM_FILES} -o ${CMAKE_BINARY_DIR}/compiled_resources.cpp
-                   DEPENDS ${CMAKE_CURRENT_LIST_DIR}/res/view_menu.svg ${QM_FILES}
-                   VERBATIM)
+set_source_files_properties(res/view_menu.svg PROPERTIES QT_RESOURCE_ALIAS view_menu.svg)
+set_source_files_properties(${CMAKE_BINARY_DIR}/AudioExplorer_de.qm PROPERTIES QT_RESOURCE_ALIAS AudioExplorer_de.qm)
+
+qt_add_resources(AudioExplorer "appresources"
+    PREFIX "res"
+    FILES res/view_menu.svg ${QM_FILES})
 
 if (WIN32)
     # copy Qt plugins and translations to bin directory
