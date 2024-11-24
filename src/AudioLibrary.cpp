@@ -36,18 +36,18 @@ QDataStream& operator>>(QDataStream& s, AudioLibraryAlbumKey& key)
 
 AudioLibraryAlbumKey::AudioLibraryAlbumKey(QString artist, QString album, QString genre, int year, quint16 cover_checksum)
     : _artist(artist)
+    , _year(year)
     , _album(album)
     , _genre(genre)
-    , _year(year)
     , _cover_checksum(cover_checksum)
 {
 }
 
 AudioLibraryAlbumKey::AudioLibraryAlbumKey(const TrackInfo& info)
     : _artist(!info.album_artist.isEmpty() ? info.album_artist : info.artist)
+    , _year(info.year)
     , _album(info.album)
     , _genre(info.genre)
-    , _year(info.year)
     , _cover_checksum(qChecksum(info.cover))
 {
 }
@@ -63,38 +63,9 @@ QString AudioLibraryAlbumKey::toString() const
         QString::number(_cover_checksum);
 }
 
-bool AudioLibraryAlbumKey::operator<(const AudioLibraryAlbumKey& other) const
-{
-    auto tie = [](const AudioLibraryAlbumKey& key) {
-        return std::tie(
-            key._artist,
-            key._year,
-            key._album,
-            key._genre,
-            key._cover_checksum);
-    };
+bool AudioLibraryAlbumKey::operator==(const AudioLibraryAlbumKey&) const = default;
 
-    return tie(*this) < tie(other);
-}
-
-bool AudioLibraryAlbumKey::operator==(const AudioLibraryAlbumKey& other) const
-{
-    auto tie = [](const AudioLibraryAlbumKey& key) {
-        return std::tie(
-            key._artist,
-            key._year,
-            key._album,
-            key._genre,
-            key._cover_checksum);
-    };
-
-    return tie(*this) == tie(other);
-}
-
-bool AudioLibraryAlbumKey::operator!=(const AudioLibraryAlbumKey& other) const
-{
-    return !operator==(other);
-}
+std::strong_ordering AudioLibraryAlbumKey::operator<=>(const AudioLibraryAlbumKey&) const = default;
 
 //=============================================================================
 

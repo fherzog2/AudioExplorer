@@ -961,11 +961,7 @@ namespace {
             , _album(album->getKey().getAlbum())
         {}
 
-        bool operator<(const DuplicateAlbumKey& other) const
-        {
-            return std::tie(_artist, _album) <
-                std::tie(other._artist, other._album);
-        }
+        std::strong_ordering operator<=>(const DuplicateAlbumKey&) const = default;
 
         QString _artist;
         QString _album;

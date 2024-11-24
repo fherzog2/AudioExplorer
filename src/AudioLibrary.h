@@ -57,17 +57,16 @@ public:
     int getYear() const { return _year; }
     quint16 getCoverChecksum() const { return _cover_checksum; }
 
-    bool operator<(const AudioLibraryAlbumKey& other) const;
-    bool operator==(const AudioLibraryAlbumKey& other) const;
-    bool operator!=(const AudioLibraryAlbumKey& other) const;
+    bool operator==(const AudioLibraryAlbumKey&) const;
+    std::strong_ordering operator<=>(const AudioLibraryAlbumKey&) const;
 
     QString toString() const;
 
 private:
     QString _artist;
+    int _year = 0;
     QString _album;
     QString _genre;
-    int _year = 0;
     quint16 _cover_checksum = 0;
 };
 

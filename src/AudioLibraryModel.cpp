@@ -716,18 +716,7 @@ public:
         int num_albums = 0;
         int num_tracks = 0;
 
-        bool operator<(const GroupData& other) const
-        {
-            auto tie = [](const GroupData& g) {
-                return std::tie(
-                    g.name,
-                    g.showcase_album_uuid,
-                    g.num_albums,
-                    g.num_tracks);
-            };
-
-            return tie(*this) < tie(other);
-        }
+        std::strong_ordering operator<=>(const GroupData&) const = default;
     };
 
     std::map<GroupData, QUuid> _group_uuids;
