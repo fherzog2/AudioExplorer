@@ -654,7 +654,7 @@ void AudioLibraryModel::onUpdateFinished()
     std::vector<QUuid> ids_to_remove;
 
     for (const QUuid& id : _item_model->getAllIds())
-        if (_requested_ids.find(id) == _requested_ids.end())
+        if(!_requested_ids.contains(id))
             ids_to_remove.push_back(id);
 
     for (const QUuid& id : ids_to_remove)

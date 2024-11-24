@@ -308,7 +308,7 @@ void AudioLibrary::removeTracksExcept(const std::unordered_set<QString>& loaded_
 {
     for (auto it = _filepath_to_track_map.begin(), end = _filepath_to_track_map.end(); it != end;)
     {
-        if (loaded_audio_files.find(it->first) == loaded_audio_files.end())
+        if (!loaded_audio_files.contains(it->first))
         {
             // track is not one of the loaded files, must be outdated
 

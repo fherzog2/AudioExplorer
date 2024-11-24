@@ -1136,7 +1136,7 @@ void MainWindow::updateCurrentView()
     for (const auto& column : AudioLibraryView::columnToStringMapping())
     {
         bool is_available = std::ranges::find(available_columns, column.first) != available_columns.end();
-        bool is_hidden = _hidden_columns.find(column.first) != _hidden_columns.end();
+        bool is_hidden = _hidden_columns.contains(column.first);
 
         _table->setColumnHidden(column.first, !is_available || is_hidden);
     }

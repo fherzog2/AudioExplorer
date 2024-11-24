@@ -62,7 +62,7 @@ QString TranslationManager::getSupportedSystemLanguage() const
         {
             const QString candidate = ui_lang.left(2);
 
-            if (_translation_files.find(candidate) != _translation_files.end())
+            if (_translation_files.contains(candidate))
                 return candidate;
         }
     }
