@@ -67,8 +67,8 @@ namespace {
 
             // the library itself does not sort the tracks
 
-            std::sort(tracks_a.begin(), tracks_a.end(), compare_tracks);
-            std::sort(tracks_b.begin(), tracks_b.end(), compare_tracks);
+            std::ranges::sort(tracks_a, compare_tracks);
+            std::ranges::sort(tracks_b, compare_tracks);
 
             for (size_t j = 0, endj = album_a->getTracks().size(); j < endj; ++j)
             {

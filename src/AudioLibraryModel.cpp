@@ -254,7 +254,7 @@ void AudioLibraryModelImpl::sort(int column, Qt::SortOrder order)
             return numeric_collator.compare(a->sort_role_data[column], b->sort_role_data[column]) < 0;
         };
 
-        std::stable_sort(_rows.begin(), _rows.end(), less_than);
+        std::ranges::stable_sort(_rows, less_than);
     }
     else
     {
@@ -262,7 +262,7 @@ void AudioLibraryModelImpl::sort(int column, Qt::SortOrder order)
             return numeric_collator.compare(a->sort_role_data[column], b->sort_role_data[column]) > 0;
         };
 
-        std::stable_sort(_rows.begin(), _rows.end(), greater_than);
+        std::ranges::stable_sort(_rows, greater_than);
     }
 
     // update persistent indexes

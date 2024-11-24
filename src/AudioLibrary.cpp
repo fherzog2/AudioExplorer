@@ -116,8 +116,7 @@ void AudioLibraryAlbum::addTrack(const AudioLibraryTrack* track)
 
 void AudioLibraryAlbum::removeTrack(const AudioLibraryTrack* track)
 {
-    auto new_end = std::remove(_tracks.begin(), _tracks.end(), track);
-    _tracks.erase(new_end, _tracks.end());
+    std::erase(_tracks, track);
 
     // reset the uuid because data has been modified
     _uuid = QUuid::createUuid();

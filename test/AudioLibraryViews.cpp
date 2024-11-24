@@ -38,7 +38,7 @@ bool testAudioLibraryView(const AudioLibrary& library, const AudioLibraryView& v
     }
 
     const auto display_mode_mapping = AudioLibraryView::displayModeToStringMapping();
-    const auto display_mode_str = std::find_if(display_mode_mapping.begin(), display_mode_mapping.end(), [display_mode](const auto& i) { return i.first == display_mode; });
+    const auto display_mode_str = std::ranges::find_if(display_mode_mapping, [display_mode](const auto& i) { return i.first == display_mode; });
 
     result_list << "===============================================================================";
     result_list << "    " + view.getId() + "|" + display_mode_str->second;

@@ -271,7 +271,7 @@ namespace{
                 const TagLib::ASF::AttributeList& attr_list = attr_list_it->second;
                 if (!attr_list.isEmpty())
                 {
-                    auto found = std::find_if(attr_list.begin(), attr_list.end(), [](const TagLib::ASF::Attribute& a){
+                    auto found = std::ranges::find_if(attr_list, [](const TagLib::ASF::Attribute& a){
                         return a.toPicture().type() == TagLib::ASF::Picture::FrontCover;
                     });
 

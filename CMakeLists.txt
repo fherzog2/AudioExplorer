@@ -58,7 +58,7 @@ add_executable(AudioExplorer WIN32 src/main.cpp
                                    ${WIN_RESOURCE_FILE})
 target_link_libraries(AudioExplorer ${CMAKE_THREAD_LIBS_INIT} Qt::Widgets Qt::Svg ${TAGLIB_LIBRARY})
 target_include_directories(AudioExplorer PRIVATE ${TAGLIB_INCLUDE_DIR})
-set_property(TARGET AudioExplorer PROPERTY CXX_STANDARD 17)
+set_property(TARGET AudioExplorer PROPERTY CXX_STANDARD 20)
 set_property(TARGET AudioExplorer PROPERTY AUTOMOC ON)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND SANITIZE_ADDRESS)
@@ -164,7 +164,7 @@ add_executable(tests
                test/tools.h)
 target_link_libraries(tests GTest::gtest GTest::gtest_main ${CMAKE_THREAD_LIBS_INIT} Qt::Widgets ${TAGLIB_LIBRARY})
 target_include_directories(tests PRIVATE ${TAGLIB_INCLUDE_DIR})
-set_property(TARGET tests PROPERTY CXX_STANDARD 17)
+set_property(TARGET tests PROPERTY CXX_STANDARD 20)
 set_property(TARGET tests PROPERTY AUTOMOC ON)
 target_include_directories(tests PRIVATE "src")
 gtest_discover_tests(tests)

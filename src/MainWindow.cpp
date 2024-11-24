@@ -868,7 +868,7 @@ void MainWindow::onDisplayModeChanged(AudioLibraryView::DisplayMode display_mode
 
     if (modes.size() > 1)
     {
-        auto found = std::find_if(_selected_display_modes.begin(), _selected_display_modes.end(), [modes](const std::pair<std::vector<AudioLibraryView::DisplayMode>, AudioLibraryView::DisplayMode> & i) {
+        auto found = std::ranges::find_if(_selected_display_modes, [modes](const std::pair<std::vector<AudioLibraryView::DisplayMode>, AudioLibraryView::DisplayMode> & i) {
             return i.first == modes;
             });
 
@@ -975,7 +975,7 @@ void MainWindow::onTableHeaderContextMenu(const QPoint& pos)
         columns_and_names.emplace_back(column, name);
     }
 
-    std::sort(columns_and_names.begin(), columns_and_names.end(), [](const std::pair<AudioLibraryView::Column, QString>& a, const std::pair<AudioLibraryView::Column, QString>& b){
+    std::ranges::sort(columns_and_names, [](const std::pair<AudioLibraryView::Column, QString>& a, const std::pair<AudioLibraryView::Column, QString>& b){
         return a.second < b.second;
     });
 
@@ -1087,7 +1087,7 @@ void MainWindow::updateCurrentView()
 
     if (supported_modes.size() > 1)
     {
-        auto found_selected_display_mode = std::find_if(_selected_display_modes.begin(), _selected_display_modes.end(), [supported_modes](const std::pair<std::vector<AudioLibraryView::DisplayMode>, AudioLibraryView::DisplayMode>& i) {
+        auto found_selected_display_mode = std::ranges::find_if(_selected_display_modes, [supported_modes](const std::pair<std::vector<AudioLibraryView::DisplayMode>, AudioLibraryView::DisplayMode>& i) {
             return i.first == supported_modes;
         });
 
@@ -1116,7 +1116,7 @@ void MainWindow::updateCurrentView()
     {
         // hide actions for unsupported display modes
         // if there is only one mode, hide all actions
-        const bool is_supported = std::find(supported_modes.begin(), supported_modes.end(), action_and_mode.second) != supported_modes.end();
+        const bool is_supported = std::ranges::find(supported_modes, action_and_mode.second) != supported_modes.end();
         action_and_mode.first->setVisible(is_supported && have_display_mode_choice);
 
         // select current mode
@@ -1135,7 +1135,7 @@ void MainWindow::updateCurrentView()
 
     for (const auto& column : AudioLibraryView::columnToStringMapping())
     {
-        bool is_available = std::find(available_columns.begin(), available_columns.end(), column.first) != available_columns.end();
+        bool is_available = std::ranges::find(available_columns, column.first) != available_columns.end();
         bool is_hidden = _hidden_columns.find(column.first) != _hidden_columns.end();
 
         _table->setColumnHidden(column.first, !is_available || is_hidden);
@@ -1224,7 +1224,7 @@ void MainWindow::advanceIconSize(int direction)
     if (!scroll_to_index.isValid())
         scroll_to_index = _list->model()->index(0, 0);
 
-    auto found = std::find(_icon_size_steps.begin(), _icon_size_steps.end(), current_size);
+    auto found = std::ranges::find(_icon_size_steps, current_size);
 
     if (found != _icon_size_steps.end())
     {
@@ -1298,7 +1298,7 @@ void MainWindow::forEachFilepathAtIndex(const QModelIndex& index, std::function<
         if (view->getResolveToTracksIF())
             view->getResolveToTracksIF()->resolveToTracks(acc.getLibrary(), tracks);
 
-        std::sort(tracks.begin(), tracks.end(), [](const AudioLibraryTrack* a, const AudioLibraryTrack* b) {
+        std::ranges::sort(tracks, [](const AudioLibraryTrack* a, const AudioLibraryTrack* b) {
 
             auto tie = [](const AudioLibraryTrack* t) {
                 return std::make_tuple<const QString&, int, int, const QString&>(
@@ -1393,7 +1393,7 @@ void MainWindow::restoreBreadCrumb(QObject* object)
 
     // remove all breadcrumbs behind the given one
 
-    auto found = std::find_if(_breadcrumb_buttons.begin(), _breadcrumb_buttons.end(), [object](const std::unique_ptr<QObject, LateDeleter>& i){
+    auto found = std::ranges::find_if(_breadcrumb_buttons, [object](const std::unique_ptr<QObject, LateDeleter>& i){
         return i.get() == object;
     });
 
