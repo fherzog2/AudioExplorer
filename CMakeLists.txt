@@ -72,11 +72,10 @@ else(MSVC)
   target_compile_options(AudioExplorer PRIVATE -Wall -Wextra -pedantic -Werror)
 endif(MSVC)
 
-set_source_files_properties(res/view_menu.svg PROPERTIES QT_RESOURCE_ALIAS view_menu.svg)
-set_source_files_properties(${CMAKE_BINARY_DIR}/AudioExplorer_de.qm PROPERTIES QT_RESOURCE_ALIAS AudioExplorer_de.qm)
+set_source_files_properties(${CMAKE_BINARY_DIR}/AudioExplorer_de.qm PROPERTIES QT_RESOURCE_ALIAS res/AudioExplorer_de.qm)
 
 qt_add_resources(AudioExplorer "appresources"
-    PREFIX "res"
+    PREFIX "/"
     FILES res/view_menu.svg ${QM_FILES})
 
 if (WIN32)
