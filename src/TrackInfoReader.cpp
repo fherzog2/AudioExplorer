@@ -125,7 +125,7 @@ namespace{
                 if (!first_picture)
                     first_picture = p;
 
-                if (p->type() == TagLib::FLAC::Picture::FrontCover)
+                if (p && p->type() == TagLib::FLAC::Picture::FrontCover)
                 {
                     picture = p;
                     break;

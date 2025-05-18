@@ -2,6 +2,7 @@
 #include "AudioLibraryModel.h"
 
 #include <array>
+#include <ranges>
 #include <QtCore/qabstractitemmodel.h>
 #include <QtCore/qcollator.h>
 #include <QtCore/qtimer.h>
@@ -404,10 +405,8 @@ void AudioLibraryModelImpl::loadRequestedDecorations()
 
     auto start_time = std::chrono::steady_clock::now();
 
-    for (auto it = _requested_decorations.rbegin(), end = _requested_decorations.rend(); it != end; ++it)
+    for(const auto& decoration : std::ranges::reverse_view(_requested_decorations))
     {
-        const auto& decoration = *it;
-
         auto current_time = std::chrono::steady_clock::now();
 
         if (std::chrono::duration_cast<std::chrono::milliseconds>(current_time - start_time).count() > 50)
