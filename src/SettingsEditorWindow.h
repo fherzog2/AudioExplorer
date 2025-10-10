@@ -24,7 +24,7 @@ class FirstStartDialog : public QDialog
 public:
     FirstStartDialog(QWidget* parent, Settings& settings);
 
-    virtual void accept() override;
+    void accept() override;
 
 private:
     std::unique_ptr<AbstractSettingsWidget> _audio_dir_paths_widget;
@@ -39,10 +39,10 @@ class SettingsEditorDialog : public QDialog
 public:
     SettingsEditorDialog(QWidget* parent, Settings& settings);
 
-    virtual void accept() override;
+    void accept() override;
 
 protected:
-    virtual void closeEvent(QCloseEvent* e) override;
+    void closeEvent(QCloseEvent* e) override;
 
 private:
     Settings& _settings;

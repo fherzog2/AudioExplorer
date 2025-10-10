@@ -61,7 +61,7 @@ class AudioFilesLoader : public QObject
 
 public:
     AudioFilesLoader(ThreadSafeAudioLibrary& library);
-    ~AudioFilesLoader();
+    ~AudioFilesLoader() override;
 
     void startLoading(const QStringList& audio_dir_paths);
     bool isLoading() const;

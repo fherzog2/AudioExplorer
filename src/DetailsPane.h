@@ -21,7 +21,7 @@ public:
     QSize minimumSizeHint() const override;
 
 protected:
-    virtual void paintEvent(QPaintEvent* e) override;
+    void paintEvent(QPaintEvent* e) override;
 
 private:
     QGridLayout* _data_grid = nullptr;

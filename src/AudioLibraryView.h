@@ -88,13 +88,13 @@ class AudioLibraryViewAllArtists : public AudioLibraryView
 public:
     AudioLibraryViewAllArtists(QString filter);
 
-    virtual std::unique_ptr<AudioLibraryView> clone() const override;
-    virtual QString getDisplayName() const override;
-    virtual std::vector<DisplayMode> getSupportedModes() const override;
-    virtual void createItems(const AudioLibrary& library,
+    std::unique_ptr<AudioLibraryView> clone() const override;
+    QString getDisplayName() const override;
+    std::vector<DisplayMode> getSupportedModes() const override;
+    void createItems(const AudioLibrary& library,
         DisplayMode display_mode,
         AudioLibraryModel* model) const override;
-    virtual QString getId() const override;
+    QString getId() const override;
 
     static QString getBaseId();
 
@@ -107,13 +107,13 @@ class AudioLibraryViewAllAlbums : public AudioLibraryView
 public:
     AudioLibraryViewAllAlbums(QString filter);
 
-    virtual std::unique_ptr<AudioLibraryView> clone() const override;
-    virtual QString getDisplayName() const override;
-    virtual std::vector<DisplayMode> getSupportedModes() const override;
-    virtual void createItems(const AudioLibrary& library,
+    std::unique_ptr<AudioLibraryView> clone() const override;
+    QString getDisplayName() const override;
+    std::vector<DisplayMode> getSupportedModes() const override;
+    void createItems(const AudioLibrary& library,
         DisplayMode display_mode,
         AudioLibraryModel* model) const override;
-    virtual QString getId() const override;
+    QString getId() const override;
 
     static QString getBaseId();
 
@@ -126,13 +126,13 @@ class AudioLibraryViewAllTracks : public AudioLibraryView
 public:
     AudioLibraryViewAllTracks(QString filter);
 
-    virtual std::unique_ptr<AudioLibraryView> clone() const override;
-    virtual QString getDisplayName() const override;
-    virtual std::vector<DisplayMode> getSupportedModes() const override;
-    virtual void createItems(const AudioLibrary& library,
+    std::unique_ptr<AudioLibraryView> clone() const override;
+    QString getDisplayName() const override;
+    std::vector<DisplayMode> getSupportedModes() const override;
+    void createItems(const AudioLibrary& library,
         DisplayMode display_mode,
         AudioLibraryModel* model) const override;
-    virtual QString getId() const override;
+    QString getId() const override;
 
     static QString getBaseId();
 
@@ -143,13 +143,13 @@ private:
 class AudioLibraryViewAllYears : public AudioLibraryView
 {
 public:
-    virtual std::unique_ptr<AudioLibraryView> clone() const override;
-    virtual QString getDisplayName() const override;
-    virtual std::vector<DisplayMode> getSupportedModes() const override;
-    virtual void createItems(const AudioLibrary& library,
+    std::unique_ptr<AudioLibraryView> clone() const override;
+    QString getDisplayName() const override;
+    std::vector<DisplayMode> getSupportedModes() const override;
+    void createItems(const AudioLibrary& library,
         DisplayMode display_mode,
         AudioLibraryModel* model) const override;
-    virtual QString getId() const override;
+    QString getId() const override;
 
     static QString getBaseId();
 };
@@ -159,13 +159,13 @@ class AudioLibraryViewAllGenres : public AudioLibraryView
 public:
     AudioLibraryViewAllGenres(const QString& filter);
 
-    virtual std::unique_ptr<AudioLibraryView> clone() const override;
-    virtual QString getDisplayName() const override;
-    virtual std::vector<DisplayMode> getSupportedModes() const override;
-    virtual void createItems(const AudioLibrary& library,
+    std::unique_ptr<AudioLibraryView> clone() const override;
+    QString getDisplayName() const override;
+    std::vector<DisplayMode> getSupportedModes() const override;
+    void createItems(const AudioLibrary& library,
         DisplayMode display_mode,
         AudioLibraryModel* model) const override;
-    virtual QString getId() const override;
+    QString getId() const override;
 
     static QString getBaseId();
 
@@ -178,15 +178,15 @@ class AudioLibraryViewArtist : public AudioLibraryView, public ResolveToTracksIF
 public:
     AudioLibraryViewArtist(const QString& artist);
 
-    virtual std::unique_ptr<AudioLibraryView> clone() const override;
-    virtual QString getDisplayName() const override;
-    virtual std::vector<DisplayMode> getSupportedModes() const override;
-    virtual void createItems(const AudioLibrary& library,
+    std::unique_ptr<AudioLibraryView> clone() const override;
+    QString getDisplayName() const override;
+    std::vector<DisplayMode> getSupportedModes() const override;
+    void createItems(const AudioLibrary& library,
         DisplayMode display_mode,
         AudioLibraryModel* model) const override;
-    virtual void resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const override;
-    virtual const ResolveToTracksIF* getResolveToTracksIF() const override;
-    virtual QString getId() const override;
+    void resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const override;
+    const ResolveToTracksIF* getResolveToTracksIF() const override;
+    QString getId() const override;
 
 private:
     QString _artist;
@@ -197,15 +197,15 @@ class AudioLibraryViewAlbum : public AudioLibraryView, public ResolveToTracksIF
 public:
     AudioLibraryViewAlbum(const AudioLibraryAlbumKey& key);
 
-    virtual std::unique_ptr<AudioLibraryView> clone() const override;
-    virtual QString getDisplayName() const override;
-    virtual std::vector<DisplayMode> getSupportedModes() const override;
-    virtual void createItems(const AudioLibrary& library,
+    std::unique_ptr<AudioLibraryView> clone() const override;
+    QString getDisplayName() const override;
+    std::vector<DisplayMode> getSupportedModes() const override;
+    void createItems(const AudioLibrary& library,
         DisplayMode display_mode,
         AudioLibraryModel* model) const override;
-    virtual void resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const override;
-    virtual const ResolveToTracksIF* getResolveToTracksIF() const override;
-    virtual QString getId() const override;
+    void resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const override;
+    const ResolveToTracksIF* getResolveToTracksIF() const override;
+    QString getId() const override;
 
 private:
     AudioLibraryAlbumKey _key;
@@ -216,15 +216,15 @@ class AudioLibraryViewYear : public AudioLibraryView, public ResolveToTracksIF
 public:
     AudioLibraryViewYear(int year);
 
-    virtual std::unique_ptr<AudioLibraryView> clone() const override;
-    virtual QString getDisplayName() const override;
-    virtual std::vector<DisplayMode> getSupportedModes() const override;
-    virtual void createItems(const AudioLibrary& library,
+    std::unique_ptr<AudioLibraryView> clone() const override;
+    QString getDisplayName() const override;
+    std::vector<DisplayMode> getSupportedModes() const override;
+    void createItems(const AudioLibrary& library,
         DisplayMode display_mode,
         AudioLibraryModel* model) const override;
-    virtual void resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const override;
-    virtual const ResolveToTracksIF* getResolveToTracksIF() const override;
-    virtual QString getId() const override;
+    void resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const override;
+    const ResolveToTracksIF* getResolveToTracksIF() const override;
+    QString getId() const override;
 
 private:
     int _year;
@@ -235,15 +235,15 @@ class AudioLibraryViewGenre : public AudioLibraryView, public ResolveToTracksIF
 public:
     AudioLibraryViewGenre(const QString& genre);
 
-    virtual std::unique_ptr<AudioLibraryView> clone() const override;
-    virtual QString getDisplayName() const override;
-    virtual std::vector<DisplayMode> getSupportedModes() const override;
-    virtual void createItems(const AudioLibrary& library,
+    std::unique_ptr<AudioLibraryView> clone() const override;
+    QString getDisplayName() const override;
+    std::vector<DisplayMode> getSupportedModes() const override;
+    void createItems(const AudioLibrary& library,
         DisplayMode display_mode,
         AudioLibraryModel* model) const override;
-    virtual void resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const override;
-    virtual const ResolveToTracksIF* getResolveToTracksIF() const override;
-    virtual QString getId() const override;
+    void resolveToTracks(const AudioLibrary& library, std::vector<const AudioLibraryTrack*>& tracks) const override;
+    const ResolveToTracksIF* getResolveToTracksIF() const override;
+    QString getId() const override;
 
 private:
     QString _genre;
@@ -252,11 +252,11 @@ private:
 class AudioLibraryViewDuplicateAlbums : public AudioLibraryView
 {
 public:
-    virtual std::unique_ptr<AudioLibraryView> clone() const override;
-    virtual QString getDisplayName() const override;
-    virtual std::vector<DisplayMode> getSupportedModes() const override;
-    virtual void createItems(const AudioLibrary& library,
+    std::unique_ptr<AudioLibraryView> clone() const override;
+    QString getDisplayName() const override;
+    std::vector<DisplayMode> getSupportedModes() const override;
+    void createItems(const AudioLibrary& library,
         DisplayMode display_mode,
         AudioLibraryModel* model) const override;
-    virtual QString getId() const override;
+    QString getId() const override;
 };

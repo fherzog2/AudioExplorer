@@ -105,14 +105,14 @@ class MainWindow : public QFrame
 public:
     MainWindow(Settings& settings, ThreadSafeAudioLibrary& library, AudioFilesLoader& audio_files_loader);
 
-    virtual bool eventFilter(QObject* watched, QEvent* event) override;
+    bool eventFilter(QObject* watched, QEvent* event) override;
     void setBreadCrumb(std::unique_ptr<AudioLibraryView> view);
 
 Q_SIGNALS:
     void checkLanguageChanged();
 
 protected:
-    virtual void closeEvent(QCloseEvent* e) override;
+    void closeEvent(QCloseEvent* e) override;
 
 private:
     void onEditPreferences();

@@ -11,14 +11,14 @@ public:
     ImageView(QWidget* parent);
 
     void setPixmap(const QPixmap& pixmap);
-    virtual QSize sizeHint() const override;
+    QSize sizeHint() const override;
 
 protected:
-    virtual void paintEvent(QPaintEvent* event) override;
-    virtual void mouseMoveEvent(QMouseEvent* event) override;
-    virtual void mousePressEvent(QMouseEvent* event) override;
-    virtual void mouseReleaseEvent(QMouseEvent* event) override;
-    virtual void wheelEvent(QWheelEvent* e) override;
+    void paintEvent(QPaintEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void mousePressEvent(QMouseEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
+    void wheelEvent(QWheelEvent* e) override;
 
 private:
     void setOffset(const QPointF& offset);
@@ -50,7 +50,7 @@ public:
     void setPixmap(const QPixmap& pixmap);
 
 protected:
-    virtual void closeEvent(QCloseEvent* event) override;
+    void closeEvent(QCloseEvent* event) override;
 
 private:
     ImageView* _scroll_area = nullptr;
