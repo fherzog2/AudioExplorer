@@ -504,7 +504,7 @@ MainWindow::MainWindow(Settings& settings, ThreadSafeAudioLibrary& library, Audi
             onDisplayModeChanged(display_mode);
         });
 
-        _display_mode_actions.push_back(std::make_pair(action, display_mode));
+        _display_mode_actions.emplace_back(action, display_mode);
         display_mode_group->addAction(action);
         _toolbar->addAction(action);
     }
@@ -1256,7 +1256,7 @@ void MainWindow::addViewTypeAction(QWidget* view, const QString& friendly_name, 
         onViewTypeSelected(view);
     });
 
-    _view_type_actions.push_back(std::make_pair(action, internal_name));
+    _view_type_actions.emplace_back(action, internal_name);
 }
 
 void MainWindow::getFilepathsFromIndex(const QModelIndex& index, std::vector<QString>& filepaths)

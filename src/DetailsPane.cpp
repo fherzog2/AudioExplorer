@@ -227,7 +227,7 @@ void DetailsPane::setSelection(const QAbstractItemModel* model, const QModelInde
 
         while (_data_labels.size() < columns.size())
         {
-            _data_labels.push_back(std::make_pair(new QLabel(this), new ElidedLabel(QString(), this)));
+            _data_labels.emplace_back(new QLabel(this), new ElidedLabel(QString(), this));
             const int next_row = _data_grid->rowCount();
             _data_grid->addWidget(_data_labels.back().first, next_row, 0);
             _data_grid->addWidget(_data_labels.back().second, next_row, 1);

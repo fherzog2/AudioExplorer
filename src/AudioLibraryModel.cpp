@@ -160,7 +160,7 @@ void AudioLibraryModelImpl::setDecoration(int row, const AudioLibraryAlbum* albu
             auto decoration = std::make_shared<Decoration>();
             decoration->bytes = album->getCover();
             decoration->variant = _default_icon;
-            it = _decorations_for_album_ids.emplace(std::make_pair(album->getUuid(), decoration)).first;
+            it = _decorations_for_album_ids.emplace(album->getUuid(), decoration).first;
         }
 
         row_data->decoration = it->second;
