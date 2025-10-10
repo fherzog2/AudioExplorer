@@ -78,12 +78,7 @@ void ImageView::wheelEvent(QWheelEvent* event)
 {
     // remember image point under the mouse
 
-    const QPointF viewport_mouse_pos =
-#if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
-        event->position();
-#else
-        event->posF();
-#endif
+    const QPointF viewport_mouse_pos = event->position();
     QPointF image_mouse_pos = viewportPointToImagePoint(viewport_mouse_pos);
 
     image_mouse_pos.rx() = qBound(0.0, image_mouse_pos.rx(), double(_pixmap.width()));
