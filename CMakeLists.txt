@@ -248,4 +248,15 @@ if (WIN32)
         NO_UNSUPPORTED_PLATFORM_ERROR
     )
     install(SCRIPT ${deploy_script})
+else()
+    # "install" by creating an AppImage
+
+    set(APP_DIR_DESTINATION_START "AppDir/usr")
+
+    install(TARGETS AudioExplorer DESTINATION ${APP_DIR_DESTINATION_START}/bin)
+
+    install(FILES ${CMAKE_SOURCE_DIR}/res/AudioExplorer.desktop DESTINATION ${APP_DIR_DESTINATION_START}/share/applications)
+    install(FILES ${CMAKE_SOURCE_DIR}/res/appicon.svg           DESTINATION ${APP_DIR_DESTINATION_START}/share/icons/hicolor/scalable/apps)
+
+    install(CODE "execute_process(COMMAND \"${CMAKE_SOURCE_DIR}/deploy_as_appimage.sh\" WORKING_DIRECTORY \"${CMAKE_INSTALL_PREFIX}\")")
 endif()
