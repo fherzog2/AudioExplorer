@@ -362,6 +362,7 @@ std::vector<QUuid> AudioLibraryModelImpl::getAllIds() const
 {
     std::vector<QUuid> ids;
 
+    ids.reserve(_id_to_row_map.size());
     for (const auto& i : _id_to_row_map)
     {
         ids.push_back(i.first);
