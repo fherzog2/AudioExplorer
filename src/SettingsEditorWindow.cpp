@@ -197,7 +197,7 @@ void SettingsWidgetDirPaths::addPath(const QString& path) const
 void SettingsWidgetDirPaths::deleteSelectedRows() const
 {
     // highest rows first for safe deletion
-    std::set<int, std::greater<int>> rows;
+    std::set<int, std::greater<>> rows;
 
     for (const QModelIndex& selected : _list->selectionModel()->selectedIndexes())
         rows.insert(selected.row());

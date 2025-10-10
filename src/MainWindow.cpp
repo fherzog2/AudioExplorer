@@ -1346,7 +1346,7 @@ void MainWindow::updateAfterHistoryChange()
 
     std::shared_ptr<ViewRestoreData> restore_data;
     if (current_history_items.back()->restore_data)
-        restore_data.reset(new ViewRestoreData(*current_history_items.back()->restore_data));
+        restore_data = std::make_shared<ViewRestoreData>(*current_history_items.back()->restore_data);
 
     updateCurrentView();
 
