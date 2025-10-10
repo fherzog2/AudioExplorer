@@ -121,7 +121,7 @@ SettingsWidgetDirPaths::SettingsWidgetDirPaths(QWidget* parent, SettingsItem<QSt
 {
     _container = new QFrame(parent);
 
-    QPushButton* add_button = new QPushButton(QObject::tr("Add audio directory..."), _container);
+    auto* add_button = new QPushButton(QObject::tr("Add audio directory..."), _container);
     QObject::connect(add_button, &QPushButton::clicked, [this](){
         QString path = QFileDialog::getExistingDirectory();
         if (!path.isEmpty())
@@ -159,7 +159,7 @@ SettingsWidgetDirPaths::SettingsWidgetDirPaths(QWidget* parent, SettingsItem<QSt
         deleteSelectedRows();
     });
 
-    QVBoxLayout* vbox = new QVBoxLayout(_container);
+    auto* vbox = new QVBoxLayout(_container);
     vbox->addWidget(add_button);
     vbox->addWidget(_list);
 }

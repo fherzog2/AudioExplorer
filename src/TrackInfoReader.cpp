@@ -340,7 +340,7 @@ bool readTrackInfo(const QString& filepath, TrackInfo& info)
             info.bitrate_kbs         = file_ref.audioProperties()->bitrate();
             info.samplerate_hz       = file_ref.audioProperties()->sampleRate();
 
-            if (TagLib::MPEG::File* file = dynamic_cast<TagLib::MPEG::File*>(file_ref.file()))
+            if (auto* file = dynamic_cast<TagLib::MPEG::File*>(file_ref.file()))
             {
                 if (file->hasID3v1Tag())
                     readID3v1Info(info);
@@ -349,47 +349,47 @@ bool readTrackInfo(const QString& filepath, TrackInfo& info)
                 if (file->hasAPETag())
                     readAPEInfo(file->APETag(), info);
             }
-            if (TagLib::Ogg::Vorbis::File* file = dynamic_cast<TagLib::Ogg::Vorbis::File*>(file_ref.file()))
+            if (auto* file = dynamic_cast<TagLib::Ogg::Vorbis::File*>(file_ref.file()))
             {
                 readXiphCommentInfo(file->tag(), info);
             }
-            if (TagLib::Ogg::Opus::File* file = dynamic_cast<TagLib::Ogg::Opus::File*>(file_ref.file()))
+            if (auto* file = dynamic_cast<TagLib::Ogg::Opus::File*>(file_ref.file()))
             {
                 readXiphCommentInfo(file->tag(), info);
             }
-            if (TagLib::Ogg::FLAC::File* file = dynamic_cast<TagLib::Ogg::FLAC::File*>(file_ref.file()))
+            if (auto* file = dynamic_cast<TagLib::Ogg::FLAC::File*>(file_ref.file()))
             {
                 readXiphCommentInfo(file->tag(), info);
             }
-            if (TagLib::Ogg::Speex::File* file = dynamic_cast<TagLib::Ogg::Speex::File*>(file_ref.file()))
+            if (auto* file = dynamic_cast<TagLib::Ogg::Speex::File*>(file_ref.file()))
             {
                 readXiphCommentInfo(file->tag(), info);
             }
-            if (TagLib::RIFF::WAV::File* file = dynamic_cast<TagLib::RIFF::WAV::File*>(file_ref.file()))
+            if (auto* file = dynamic_cast<TagLib::RIFF::WAV::File*>(file_ref.file()))
             {
                 if (file->hasID3v2Tag())
                     readID3v2Info(file->ID3v2Tag(), info);
                 if (file->hasInfoTag())
                     readInfoInfo(info);
             }
-            if (TagLib::RIFF::AIFF::File* file = dynamic_cast<TagLib::RIFF::AIFF::File*>(file_ref.file()))
+            if (auto* file = dynamic_cast<TagLib::RIFF::AIFF::File*>(file_ref.file()))
             {
                 if (file->hasID3v2Tag())
                     readID3v2Info(file->tag(), info);
             }
-            if (TagLib::MPC::File* file = dynamic_cast<TagLib::MPC::File*>(file_ref.file()))
+            if (auto* file = dynamic_cast<TagLib::MPC::File*>(file_ref.file()))
             {
                 if (file->hasID3v1Tag())
                     readID3v1Info(info);
                 if (file->hasAPETag())
                     readAPEInfo(file->APETag(), info);
             }
-            if (TagLib::MP4::File* file = dynamic_cast<TagLib::MP4::File*>(file_ref.file()))
+            if (auto* file = dynamic_cast<TagLib::MP4::File*>(file_ref.file()))
             {
                 if (file->hasMP4Tag())
                     readMP4Info(file->tag(), info);
             }
-            if (TagLib::FLAC::File* file = dynamic_cast<TagLib::FLAC::File*>(file_ref.file()))
+            if (auto* file = dynamic_cast<TagLib::FLAC::File*>(file_ref.file()))
             {
                 if (file->hasID3v1Tag())
                     readID3v1Info(info);
@@ -398,11 +398,11 @@ bool readTrackInfo(const QString& filepath, TrackInfo& info)
                 if (file->hasXiphComment())
                     readXiphCommentInfo(file->xiphComment(), info);
             }
-            if (TagLib::ASF::File* file = dynamic_cast<TagLib::ASF::File*>(file_ref.file()))
+            if (auto* file = dynamic_cast<TagLib::ASF::File*>(file_ref.file()))
             {
                 readASFInfo(file->tag(), info);
             }
-            if (TagLib::APE::File* file = dynamic_cast<TagLib::APE::File*>(file_ref.file()))
+            if (auto* file = dynamic_cast<TagLib::APE::File*>(file_ref.file()))
             {
                 if (file->hasID3v1Tag())
                     readID3v1Info(info);
@@ -425,14 +425,14 @@ bool readTrackInfo(const QString& filepath, TrackInfo& info)
             {
                 readModInfo(info);
             }
-            if (TagLib::TrueAudio::File* file = dynamic_cast<TagLib::TrueAudio::File*>(file_ref.file()))
+            if (auto* file = dynamic_cast<TagLib::TrueAudio::File*>(file_ref.file()))
             {
                 if (file->hasID3v1Tag())
                     readID3v1Info(info);
                 if (file->hasID3v2Tag())
                     readID3v2Info(file->ID3v2Tag(), info);
             }
-            if (TagLib::WavPack::File* file = dynamic_cast<TagLib::WavPack::File*>(file_ref.file()))
+            if (auto* file = dynamic_cast<TagLib::WavPack::File*>(file_ref.file()))
             {
                 if (file->hasID3v1Tag())
                     readID3v1Info(info);

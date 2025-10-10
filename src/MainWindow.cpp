@@ -34,7 +34,7 @@ namespace
     template<class RECEIVER, class FUNC>
     QAction* addMenuAction(QMenu& menu, const QString& text, RECEIVER rec, FUNC func, const QKeySequence& shortcut = 0)
     {
-        QAction* action = new QAction(&menu);
+        auto* action = new QAction(&menu);
         action->setText(text);
         action->setShortcut(shortcut);
         QObject::connect(action, &QAction::triggered, rec, func);
@@ -136,7 +136,7 @@ namespace
         // reserve a square area for the decoration icon
         // otherwise the layout may be uneven, depending on the icons
 
-        if (const QListView* list = qobject_cast<const QListView*>(option->widget))
+        if (const auto* list = qobject_cast<const QListView*>(option->widget))
         {
             option->decorationSize = list->iconSize();
         }
@@ -425,7 +425,7 @@ MainWindow::MainWindow(Settings& settings, ThreadSafeAudioLibrary& library, Audi
 
     auto toolarea = new QWidget(this);
 
-    QToolButton* view_selector_popup_button = new QToolButton(toolarea);
+    auto* view_selector_popup_button = new QToolButton(toolarea);
     view_selector_popup_button->setToolTip(tr("Select view"));
 
     view_selector_popup_button->setIcon(QIcon(":/res/view_menu.svg"));
@@ -543,17 +543,17 @@ MainWindow::MainWindow(Settings& settings, ThreadSafeAudioLibrary& library, Audi
 
     // breadcrumbs
 
-    QHBoxLayout* breadcrumb_layout_wrapper = new QHBoxLayout();
+    auto* breadcrumb_layout_wrapper = new QHBoxLayout();
     _breadcrumb_layout = new QHBoxLayout();
     breadcrumb_layout_wrapper->addWidget(view_selector_popup_button);
     breadcrumb_layout_wrapper->addLayout(_breadcrumb_layout);
     breadcrumb_layout_wrapper->addStretch();
     breadcrumb_layout_wrapper->addWidget(_toolbar);
 
-    QVBoxLayout* tool_vbox = new QVBoxLayout(toolarea);
+    auto* tool_vbox = new QVBoxLayout(toolarea);
     tool_vbox->addLayout(breadcrumb_layout_wrapper);
 
-    QVBoxLayout* vbox = new QVBoxLayout(this);
+    auto* vbox = new QVBoxLayout(this);
     vbox->setContentsMargins(0, 0, 0, 0);
     vbox->setSpacing(0);
     vbox->setMenuBar(menubar);
@@ -603,7 +603,7 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event)
 {
     if (watched == _list->viewport() && event->type() == QEvent::Wheel)
     {
-        QWheelEvent* we = static_cast<QWheelEvent*>(event);
+        auto* we = static_cast<QWheelEvent*>(event);
         if (we->modifiers().testFlag(Qt::ControlModifier))
         {
             advanceIconSize(we->angleDelta().y() > 0 ? 1 : -1);
@@ -625,7 +625,7 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event)
         {
         case QEvent::MouseButtonPress:
         {
-            QMouseEvent* me = static_cast<QMouseEvent*>(event);
+            auto* me = static_cast<QMouseEvent*>(event);
             QModelIndex mouse_index = view->indexAt(me->pos());
             if (mouse_index.isValid())
             {
@@ -663,7 +663,7 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event)
         case QEvent::MouseMove:
             if (_is_dragging)
             {
-                QMouseEvent* me = static_cast<QMouseEvent*>(event);
+                auto* me = static_cast<QMouseEvent*>(event);
                 if ((me->pos() - _drag_start_pos).manhattanLength() >= QApplication::startDragDistance())
                 {
                     QList<QUrl> urls;
@@ -674,7 +674,7 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event)
                         });
                     }
 
-                    QMimeData* mime_data = new QMimeData();
+                    auto* mime_data = new QMimeData();
                     mime_data->setUrls(urls);
 
                     QDrag drag(this);
@@ -735,14 +735,14 @@ void MainWindow::onShowFindWidget()
         _find_widget_line_edit->setClearButtonEnabled(true);
         connect(_find_widget_line_edit, &QLineEdit::returnPressed, this, &MainWindow::onFindNext);
 
-        QPushButton* search_button = new QPushButton(_find_widget);
+        auto* search_button = new QPushButton(_find_widget);
         search_button->setText(tr("Find Next"));
         connect(search_button, &QPushButton::clicked, this, &MainWindow::onFindNext);
 
-        QShortcut* shortcut_escape = new QShortcut(Qt::Key_Escape, _find_widget);
+        auto* shortcut_escape = new QShortcut(Qt::Key_Escape, _find_widget);
         connect(shortcut_escape, &QShortcut::activated, _find_widget, &QWidget::close);
 
-        QHBoxLayout* box = new QHBoxLayout(_find_widget);
+        auto* box = new QHBoxLayout(_find_widget);
         box->addWidget(_find_widget_line_edit);
         box->addWidget(search_button);
     }
@@ -755,7 +755,7 @@ void MainWindow::onShowFindWidget()
 
 void MainWindow::onFindNext()
 {
-    if (QAbstractItemView* view = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget()))
+    if (auto* view = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget()))
     {
         int start_row = 0;
 
@@ -887,11 +887,11 @@ void MainWindow::onDisplayModeChanged(AudioLibraryView::DisplayMode display_mode
 
 void MainWindow::onViewTypeSelected(QWidget* view)
 {
-    QAbstractItemView* previous_view = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget());
+    auto* previous_view = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget());
 
     _view_stack->setCurrentWidget(view);
 
-    QAbstractItemView* current_view = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget());
+    auto* current_view = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget());
 
     if (previous_view && current_view && previous_view != current_view)
     {
@@ -1024,7 +1024,7 @@ void MainWindow::onModelCurrentChanged(const QModelIndex& current, const QModelI
 
 void MainWindow::onModelDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& /*roles*/)
 {
-    QAbstractItemView* current_view = static_cast<QAbstractItemView*>(_view_stack->currentWidget());
+    auto* current_view = static_cast<QAbstractItemView*>(_view_stack->currentWidget());
 
     const QModelIndex current_index = current_view->selectionModel()->currentIndex();
     if (topLeft.row() <= current_index.row() && bottomRight.row() >= current_index.row())
@@ -1045,7 +1045,7 @@ void MainWindow::scanAudioDirs()
 
 void MainWindow::selectRandomItem()
 {
-    if (QAbstractItemView* view = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget()))
+    if (auto* view = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget()))
     {
         const int row_count = view->model()->rowCount();
         if (row_count < 1)
@@ -1153,7 +1153,7 @@ void MainWindow::updateCurrentView()
     }
     else
     {
-        AudioLibraryModel* model = new AudioLibraryModel(this, _group_uuids);
+        auto* model = new AudioLibraryModel(this, _group_uuids);
 
         QStringList model_headers;
         for (const auto& column : AudioLibraryView::columnToStringMapping())
@@ -1337,7 +1337,7 @@ void MainWindow::updateAfterHistoryChange()
 
     for (const History::Item* item : current_history_items)
     {
-        QPushButton* button = new QPushButton(item->view->getDisplayName(), this);
+        auto* button = new QPushButton(item->view->getDisplayName(), this);
         connect(button, &QPushButton::clicked, this, &MainWindow::onBreadCrumbClicked);
         _breadcrumb_buttons.push_back(std::unique_ptr<QObject, LateDeleter>(button));
 
@@ -1526,7 +1526,7 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
 
             if(icon_variant.isValid())
             {
-                QIcon icon = icon_variant.value<QIcon>();
+                auto icon = icon_variant.value<QIcon>();
 
                 if (!_model->isDefaultIcon(icon) &&
                     !icon.availableSizes().empty())
@@ -1536,7 +1536,7 @@ void MainWindow::contextMenuEventForView(QAbstractItemView* view, QContextMenuEv
                     QAction* action = menu.addAction(tr("View coverart"));
 
                     auto slot = [this, pixmap]() {
-                        ImageViewWindow* image_view = new ImageViewWindow(_settings);
+                        auto* image_view = new ImageViewWindow(_settings);
                         image_view->setPixmap(pixmap);
                         image_view->show();
                     };
@@ -1595,7 +1595,7 @@ void MainWindow::setCurrentSelectedIndex(const QModelIndex& index)
     const QModelIndex end = index.sibling(index.row(), _model->getModel()->columnCount() - 1);
     selection.push_back(QItemSelectionRange(index, end));
 
-    if (QAbstractItemView* view = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget()))
+    if (auto* view = qobject_cast<QAbstractItemView*>(_view_stack->currentWidget()))
     {
         view->selectionModel()->select(selection, QItemSelectionModel::ClearAndSelect);
         view->setCurrentIndex(index);

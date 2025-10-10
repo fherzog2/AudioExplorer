@@ -175,9 +175,9 @@ DetailsPane::DetailsPane(QWidget* parent)
 {
     _picture_box = new PictureBox(this);
 
-    QWidget* data_grid_widget = new QWidget();
+    auto* data_grid_widget = new QWidget();
 
-    QScrollArea* data_grid_scroll_area = new QScrollArea(this);
+    auto* data_grid_scroll_area = new QScrollArea(this);
     data_grid_scroll_area->setWidget(data_grid_widget);
     data_grid_scroll_area->setFrameShape(QFrame::NoFrame);
     data_grid_scroll_area->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -186,11 +186,11 @@ DetailsPane::DetailsPane(QWidget* parent)
     _data_grid = new QGridLayout();
     _data_grid->setColumnStretch(1, 1);
 
-    QVBoxLayout* data_grid_padding_layout = new QVBoxLayout(data_grid_widget);
+    auto* data_grid_padding_layout = new QVBoxLayout(data_grid_widget);
     data_grid_padding_layout->addLayout(_data_grid);
     data_grid_padding_layout->addStretch(1);
 
-    QVBoxLayout* vbox = new QVBoxLayout(this);
+    auto* vbox = new QVBoxLayout(this);
     vbox->setContentsMargins(0, 0, 0, 0);
     vbox->addWidget(_picture_box);
     vbox->addWidget(data_grid_scroll_area, 1);
