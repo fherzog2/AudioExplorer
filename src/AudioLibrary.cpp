@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 #include "AudioLibrary.h"
 #include <cassert>
+#include <ranges>
 
 QDataStream& operator<<(QDataStream& s, const AudioLibraryAlbumKey& key)
 {
@@ -268,13 +269,8 @@ void AudioLibrary::removeTracksWithInvalidPaths()
 
 std::vector<const AudioLibraryAlbum*> AudioLibrary::getAlbums() const
 {
-    std::vector<const AudioLibraryAlbum*> result;
-
-    result.reserve(_album_map.size());
-    for (const auto& album : _album_map)
-        result.push_back(album.second.get());
-
-    return result;
+    const auto albums = _album_map | std::views::transform([](const auto& key_and_album) { return key_and_album.second.get(); });
+    return { albums.begin(), albums.end() };
 }
 
 const AudioLibraryAlbum* AudioLibrary::getAlbum(const AudioLibraryAlbumKey& key) const
