@@ -5,6 +5,7 @@
 #include <QtWidgets/qscrollarea.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qpainter.h>
+#include <ranges>
 
 /**
 * Shows an icon in a square area. The icon is expected to contain a pixmap.
@@ -235,18 +236,15 @@ void DetailsPane::setSelection(const QAbstractItemModel* model, const QModelInde
 
         // update and show labels
 
-        auto label_it = _data_labels.begin();
-        for (AudioLibraryView::Column view_column : columns)
+        for (const auto& [view_column, data_label] : std::views::zip(columns, _data_labels))
         {
-            int logical_index = static_cast<int>(view_column);
+            const int logical_index = static_cast<int>(view_column);
 
-            label_it->first->setText(model->headerData(logical_index, Qt::Horizontal, Qt::DisplayRole).toString());
-            label_it->second->setText(model->data(model->index(view_row, logical_index), Qt::DisplayRole).toString());
+            data_label.first->setText(model->headerData(logical_index, Qt::Horizontal, Qt::DisplayRole).toString());
+            data_label.second->setText(model->data(model->index(view_row, logical_index), Qt::DisplayRole).toString());
 
-            label_it->first->show();
-            label_it->second->show();
-
-            ++label_it;
+            data_label.first->show();
+            data_label.second->show();
         }
     }
 
