@@ -5,30 +5,6 @@
 #include <QtCore/qsavefile.h>
 
 namespace {
-    template<class T, class V>
-    class SetValueOnDestroy
-    {
-    public:
-        SetValueOnDestroy(T& variable, V value)
-            : _variable(variable)
-            , _value(value)
-        {}
-
-        ~SetValueOnDestroy()
-        {
-            _variable = _value;
-        }
-
-        SetValueOnDestroy(const SetValueOnDestroy& other) = delete;
-        SetValueOnDestroy& operator=(const SetValueOnDestroy& other) = delete;
-        SetValueOnDestroy(SetValueOnDestroy&& other) = delete;
-        SetValueOnDestroy& operator=(SetValueOnDestroy&& other) = delete;
-
-    private:
-        T& _variable;
-        V _value;
-    };
-
     template<class FUNC>
     void forEachFileInDirectory(const QString& dirpath, FUNC func)
     {
@@ -209,7 +185,8 @@ void AudioFilesLoader::loadFromCache(const QString& cache_location)
 
 void AudioFilesLoader::threadLoadAudioFiles(const QString& cache_location, const QStringList& audio_dir_paths)
 {
-    SetValueOnDestroy<std::atomic_bool, bool> reset_loading_flag(_is_loading, false);
+    _is_loading = true;
+    auto guard = qScopeGuard([this]() { _is_loading = false; });
 
     int files_loaded = 0;
     int files_in_cache = 0;
