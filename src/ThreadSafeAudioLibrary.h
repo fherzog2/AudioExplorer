@@ -74,13 +74,11 @@ signals:
 private:
     void stopLoading();
     void loadFromCache(const QString& cache_location);
-    void threadLoadAudioFiles(const QString& cache_location, const QStringList& audio_dir_paths);
+    void threadLoadAudioFiles(std::stop_token stop_token, const QString& cache_location, const QStringList& audio_dir_paths);
 
     ThreadSafeAudioLibrary& _library;
 
-    std::thread _audio_file_loading_thread;
-
-    std::atomic_bool _thread_abort_flag = ATOMIC_VAR_INIT(false);
+    std::jthread _audio_file_loading_thread;
 
     std::atomic_bool _is_loading = ATOMIC_VAR_INIT(false);
 };

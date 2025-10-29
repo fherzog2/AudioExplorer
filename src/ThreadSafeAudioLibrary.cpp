@@ -114,10 +114,7 @@ AudioFilesLoader::AudioFilesLoader(ThreadSafeAudioLibrary& library)
 {
 }
 
-AudioFilesLoader::~AudioFilesLoader()
-{
-    stopLoading();
-}
+AudioFilesLoader::~AudioFilesLoader() = default;
 
 void AudioFilesLoader::startLoading(const QStringList& audio_dir_paths)
 {
@@ -129,11 +126,10 @@ void AudioFilesLoader::startLoading(const QStringList& audio_dir_paths)
 
     // start
 
-    _thread_abort_flag = false;
     _is_loading = true;
 
-    _audio_file_loading_thread = std::thread([this, cache_location, audio_dir_paths](){
-        threadLoadAudioFiles(cache_location, audio_dir_paths);
+    _audio_file_loading_thread = std::jthread([this, cache_location, audio_dir_paths](std::stop_token stop_token){
+        threadLoadAudioFiles(stop_token, cache_location, audio_dir_paths);
     });
 }
 
@@ -144,10 +140,7 @@ bool AudioFilesLoader::isLoading() const
 
 void AudioFilesLoader::stopLoading()
 {
-    _thread_abort_flag = true;
-
-    if (_audio_file_loading_thread.joinable())
-        _audio_file_loading_thread.join();
+    _audio_file_loading_thread = {};
 }
 
 void AudioFilesLoader::loadFromCache(const QString& cache_location)
@@ -183,7 +176,7 @@ void AudioFilesLoader::loadFromCache(const QString& cache_location)
     }
 }
 
-void AudioFilesLoader::threadLoadAudioFiles(const QString& cache_location, const QStringList& audio_dir_paths)
+void AudioFilesLoader::threadLoadAudioFiles(std::stop_token stop_token, const QString& cache_location, const QStringList& audio_dir_paths)
 {
     _is_loading = true;
     auto guard = qScopeGuard([this]() { _is_loading = false; });
@@ -203,8 +196,8 @@ void AudioFilesLoader::threadLoadAudioFiles(const QString& cache_location, const
 
     for (const QString& dirpath : audio_dir_paths)
     {
-        forEachFileInDirectory(dirpath, [this, &files_loaded, &files_in_cache, &visited_audio_files](const QFileInfo& file) {
-            if (_thread_abort_flag)
+        forEachFileInDirectory(dirpath, [this, stop_token, &files_loaded, &files_in_cache, &visited_audio_files](const QFileInfo& file) {
+            if (stop_token.stop_requested())
                 return false; // stop iteration
 
             const QString filepath = file.filePath();
@@ -240,7 +233,7 @@ void AudioFilesLoader::threadLoadAudioFiles(const QString& cache_location, const
             });
     }
 
-    if (!_thread_abort_flag)
+    if (!stop_token.stop_requested())
     {
         ThreadSafeAudioLibrary::LibraryAccessor acc(_library);
 
