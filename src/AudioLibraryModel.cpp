@@ -99,7 +99,7 @@ AudioLibraryModelImpl::AudioLibraryModelImpl(QObject* parent)
     connect(load_requested_decorations_timer, &QTimer::timeout,
         this, &AudioLibraryModelImpl::loadRequestedDecorations);
     load_requested_decorations_timer->setSingleShot(false);
-    load_requested_decorations_timer->start(100);
+    load_requested_decorations_timer->start(std::chrono::milliseconds(100));
 }
 
 int AudioLibraryModelImpl::rowCount(const QModelIndex& /*parent*/) const

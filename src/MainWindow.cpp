@@ -1354,9 +1354,9 @@ void MainWindow::updateAfterHistoryChange()
     {
         // restore uses a timer because the list view is updating asynchronously
 
-        QTimer::singleShot(1, this, [this, restore_data]() {
+        QTimer::singleShot(std::chrono::milliseconds(1), this, [this, restore_data]() {
             restoreViewSettings(restore_data.get());
-            });
+        });
     }
 }
 
