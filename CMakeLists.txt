@@ -155,12 +155,12 @@ add_executable(tests
                src/ThreadSafeAudioLibrary.h
                src/TrackInfoReader.h
                src/TrackInfoReader.cpp
-               test/AudioLibrarySaveAndLoad.cpp
-               test/AudioLibraryTrackCleanup.cpp
-               test/AudioLibraryViews.cpp
-               test/ThreadSafeAudioLibrary.cpp
-               test/TrackInfo.cpp
-               test/VisualIndexRestoration.cpp
+               test/test_AudioLibrarySaveAndLoad.cpp
+               test/test_AudioLibraryTrackCleanup.cpp
+               test/test_AudioLibraryViews.cpp
+               test/test_ThreadSafeAudioLibrary.cpp
+               test/test_TrackInfo.cpp
+               test/test_VisualIndexRestoration.cpp
                test/tools.h)
 target_link_libraries(tests GTest::gtest GTest::gtest_main ${CMAKE_THREAD_LIBS_INIT} Qt::Widgets ${TAGLIB_LIBRARY})
 target_include_directories(tests PRIVATE ${TAGLIB_INCLUDE_DIR})
