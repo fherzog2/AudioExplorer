@@ -382,7 +382,7 @@ bool ContainingFolderOpener::isSupported() const
 #ifdef _WIN32
     return true;
 #else
-    return false;
+    return true;
 #endif
 }
 
@@ -397,6 +397,11 @@ void ContainingFolderOpener::operator()() const
     process.setProgram("explorer");
     process.setNativeArguments(QString("/select,%1").arg(filepath));
     process.startDetached();
+#else
+    const auto info = QFileInfo(_filepath);
+    const QString dir_path = info.path();
+
+    QProcess::startDetached("xdg-open", {dir_path});
 #endif
 }
 
@@ -1557,7 +1562,15 @@ QString MainWindow::getVlcPath()
     QSettings vlc_registry("HKEY_LOCAL_MACHINE\\SOFTWARE\\VideoLAN\\VLC", QSettings::NativeFormat);
     return vlc_registry.value("Default").toString();
 #else
-    return QString();
+    QProcess process;
+    process.start("which", {"vlc"});
+    if (!process.waitForFinished())
+        return QString();
+
+    const QByteArray output = process.readAllStandardOutput();
+    if (output.isEmpty())
+        return QString();
+    return QString(output).split("\n")[0];
 #endif
 }
 
