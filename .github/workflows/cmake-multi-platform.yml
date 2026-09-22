@@ -56,6 +56,8 @@ jobs:
           mingw-w64-ucrt-x86_64-cc
           mingw-w64-ucrt-x86_64-cmake
           mingw-w64-ucrt-x86_64-qt6-base
+          mingw-w64-ucrt-x86_64-qt6-svg
+          mingw-w64-ucrt-x86_64-qt6-tools
           mingw-w64-ucrt-x86_64-taglib
           mingw-w64-ucrt-x86_64-gtest
 
