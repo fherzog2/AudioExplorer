@@ -21,6 +21,16 @@ if(WIN32)
                           src/project_version.rc)
 endif()
 
+set_source_files_properties(${CMAKE_BINARY_DIR}/git_version_info.cpp
+                            PROPERTIES GENERATED TRUE
+                                       SKIP_AUTOMOC ON)
+
+add_custom_target(EmbedGitHash
+    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_LIST_DIR}/EmbedGitHash.cmake
+    BYPRODUCTS ${CMAKE_BINARY_DIR}/git_version_info.cpp
+    VERBATIM
+)
+
 # add our own translations
 
 #set(RECREATE_TRANSLATIONS ON)
@@ -54,12 +64,16 @@ add_executable(AudioExplorer WIN32 src/main.cpp
                                    src/ThreadSafeAudioLibrary.h
                                    src/TrackInfoReader.cpp
                                    src/TrackInfoReader.h
+                                   src/git_version_info.h
+                                   ${CMAKE_BINARY_DIR}/git_version_info.cpp
                                    ${TS_FILES}
                                    ${WIN_RESOURCE_FILE})
 target_link_libraries(AudioExplorer ${CMAKE_THREAD_LIBS_INIT} Qt::Widgets Qt::Svg ${TAGLIB_LIBRARY})
 target_include_directories(AudioExplorer PRIVATE ${TAGLIB_INCLUDE_DIR})
 set_property(TARGET AudioExplorer PROPERTY CXX_STANDARD 23)
 set_property(TARGET AudioExplorer PROPERTY AUTOMOC ON)
+# execute EmbedGitHash before each build
+add_dependencies(AudioExplorer EmbedGitHash)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND SANITIZE_ADDRESS)
     target_compile_options(AudioExplorer PRIVATE -fno-omit-frame-pointer -fsanitize=address)
