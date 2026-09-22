@@ -44,6 +44,7 @@ jobs:
             c_compiler: clang
           - os: ubuntu-latest
             c_compiler: cl
+          - os: ubuntu-latest # only trying Windows for now
 
     steps:
     - uses: actions/checkout@v4
@@ -61,7 +62,7 @@ jobs:
     - name: Install TagLib via vcpkg
       if: matrix.os == 'windows-latest'
       run: |
-        vcpkg install taglib:x64-windows
+        vcpkg install taglib gtest --triplet x64-windows
 
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
@@ -81,6 +82,8 @@ jobs:
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+        -DVCPKG_TARGET_TRIPLET=x64-windows
         -S ${{ github.workspace }}
 
     - name: Build
