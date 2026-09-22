@@ -1,6 +1,7 @@
 # This starter workflow is for a CMake project running on multiple platforms. There is a different starter workflow if you just want a single platform.
 # See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
-name: CMake on multiple platforms
+
+name: Multi-Platform CI
 
 on:
   push:
@@ -10,56 +11,61 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
-      fail-fast: false
-      
-      matrix:
-        os: [windows-latest]
-        build_type: [Release]
-        c_compiler: [cl]
-        include:
-          - os: windows-latest
-            c_compiler: cl
-            cpp_compiler: cl
+  # ==========================================
+  # JOB 1: LINUX BUILD
+  # ==========================================
+  build-linux:
+    name: Ubuntu
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install dependencies via vcpkg (except Qt)
-      if: matrix.os == 'windows-latest'
-      run: vcpkg install taglib gtest --triplet x64-windows
-
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v4
-
-    - name: Set reusable strings
-      # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
-      id: strings
-      shell: bash
+    - name: Install Dependencies
       run: |
-        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+        sudo apt-get update
+        sudo apt-get install -y qt6-base-dev qt6-svg-dev qt6-tools-dev libtag1-dev libgtest-dev
 
     - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: >
-        cmake -B ${{ steps.strings.outputs.build-output-dir }}
-        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -DCMAKE_PREFIX_PATH="$env:Qt6_DIR;$($env:VCPKG_INSTALLATION_ROOT)/installed/x64-windows"
-        -S ${{ github.workspace }}
+      run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
 
-    - name: Build
-      # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+    - name: Build Project
+      run: cmake --build build --config Release
 
-    - name: Test
-      working-directory: ${{ steps.strings.outputs.build-output-dir }}
-      # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ctest --build-config ${{ matrix.build_type }}
+    - name: Run Tests
+      run: ctest --test-dir build --build-config Release --output-on-failure
+
+
+
+  # ==========================================
+  # JOB 2: WINDOWS BUILD
+  # ==========================================
+  build-windows:
+    name: Windows (MSYS2 MinGW)
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up MSYS2 & Install Dependencies
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: UCRT64
+        update: true
+        install: >-
+          mingw-w64-ucrt-x86_64-cc
+          mingw-w64-ucrt-x86_64-qt6-base
+          mingw-w64-ucrt-x86_64-taglib
+          mingw-w64-ucrt-x86_64-gtest
+
+    - name: Configure CMake
+      shell: msys2 {0}
+      run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build Project
+      shell: msys2 {0}
+      run: cmake --build build --config Release
+
+    - name: Run Tests
+      shell: msys2 {0}
+      run: ctest --test-dir build --build-config Release --output-on-failure
