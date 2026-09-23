@@ -1,6 +1,3 @@
-# This starter workflow is for a CMake project running on multiple platforms. There is a different starter workflow if you just want a single platform.
-# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
-
 name: Multi-Platform CI
 
 on:
@@ -8,15 +5,20 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
-  workflow_dispatch:
 
 jobs:
-  # ==========================================
-  # JOB 1: LINUX BUILD
-  # ==========================================
   build-linux:
     name: Ubuntu
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+        include:
+          - compiler: gcc
+            cxx_compiler: g++
+          - compiler: clang
+            cxx_compiler: clang++
 
     steps:
     - uses: actions/checkout@v4
@@ -27,6 +29,9 @@ jobs:
         sudo apt-get install -y qt6-base-dev qt6-svg-dev qt6-tools-dev libtag1-dev libgtest-dev
 
     - name: Configure CMake
+      env:
+        CC: ${{ matrix.compiler }}
+        CXX: ${{ matrix.cxx_compiler }}
       run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
 
     - name: Build Project
@@ -37,11 +42,6 @@ jobs:
         QT_QPA_PLATFORM: offscreen
       run: ctest --test-dir build --build-config Release --output-on-failure
 
-
-
-  # ==========================================
-  # JOB 2: WINDOWS BUILD
-  # ==========================================
   build-windows:
     name: Windows (MSYS2 MinGW)
     runs-on: windows-latest
