@@ -35,7 +35,7 @@ jobs:
       run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
 
     - name: Build Project
-      run: cmake --build build --config Release
+      run: cmake --build build
 
     - name: Run Tests
       env:
@@ -69,7 +69,7 @@ jobs:
 
     - name: Build Project
       shell: msys2 {0}
-      run: cmake --build build --config Release
+      run: cmake --build build
 
     - name: Run Tests
       shell: msys2 {0}
