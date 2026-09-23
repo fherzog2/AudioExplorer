@@ -78,7 +78,7 @@ qt_add_resources(AudioExplorer "appresources"
     PREFIX "/"
     FILES res/view_menu.svg ${QM_FILES})
 
-if (WIN32)
+if (MSVC)
     # copy Qt plugins and translations to bin directory
 
     find_program(WINDEPLOYQT_DEBUG NAMES windeployqt.debug.bat)
