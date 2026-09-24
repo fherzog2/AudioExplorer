@@ -631,7 +631,19 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event)
         case QEvent::MouseButtonPress:
         {
             auto* me = static_cast<QMouseEvent*>(event);
-            QModelIndex mouse_index = view->indexAt(me->pos());
+
+            if (me->button() == Qt::MouseButton::BackButton)
+            {
+                onHistoryBack();
+                return true;
+            }
+            else if (me->button() == Qt::MouseButton::ForwardButton)
+            {
+                onHistoryForward();
+                return true;
+            }
+
+            const QModelIndex mouse_index = view->indexAt(me->pos());
             if (mouse_index.isValid())
             {
                 _is_dragging = true;
