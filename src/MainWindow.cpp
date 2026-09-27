@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <set>
 #include <random>
+#include <ranges>
 #include <QtCore/qmimedata.h>
 #include <QtCore/qprocess.h>
 #include <QtCore/qsettings.h>
@@ -311,11 +312,11 @@ void History::addItem(std::unique_ptr<AudioLibraryView> view, bool is_top_level_
 
 std::vector<const History::Item*> History::getCurrentItems() const
 {
-    // find top level view
+    // iterate from _current_item to 0, searching for the nearest top level view
 
     size_t index_of_top_level_view = 0;
 
-    for (size_t i = _current_item; i != size_t(-1); --i)
+    for (const size_t i : std::views::iota(size_t(0), _current_item + 1) | std::views::reverse)
     {
         if (_items[i].is_top_level_view)
         {
@@ -793,9 +794,10 @@ void MainWindow::onFindNext()
 
         QString search_text = _find_widget_line_edit->text();
 
-        for (int i = 0, n = view->model()->rowCount(); i < n; ++i)
+        const int n = view->model()->rowCount();
+        for (const int i : std::views::iota(0, n))
         {
-            int row = (start_row + i) % n;
+            const int row = (start_row + i) % n;
 
             QModelIndex index = view->model()->index(row, 0);
 

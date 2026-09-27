@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 #pragma once
 
+#include <ranges>
 #include <AudioLibrary.h>
 #include <TrackInfoReader.h>
 
@@ -44,11 +45,8 @@ namespace {
         if (albums_a.size() != albums_b.size())
             return false;
 
-        for (size_t i = 0, endi = albums_a.size(); i < endi; ++i)
+        for (const auto& [album_a, album_b] : std::views::zip(albums_a, albums_b))
         {
-            const auto album_a = albums_a[i];
-            const auto album_b = albums_b[i];
-
             if (album_a->getKey() != album_b->getKey())
                 return false;
 
@@ -70,11 +68,8 @@ namespace {
             std::ranges::sort(tracks_a, compare_tracks);
             std::ranges::sort(tracks_b, compare_tracks);
 
-            for (size_t j = 0, endj = album_a->getTracks().size(); j < endj; ++j)
+            for (const auto& [track_a, track_b] : std::views::zip(album_a->getTracks(), album_b->getTracks()))
             {
-                const auto track_a = tracks_a[j];
-                const auto track_b = tracks_b[j];
-
                 if (*track_a != *track_b)
                     return false;
             }

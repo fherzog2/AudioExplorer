@@ -23,11 +23,11 @@ bool testAudioLibraryView(const AudioLibrary& library, const AudioLibraryView& v
     QStringList row_str_list;
 
     const QAbstractItemModel* m = model.getModel();
-    for (int row = 0; row < m->rowCount(); ++row)
+    for (const int row : std::views::iota(0, m->rowCount()))
     {
         QStringList row_str;
 
-        for (int col = 0; col < m->columnCount(); ++col)
+        for (const int col : std::views::iota(0, m->columnCount()))
         {
             const QVariant v = m->data(m->index(row, col), Qt::DisplayRole);
             if (v.isValid())

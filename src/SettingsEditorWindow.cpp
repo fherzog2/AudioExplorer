@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 #include "SettingsEditorWindow.h"
 
+#include <ranges>
 #include <set>
 #include <QtCore/qcollator.h>
 #include <QtCore/qmimedata.h>
@@ -173,7 +174,7 @@ void SettingsWidgetDirPaths::applyChanges() const
 {
     QStringList paths;
 
-    for (int i = 0, n = _model->rowCount(); i < n; ++i)
+    for (const int i : std::views::iota(0, _model->rowCount()))
         paths.push_back(_model->item(i)->text());
 
     _item.setValue(paths);
@@ -183,7 +184,7 @@ void SettingsWidgetDirPaths::addPath(const QString& path) const
 {
     // prevent duplicates
 
-    for (int i = 0, n = _model->rowCount(); i < n; ++i)
+    for (const int i : std::views::iota(0, _model->rowCount()))
     {
         const QModelIndex index = _model->index(i, 0);
         if (index.data().toString() == path)
@@ -235,7 +236,7 @@ LanguageSelect::LanguageSelect(QWidget* parent, SettingsItem<QString>& item)
     auto layout = new QVBoxLayout(_container);
     layout->addWidget(_combobox);
 
-    for (int i = 0, n = _combobox->count(); i < n; ++i)
+    for (const int i : std::views::iota(0, _combobox->count()))
     {
         if (_combobox->itemData(i).toString() == item.getValue())
         {
