@@ -17,6 +17,7 @@
 #include <QtGui/qimagereader.h>
 #include <QtGui/qpainter.h>
 #include <QtWidgets/qapplication.h>
+#include <QtWidgets/qdialogbuttonbox.h>
 #include <QtWidgets/qmenubar.h>
 #include <QtWidgets/qscrollbar.h>
 #include <QtWidgets/qshortcut.h>
@@ -27,6 +28,7 @@
 #include <QtWidgets/qtooltip.h>
 #include "ImageViewWindow.h"
 #include "project_version.h"
+#include "git_version_info.h"
 #include "SettingsEditorWindow.h"
 
 namespace
@@ -428,6 +430,9 @@ MainWindow::MainWindow(Settings& settings, ThreadSafeAudioLibrary& library, Audi
     addMenuAction(*viewmenu, tr("Reload all files"), this, &MainWindow::scanAudioDirs, QKeySequence::Refresh);
     addMenuAction(*viewmenu, tr("Select random item"), this, &MainWindow::selectRandomItem, QKeySequence(Qt::Key_F6));
 
+    auto helpmenu = menubar->addMenu(tr("&Help"));
+    addMenuAction(*helpmenu, tr("About..."), this, &MainWindow::onAbout);
+
     auto toolarea = new QWidget(this);
 
     auto* view_selector_popup_button = new QToolButton(toolarea);
@@ -806,6 +811,33 @@ void MainWindow::onFindNext()
             }
         }
     }
+}
+
+void MainWindow::onAbout()
+{
+    const QString hash = getGitCommitHash();
+    const auto date = QDate::fromString(getGitCommitterDate(), Qt::ISODate);
+    const QString date_str = QLocale::system().toString(date, QLocale::LongFormat);
+
+    const QString version_info = [hash = hash.left(12), date_str](){
+        if (getGitHasUncommittedChanges())
+            return tr("Version: %1 (modified), %2").arg(hash).arg(date_str);
+
+        return tr("Version: %1, %2").arg(hash).arg(date_str);
+    }();
+
+    QDialog dialog(this);
+
+    auto label = new QLabel(version_info, &dialog);
+
+    auto button_box = new QDialogButtonBox(QDialogButtonBox::Close);
+    connect(button_box, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+    auto layout = new QVBoxLayout(&dialog);
+    layout->addWidget(label);
+    layout->addWidget(button_box);
+
+    dialog.exec();
 }
 
 void MainWindow::onLibraryCacheLoading()

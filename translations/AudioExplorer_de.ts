@@ -134,6 +134,22 @@
         <source>Select random item</source>
         <translation>Zufälligen Eintrag auswählen</translation>
     </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation>&amp;Hilfe</translation>
+    </message>
+    <message>
+        <source>About...</source>
+        <translation>Über...</translation>
+    </message>
+    <message>
+        <source>Version: %1 (modified), %2</source>
+        <translation>Version: %1 (modifiziert), %2</translation>
+    </message>
+    <message>
+        <source>Version: %1, %2</source>
+        <translation>Version: %1, %2</translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>

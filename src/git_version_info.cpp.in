@@ -1,0 +1,15 @@
+const char* getGitCommitHash()
+{
+    return "@GIT_COMMIT_HASH@";
+}
+
+/** strict ISO 8601 format */
+const char* getGitCommitterDate()
+{
+    return "@GIT_COMMITTER_DATE@";
+}
+
+bool getGitHasUncommittedChanges()
+{
+    return @GIT_HAS_UNCOMMITTED_CHANGES@;
+}

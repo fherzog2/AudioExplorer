@@ -118,6 +118,7 @@ private:
     void onEditPreferences();
     void onShowFindWidget();
     void onFindNext();
+    void onAbout();
     void onLibraryCacheLoading();
     void onLibraryLoadProgressed(int files_loaded, int files_in_cache);
     void onLibraryLoadFinished(int files_loaded, int files_in_cache, float duration_sec);
