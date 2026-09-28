@@ -689,15 +689,15 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event)
                         });
                     }
 
-                    auto* mime_data = new QMimeData();
-                    mime_data->setUrls(urls);
-
-                    QDrag drag(this);
-                    drag.setMimeData(mime_data);
-
                     if (!urls.empty())
                     {
-                        drag.exec(Qt::CopyAction);
+                        auto* mime_data = new QMimeData();
+                        mime_data->setUrls(urls);
+
+                        auto* drag = new QDrag(this);
+                        drag->setMimeData(mime_data);
+                        drag->exec(Qt::CopyAction);
+
                         _is_dragging = false;
                         _drag_start_pos = QPoint();
                         _dragged_indexes.clear();
