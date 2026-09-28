@@ -312,28 +312,20 @@ void History::addItem(std::unique_ptr<AudioLibraryView> view, bool is_top_level_
 
 std::vector<const History::Item*> History::getCurrentItems() const
 {
-    // iterate from _current_item to 0, searching for the nearest top level view
+    // find the last top level item before/at _current_item
 
-    size_t index_of_top_level_view = 0;
-
-    for (const size_t i : std::views::iota(size_t(0), _current_item + 1) | std::views::reverse)
-    {
-        if (_items[i].is_top_level_view)
-        {
-            index_of_top_level_view = i;
-            break;
-        }
-    }
+    const auto current_items = std::ranges::find_last_if(
+        _items | std::views::take(_current_item + 1),
+        [](const Item& item){ return item.is_top_level_view; });
 
     // create result
 
     std::vector<const Item*> result;
-
-    for (size_t i = index_of_top_level_view; i <= _current_item; ++i)
+    result.reserve(current_items.size());
+    for (const Item& item : current_items)
     {
-        result.push_back(&_items[i]);
+        result.push_back(&item);
     }
-
     return result;
 }
 
