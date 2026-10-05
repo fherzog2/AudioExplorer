@@ -35,12 +35,18 @@ namespace{
 
     void readBasicTrackInfo(TagLib::Tag* tag, TrackInfo& info)
     {
+        if (!std::in_range<int>(tag->year()))
+            throw std::runtime_error("Year number is out of range");
+
+        if (!std::in_range<int>(tag->track()))
+            throw std::runtime_error("Track number is out of range");
+
         info.artist = toQString(tag->artist());
         info.album = toQString(tag->album());
-        info.year = tag->year();
+        info.year = static_cast<int>(tag->year());
         info.genre = toQString(tag->genre());
         info.title = toQString(tag->title());
-        info.track_number = tag->track();
+        info.track_number = static_cast<int>(tag->track());
         info.comment = toQString(tag->comment());
     }
 
