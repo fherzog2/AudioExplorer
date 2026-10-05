@@ -1626,7 +1626,7 @@ void MainWindow::startVlc(const QList<QPersistentModelIndex>& indexes, bool only
     if(only_add_to_playlist)
         arguments << "--playlist-enqueue";
 
-    for (const QString& filepath : filepaths)
+    for (QString filepath : filepaths)
     {
 #if WIN32
         // VLC has problems with slashes in filepaths
