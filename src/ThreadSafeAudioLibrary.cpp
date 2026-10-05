@@ -243,5 +243,5 @@ void AudioFilesLoader::threadLoadAudioFiles(std::stop_token stop_token, const QS
     auto end_time = std::chrono::system_clock::now();
     auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
 
-    libraryLoadFinished(files_loaded, files_in_cache, float(millis.count()) / 1000.0);
+    libraryLoadFinished(files_loaded, files_in_cache, float(millis.count()) / 1000.0f);
 }

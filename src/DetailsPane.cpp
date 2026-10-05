@@ -78,7 +78,7 @@ bool PictureBox::hasHeightForWidth() const
 
 int PictureBox::heightForWidth(int width) const
 {
-    int size_steps[] = { 256, 128, 64, 32 };
+    const int size_steps[] = { 256, 128, 64, 32 };
 
     for (int size_step : size_steps)
         if (size_step < width)

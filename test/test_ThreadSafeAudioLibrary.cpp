@@ -39,13 +39,13 @@ TEST(AudioExplorer, ThreadSafeAudioLibrary_SimultaneousReadWrite)
 
     ThreadSafeAudioLibrary library;
 
-    constexpr int MAX_NUMBER_OF_ALBUMS = 100;
-    constexpr int TRACKS_PER_ALBUM = 10;
+    constexpr size_t MAX_NUMBER_OF_ALBUMS = 100;
+    constexpr size_t TRACKS_PER_ALBUM = 10;
 
     auto write_thread = std::jthread([&library, MAX_NUMBER_OF_ALBUMS, TRACKS_PER_ALBUM] {
-        for (const int album_number : std::views::iota(0, MAX_NUMBER_OF_ALBUMS))
+        for (const size_t album_number : std::views::iota(size_t(0), MAX_NUMBER_OF_ALBUMS))
         {
-            for(const int track_number : std::views::iota(0, TRACKS_PER_ALBUM))
+            for(const size_t track_number : std::views::iota(size_t(0), TRACKS_PER_ALBUM))
             {
                 const auto filepath = QString("album %1 track %2").arg(album_number).arg(track_number);
                 TrackInfo info;

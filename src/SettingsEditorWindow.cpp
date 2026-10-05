@@ -136,7 +136,7 @@ SettingsWidgetDirPaths::SettingsWidgetDirPaths(QWidget* parent, SettingsItem<QSt
         addPath(path);
     }
 
-    _list = new DirectoryListView(_container, [this](QString path) { addPath(path); });
+    _list = new DirectoryListView(_container, [this](const QString& path) { addPath(path); });
     _list->setModel(_model);
     _list->setContextMenuPolicy(Qt::CustomContextMenu);
     _list->setSelectionMode(QListView::ExtendedSelection);
