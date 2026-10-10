@@ -92,6 +92,7 @@ jobs:
       shell: pwsh
       run: |
         echo "VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}\vcpkg-cache" >> $env:GITHUB_ENV
+        echo "IMAGE_VERSION_FOR_CACHE=${ImageVersion}" >> $env:GITHUB_ENV
         New-Item -ItemType Directory -Force -Path "${{ github.workspace }}\vcpkg-cache"
 
     - name: Restore vcpkg binary cache
@@ -99,7 +100,7 @@ jobs:
       uses: actions/cache@v6
       with:
         path: ${{ github.workspace }}/vcpkg-cache
-        key: windows-vcpkg-${{ hashFiles('.github/workflows/cmake-multi-platform.yml') }}
+        key: windows-vcpkg-${{ env.IMAGE_VERSION_FOR_CACHE }}-taglib-gtest
 
     - name: Install other dependencies
       run: C:\vcpkg\vcpkg.exe install taglib gtest --triplet x64-windows
