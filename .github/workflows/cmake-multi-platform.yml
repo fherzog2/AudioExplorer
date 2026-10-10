@@ -75,3 +75,27 @@ jobs:
     - name: Run Tests
       shell: msys2 {0}
       run: ctest --test-dir build --build-config Release --output-on-failure
+
+  build-windows-msvc:
+    name: Windows (MSVC)
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        cache: true
+
+    - name: Install other dependencies
+      run: C:\vcpkg\vcpkg.exe install taglib gtest --triplet x64-windows
+
+    - name: Configure CMake
+      run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake"
+
+    - name: Build Project
+      run: cmake --build build --config Release
+
+    - name: Run Tests
+      run: ctest --test-dir build --build-config Release --output-on-failure
