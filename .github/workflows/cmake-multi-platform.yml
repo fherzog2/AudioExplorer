@@ -88,7 +88,21 @@ jobs:
       with:
         cache: true
 
+    - name: Create vcpkg cache directory
+      shell: pwsh
+      run: |
+        echo "VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}\vcpkg-cache" >> $env:GITHUB_ENV
+        New-Item -ItemType Directory -Force -Path "${{ github.workspace }}\vcpkg-cache"
+
+    - name: Restore vcpkg binary cache
+      id: vcpkg-binary-cache
+      uses: actions/cache@v6
+      with:
+        path: ${{ github.workspace }}/vcpkg-cache
+        key: windows-vcpkg-${{ hashFiles('.github/workflows/cmake-multi-platform.yml') }}
+
     - name: Install other dependencies
+      if: steps.vcpkg-binary-cache.outputs.cache-hit != 'true'
       run: C:\vcpkg\vcpkg.exe install taglib gtest --triplet x64-windows
 
     - name: Configure CMake
