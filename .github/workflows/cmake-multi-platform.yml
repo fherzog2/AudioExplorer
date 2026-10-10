@@ -109,7 +109,7 @@ jobs:
       run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake"
 
     - name: Build Project
-      run: cmake --build build --config Release
+      run: cmake --build build --config Release --parallel 2
 
     - name: Run Tests
       run: ctest --test-dir build --build-config Release --output-on-failure
