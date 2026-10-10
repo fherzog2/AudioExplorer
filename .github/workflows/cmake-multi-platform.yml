@@ -95,6 +95,8 @@ jobs:
         Add-Content -Path $env:GITHUB_ENV -Value "IMAGE_VERSION_FOR_CACHE=$env:ImageVersion"
         New-Item -ItemType Directory -Force -Path "${{ github.workspace }}\vcpkg-cache"
 
+    # Using the ImageVersion env variable for the key means that the
+    # cache stays valid until the OS image receives the next update.
     - name: Restore vcpkg binary cache
       id: vcpkg-binary-cache
       uses: actions/cache@v6
