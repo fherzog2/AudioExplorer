@@ -36,7 +36,7 @@ jobs:
       run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
 
     - name: Build Project
-      run: cmake --build build
+      run: cmake --build build --parallel
 
     - name: Run Tests
       env:
@@ -70,7 +70,7 @@ jobs:
 
     - name: Build Project
       shell: msys2 {0}
-      run: cmake --build build
+      run: cmake --build build --parallel
 
     - name: Run Tests
       shell: msys2 {0}
@@ -88,6 +88,22 @@ jobs:
       with:
         cache: true
 
+    - name: Create vcpkg cache directory
+      shell: pwsh
+      run: |
+        echo "VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}\vcpkg-cache" >> $env:GITHUB_ENV
+        Add-Content -Path $env:GITHUB_ENV -Value "IMAGE_VERSION_FOR_CACHE=$env:ImageVersion"
+        New-Item -ItemType Directory -Force -Path "${{ github.workspace }}\vcpkg-cache"
+
+    # Using the ImageVersion env variable for the key means that the
+    # cache stays valid until the OS image receives the next update.
+    - name: Restore vcpkg binary cache
+      id: vcpkg-binary-cache
+      uses: actions/cache@v6
+      with:
+        path: ${{ github.workspace }}/vcpkg-cache
+        key: windows-vcpkg-${{ env.IMAGE_VERSION_FOR_CACHE }}-taglib-gtest
+
     - name: Install other dependencies
       run: C:\vcpkg\vcpkg.exe install taglib gtest --triplet x64-windows
 
@@ -95,7 +111,7 @@ jobs:
       run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake"
 
     - name: Build Project
-      run: cmake --build build --config Release
+      run: cmake --build build --config Release --parallel
 
     - name: Run Tests
       run: ctest --test-dir build --build-config Release --output-on-failure
