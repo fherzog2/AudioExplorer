@@ -36,7 +36,7 @@ jobs:
       run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
 
     - name: Build Project
-      run: cmake --build build
+      run: cmake --build build --parallel
 
     - name: Run Tests
       env:
@@ -70,7 +70,7 @@ jobs:
 
     - name: Build Project
       shell: msys2 {0}
-      run: cmake --build build
+      run: cmake --build build --parallel
 
     - name: Run Tests
       shell: msys2 {0}
@@ -106,10 +106,10 @@ jobs:
       run: C:\vcpkg\vcpkg.exe install taglib gtest --triplet x64-windows
 
     - name: Configure CMake
-      run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" -DCMAKE_CXX_FLAGS="/MP"
+      run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake"
 
     - name: Build Project
-      run: cmake --build build --config Release
+      run: cmake --build build --config Release --parallel
 
     - name: Run Tests
       run: ctest --test-dir build --build-config Release --output-on-failure
