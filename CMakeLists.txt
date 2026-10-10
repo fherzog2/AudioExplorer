@@ -6,7 +6,13 @@ option(SANITIZE_ADDRESS "Add address sanitizer flags" OFF)
 option(ENABLE_COVERAGE "Enable code coverage instrumentation" OFF)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Svg Linguist)
-find_package(TagLib REQUIRED)
+#find_package(TagLib REQUIRED)
+find_path(TAGLIB_INCLUDE_DIR
+  NAMES taglib/tag.h
+)
+find_library(TAGLIB_LIBRARY
+  NAMES tag
+)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 find_package(GTest CONFIG REQUIRED)
@@ -63,7 +69,8 @@ add_library(AudioExplorer_objects OBJECT
     src/TrackInfoReader.h
     src/git_version_info.h
     ${CMAKE_BINARY_DIR}/git_version_info.cpp)
-target_link_libraries(AudioExplorer_objects PUBLIC Threads::Threads Qt6::Widgets Qt::Svg TagLib::tag)
+target_link_libraries(AudioExplorer_objects PUBLIC Threads::Threads Qt6::Widgets Qt::Svg ${TAGLIB_LIBRARY}) # TagLib::tag
+target_include_directories(AudioExplorer_objects PUBLIC ${TAGLIB_INCLUDE_DIR})
 set_property(TARGET AudioExplorer_objects PROPERTY CXX_STANDARD 23)
 set_property(TARGET AudioExplorer_objects PROPERTY AUTOMOC ON)
 # execute EmbedGitHash before each build
