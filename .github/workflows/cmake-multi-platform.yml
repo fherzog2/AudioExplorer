@@ -106,10 +106,10 @@ jobs:
       run: C:\vcpkg\vcpkg.exe install taglib gtest --triplet x64-windows
 
     - name: Configure CMake
-      run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake"
+      run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" -DCMAKE_CXX_FLAGS="/MP"
 
     - name: Build Project
-      run: cmake --build build --config Release --parallel 2
+      run: cmake --build build --config Release
 
     - name: Run Tests
       run: ctest --test-dir build --build-config Release --output-on-failure
