@@ -102,7 +102,6 @@ jobs:
         key: windows-vcpkg-${{ hashFiles('.github/workflows/cmake-multi-platform.yml') }}
 
     - name: Install other dependencies
-      if: steps.vcpkg-binary-cache.outputs.cache-hit != 'true'
       run: C:\vcpkg\vcpkg.exe install taglib gtest --triplet x64-windows
 
     - name: Configure CMake
