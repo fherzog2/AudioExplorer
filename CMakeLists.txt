@@ -75,6 +75,12 @@ set_property(TARGET AudioExplorer_objects PROPERTY CXX_STANDARD 23)
 set_property(TARGET AudioExplorer_objects PROPERTY AUTOMOC ON)
 # execute EmbedGitHash before each build
 add_dependencies(AudioExplorer_objects EmbedGitHash)
+if(MSVC)
+  target_precompile_headers(AudioExplorer_objects PRIVATE
+    <QtCore/QtCore>
+    <QtGui/QtGui>
+    <QtWidgets/QtWidgets>)
+endif(MSVC)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND SANITIZE_ADDRESS)
     target_compile_options(AudioExplorer_objects PUBLIC -fno-omit-frame-pointer -fsanitize=address)
@@ -183,8 +189,15 @@ add_executable(tests
 target_link_libraries(tests GTest::gtest GTest::gtest_main AudioExplorer_objects)
 target_include_directories(tests PRIVATE "src")
 set_property(TARGET tests PROPERTY CXX_STANDARD 23)
-gtest_discover_tests(tests)
+if(MSVC)
+  target_precompile_headers(tests PRIVATE
+    <QtCore/QtCore>
+    <QtGui/QtGui>
+    <QtWidgets/QtWidgets>
+    <gtest/gtest.h>)
+endif(MSVC)
 
+gtest_discover_tests(tests)
 enable_testing()
 
 # install
