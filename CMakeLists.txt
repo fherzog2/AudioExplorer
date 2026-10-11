@@ -112,60 +112,6 @@ qt_add_resources(AudioExplorer "appresources"
     PREFIX "/"
     FILES res/view_menu.svg ${QM_FILES})
 
-if (MSVC AND NOT DEFINED ENV{CI})
-    # copy Qt plugins and translations to bin directory
-
-    find_program(WINDEPLOYQT_DEBUG NAMES windeployqt.debug.bat)
-    find_program(WINDEPLOYQT_RELEASE NAMES windeployqt)
-
-    # write a "deployed" marker after qtwindeploy is done, to avoid unnecessary reruns
-
-    add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/$<CONFIG>/deployed.txt"
-        COMMAND $<IF:$<CONFIG:Debug>,${WINDEPLOYQT_DEBUG},${WINDEPLOYQT_RELEASE}> $<TARGET_FILE:AudioExplorer>
-        COMMAND ${CMAKE_COMMAND} -E echo "done" > "${CMAKE_BINARY_DIR}/$<CONFIG>/deployed.txt"
-        COMMENT "Running windeployqt..."
-        VERBATIM
-    )
-
-    add_custom_target(QT_WIN_DEPLOY ALL
-        DEPENDS "${CMAKE_BINARY_DIR}/$<CONFIG>/deployed.txt"
-    )
-
-    # add qt.conf, to get correct qt translation paths when starting the app from the build directory
-
-    add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/$<CONFIG>/qt.conf"
-        COMMAND ${CMAKE_COMMAND} -E echo "[Paths] Prefix = ." > "${CMAKE_BINARY_DIR}/$<CONFIG>/qt.conf"
-        COMMENT "Adding qt.conf"
-        VERBATIM
-    )
-
-    add_custom_target(QT_CONF_DEPLOY ALL
-        DEPENDS "${CMAKE_BINARY_DIR}/$<CONFIG>/qt.conf"
-    )
-
-    # vcpkg automatically copies DLLs of all dependencies into the build dir
-    # unfortunately this doesn't work for libjpeg, because Qt technically can run without it (plugin system)
-    # manually copy the libjpeg DLL here to fix this
-
-    find_package(JPEG REQUIRED)
-
-    get_target_property(MY_JPEG_LIB_PATH JPEG::JPEG IMPORTED_LOCATION_RELEASE)
-
-    cmake_path(GET MY_JPEG_LIB_PATH PARENT_PATH MY_JPEG_LIB_DIR)
-
-    find_file(MY_JPEG_DLL
-        NAMES "jpeg${JPEG_VERSION}.dll"
-        PATHS "${MY_JPEG_LIB_DIR}\\..\\bin"
-        REQUIRED NO_DEFAULT_PATH)
-
-    add_custom_command(TARGET AudioExplorer POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${MY_JPEG_DLL}
-        "$<TARGET_FILE_DIR:AudioExplorer>\\jpeg${JPEG_VERSION}.dll"
-        COMMENT "Copying libjpeg to build dir..."
-    )
-endif()
-
 # test
 
 configure_file(${CMAKE_SOURCE_DIR}/test/AudioLibraryViews.txt ${CMAKE_CURRENT_BINARY_DIR}/test_data/AudioLibraryViews.txt COPYONLY)
@@ -210,53 +156,42 @@ if (WIN32)
     # install selected dependencies, which the qt deploy script does not find automatically
 
     install(CODE [[
-      file(GET_RUNTIME_DEPENDENCIES
-        EXECUTABLES $<TARGET_FILE:AudioExplorer>
-        RESOLVED_DEPENDENCIES_VAR _r_deps
-        UNRESOLVED_DEPENDENCIES_VAR _u_deps
-      )
-      foreach(_file ${_r_deps})
-        # whitelist, only these dlls are required
+        function(is_windows_dll INPUT_PATH OUTPUT_BOOL)
+            # check if the path starts with C:\Windows
 
-        string(FIND ${_file} pcre2 pcre2_found)
-        string(FIND ${_file} jpeg jpeg_found)
-        string(FIND ${_file} libpng libpng_found)
-        string(FIND ${_file} zlib zlib_found)
-        string(FIND ${_file} double-conversion double-conversion_found)
-        string(FIND ${_file} libcrypto libcrypto_found)
-        string(FIND ${_file} harfbuzz harfbuzz_found)
-        string(FIND ${_file} zstd zstd_found)
-        string(FIND ${_file} freetype freetype_found)
-        string(FIND ${_file} bz2 bz2_found)
-        string(FIND ${_file} brotli brotli_found)
-        string(FIND ${_file} tag tag_found)
+            file(TO_CMAKE_PATH "$ENV{SystemRoot}" WIN_NORMALIZED)
+            string(TOLOWER "${WIN_NORMALIZED}" WIN_LOWER)
 
-        if(NOT pcre2_found EQUAL -1 OR
-           NOT jpeg_found EQUAL -1 OR
-           NOT libpng_found EQUAL -1 OR
-           NOT zlib_found EQUAL -1 OR
-           NOT double-conversion_found EQUAL -1 OR
-           NOT libcrypto_found EQUAL -1 OR
-           NOT harfbuzz_found EQUAL -1 OR
-           NOT zstd_found EQUAL -1 OR
-           NOT freetype_found EQUAL -1 OR
-           NOT bz2_found EQUAL -1 OR
-           NOT brotli_found EQUAL -1 OR
-           NOT tag_found EQUAL -1)
-            file(INSTALL
-              DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
-              TYPE SHARED_LIBRARY
-              FOLLOW_SYMLINK_CHAIN
-              FILES "${_file}"
-            )
-        endif()
-      endforeach()
+            file(TO_CMAKE_PATH "${INPUT_PATH}" INPUT_NORMALIZED)
+            string(TOLOWER "${INPUT_NORMALIZED}" INPUT_LOWER)
+
+            string(FIND "${INPUT_LOWER}" "${WIN_LOWER}" SUBSTRING_INDEX)
+
+            if(SUBSTRING_INDEX EQUAL 0)
+                set(${OUTPUT_BOOL} TRUE PARENT_SCOPE)
+            else()
+                set(${OUTPUT_BOOL} FALSE PARENT_SCOPE)
+            endif()
+        endfunction()
+
+        file(GET_RUNTIME_DEPENDENCIES
+            EXECUTABLES $<TARGET_FILE:AudioExplorer>
+            RESOLVED_DEPENDENCIES_VAR _r_deps
+            UNRESOLVED_DEPENDENCIES_VAR _u_deps
+        )
+
+        foreach(_file ${_r_deps})
+            is_windows_dll(${_file} FILE_IS_WINDOWS_DLL)
+            if(NOT FILE_IS_WINDOWS_DLL)
+                file(INSTALL
+                    DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
+                    TYPE SHARED_LIBRARY
+                    FOLLOW_SYMLINK_CHAIN
+                    FILES "${_file}"
+                )
+            endif()
+        endforeach()
     ]])
-
-    # extra step for jpeg, which cannot be found through the dependencies
-
-    install(FILES ${MY_JPEG_DLL}
-            DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
 
     # install qt dependencies
 
